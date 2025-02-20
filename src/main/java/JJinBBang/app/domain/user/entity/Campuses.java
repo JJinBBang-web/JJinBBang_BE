@@ -18,16 +18,16 @@ public class Campuses {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "campus_id")
-	private Long id;
+	private Long id; // 캠퍼스 id
 
 	@Column(nullable = false, length = 100)
-	private String campusName;
+	private String campusName; // 캠퍼스 이름
 
 	@Column(nullable = false, length = 255)
-	private String campusAddress;
+	private String campusAddress; // 캠퍼스 주소
 
 	@Column(nullable = false)
-	private Point2D.Double campusCoordinate;
+	private Point2D.Double campusCoordinate; // 캠퍼스 좌표
 
-	private String image;
+	private String image; // 캠퍼스 이미지
 }

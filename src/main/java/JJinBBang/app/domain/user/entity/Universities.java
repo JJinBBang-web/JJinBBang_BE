@@ -18,11 +18,11 @@ public class Universities {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "university_id")
-	private Long id;
+	private Long id; // 대학교 id
 
 	@Column(nullable = false, length = 100)
-	private String name;
+	private String name; // 대학교 이름
 
 	@Column(nullable = false)
-	private String logo;
+	private String logo; // 대학교 로고
 }
