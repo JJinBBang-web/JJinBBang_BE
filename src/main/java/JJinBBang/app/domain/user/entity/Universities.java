@@ -21,8 +21,8 @@ public class Universities {
 	private Long id; // 대학교 id
 
 	@Column(nullable = false, length = 100)
-	private String name; // 대학교 이름
+	private String universityName; // 대학교 이름
 
 	@Column(nullable = false)
-	private String logo; // 대학교 로고
+	private String universityLogo; // 대학교 로고
 }
