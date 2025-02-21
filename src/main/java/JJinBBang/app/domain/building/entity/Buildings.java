@@ -1,15 +1,24 @@
 package JJinBBang.app.domain.building.entity;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
+import JJinBBang.app.domain.user.entity.Campuses;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -52,4 +61,13 @@ public class Buildings {
 
 	@Column(nullable = false)
 	private Integer imagesCount; // 이미지 수
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@Cascade(CascadeType.ALL)
+	@JoinColumn(name = "campus_id", nullable = false)
+	private Campuses campuses;
+
+	@OneToMany(mappedBy = "buildings")
+	@Cascade(CascadeType.ALL)
+	private List<BuildingLikes> buildingLikes = new ArrayList<>();
 }
