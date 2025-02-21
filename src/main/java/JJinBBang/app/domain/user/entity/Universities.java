@@ -30,9 +30,9 @@ public class Universities {
 	private String universityLogo; // 대학교 로고
 
 	// 연관관계 매핑
-	@OneToMany(mappedBy = "university", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "universities", cascade = CascadeType.ALL)
 	private List<Campuses> campuses; // 캠퍼스
 
-	@OneToMany(mappedBy = "university", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "universities", cascade = CascadeType.ALL)
 	private List<Users> users; // 유저
 }
