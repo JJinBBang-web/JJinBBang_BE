@@ -1,12 +1,15 @@
 package JJinBBang.app.domain.building.entity;
 
 import JJinBBang.app.domain.building.enums.ContractType;
+import JJinBBang.app.domain.user.entity.Universities;
+import JJinBBang.app.domain.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Entity
 @Getter
@@ -16,42 +19,57 @@ public class Reviews {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="review_id")
-    private Long id;
+    private Long id; // 리뷰 id
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users users; // 사용자 id
+
+    @ManyToOne
+    @JoinColumn(name = "building_id", nullable = false)
+    private Buildings buildings; // 건물 id
+
+    @ManyToOne
+    @JoinColumn(name = "university_id", nullable = false)
+    private Universities universities; // 대학교 id
 
     @Column(length = 100)
-    private String buildingName;
+    private String building; // 동
 
-    private Integer unit;
+    private Integer unit; // 호
 
-    private Integer floor;
+    private Integer floor; // 층
 
     @Column(nullable = false)
-    private ContractType contract_type;
+    private ContractType contract_type; // 계약 형태
 
-    private Integer deposit;
+    private Integer deposit; // 보증금
 
-    private Integer price;
+    private Integer price; // 월세
 
-    private Integer maintenance_cost;
+    private Integer maintenance_cost; // 관리비
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime created_at; // 작성일
 
     @UpdateTimestamp
     @Column(nullable = false)
-    private LocalDateTime updated_at;
+    private LocalDateTime updated_at; // 수정일
 
     @Column(nullable = false, columnDefinition = "integer default 0")
-    private Integer likes_count;
+    private Integer likes_count; // 좋아요 수
 
     @Column(nullable = false,length = 2083)
-    private String thumbnail_image;
+    private String thumbnail_image; // 썸네일 이미지
 
     @Column(nullable = false)
-    private String content;
+    private String content; // 후기 내용
 
     @Column(length = 30)
-    private  String tags;
+    private  String tags; // 태그
+
+    @OneToMany(mappedBy = "reviews", cascade = CascadeType.ALL)
+    private List<ReviewLikes> posts = new ArrayList<>();
 
 }
