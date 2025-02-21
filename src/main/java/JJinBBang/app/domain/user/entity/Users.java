@@ -1,18 +1,13 @@
 package JJinBBang.app.domain.user.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -62,4 +57,17 @@ public class Users {
 		this.createdAt = LocalDateTime.now();
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 	}
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private List<Reviews> reviews = new ArrayList<>();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "university_id")
+	private Universities university;
+
+	//@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	//private List<BuildingLikes> buildingLikes = new ArrayList<>();
+
+	//@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	//private List<ReviewLikes> reviewLikes = new ArrayList<>();
 }
