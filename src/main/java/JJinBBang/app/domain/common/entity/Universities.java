@@ -1,8 +1,9 @@
-package JJinBBang.app.domain.user.entity;
+package JJinBBang.app.domain.common.entity;
 
-import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
+import JJinBBang.app.domain.user.entity.Users;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,9 +31,11 @@ public class Universities {
 	private String universityLogo; // 대학교 로고
 
 	// 연관관계 매핑
+	// 대학교 -> 캠퍼스
 	@OneToMany(mappedBy = "universities", cascade = CascadeType.ALL)
-	private List<Campuses> campuses; // 캠퍼스
+	private List<Campuses> campuses = new ArrayList<>(); // 캠퍼스
 
+	// 대학교 -> 유저
 	@OneToMany(mappedBy = "universities", cascade = CascadeType.ALL)
-	private List<Users> users; // 유저
+	private List<Users> users= new ArrayList<>(); // 유저
 }
