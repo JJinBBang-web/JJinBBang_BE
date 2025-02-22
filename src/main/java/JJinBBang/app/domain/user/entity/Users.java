@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import JJinBBang.app.domain.building.entity.BuildingLikes;
+import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
@@ -11,20 +13,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class Users {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "user_id")
 	private Long userId;
-
-	@Column(name = "university_id", nullable = false)
-	private Long universityId;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "provider", nullable = false)
@@ -58,16 +53,21 @@ public class Users {
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 	}
 
+	// 연관관계 매핑
+	// 대학교 -> 유저
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "university_id")
+	private Universities universities;
+
+	// 유저 -> 리뷰
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private List<Reviews> reviews = new ArrayList<>();
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "university_id")
-	private Universities university;
+	// 유저 -> 건물-좋아요
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private List<BuildingLikes> buildingLikes = new ArrayList<>();
 
-	//@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-	//private List<BuildingLikes> buildingLikes = new ArrayList<>();
-
-	//@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-	//private List<ReviewLikes> reviewLikes = new ArrayList<>();
+	// 유저 -> 리뷰-좋아요
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private List<ReviewLikes> reviewLikes = new ArrayList<>();
 }
