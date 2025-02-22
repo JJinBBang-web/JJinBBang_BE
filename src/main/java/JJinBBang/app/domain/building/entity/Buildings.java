@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
-import JJinBBang.app.domain.user.entity.Campuses;
+import JJinBBang.app.domain.common.entity.Campuses;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

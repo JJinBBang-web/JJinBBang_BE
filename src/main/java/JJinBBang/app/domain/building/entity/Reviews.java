@@ -1,7 +1,7 @@
 package JJinBBang.app.domain.building.entity;
 
 import JJinBBang.app.domain.building.enums.ContractType;
-import JJinBBang.app.domain.user.entity.Universities;
+import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;

@@ -7,6 +7,7 @@ import java.util.List;
 import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
+import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import jakarta.persistence.*;
