@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,20 +22,8 @@ public class Reviews {
     @Column(name="review_id")
     private Long id; // 리뷰 id
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private Users users; // 사용자 id
-
-    @ManyToOne
-    @JoinColumn(name = "building_id", nullable = false)
-    private Buildings buildings; // 건물 id
-
-    @ManyToOne
-    @JoinColumn(name = "university_id", nullable = false)
-    private Universities universities; // 대학교 id
-
     @Column(length = 100)
-    private String building; // 동
+    private String block; // 동
 
     private Integer unit; // 호
 
@@ -69,7 +58,24 @@ public class Reviews {
     @Column(length = 30)
     private  String tags; // 태그
 
+    // 연관관계 매핑
+    // 유저 -> 리뷰
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user; // 사용자 id
+
+    // 건물 -> 리뷰
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "building_id", nullable = false)
+    private Buildings buildings; // 건물 id
+
+    // 대학교 -> 리뷰
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "university_id", nullable = false)
+    private Universities university; // 대학교 id
+
+    // 리뷰 -> 리뷰 좋아요
     @OneToMany(mappedBy = "reviews", cascade = CascadeType.ALL)
-    private List<ReviewLikes> posts = new ArrayList<>();
+    private List<ReviewLikes> reviewLikes = new ArrayList<>();
 
 }
