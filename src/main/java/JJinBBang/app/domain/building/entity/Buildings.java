@@ -2,12 +2,11 @@ package JJinBBang.app.domain.building.entity;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
+import java.util.List;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.user.entity.Campuses;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -62,12 +61,17 @@ public class Buildings {
 	@Column(nullable = false)
 	private Integer imagesCount; // 이미지 수
 
+	// 연관관계 매핑
+	// 캠퍼스 -> 건물
 	@ManyToOne(fetch = FetchType.LAZY)
-	@Cascade(CascadeType.ALL)
-	@JoinColumn(name = "campus_id", nullable = false)
+	@JoinColumn(name = "campus_id")
 	private Campuses campuses;
 
-	@OneToMany(mappedBy = "buildings")
-	@Cascade(CascadeType.ALL)
+	// 건물 -> 건물-좋아요
+	@OneToMany(mappedBy = "buildings", cascade = CascadeType.ALL)
 	private List<BuildingLikes> buildingLikes = new ArrayList<>();
+
+	// 건물 -> 리뷰
+	@OneToMany(mappedBy = "buildings", cascade = CascadeType.ALL)
+	private List<Reviews> reviews = new ArrayList<>();
 }
