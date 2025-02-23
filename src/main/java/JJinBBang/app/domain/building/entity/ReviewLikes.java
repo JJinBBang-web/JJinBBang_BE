@@ -8,13 +8,15 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewLikes {
+    @EmbeddedId
+    private ReviewLikeId id;
 
-    @Id
+    @MapsId("reviewId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
     private Reviews review;
 
-    @Id
+    @MapsId("userId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
