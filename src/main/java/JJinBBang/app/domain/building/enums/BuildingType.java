@@ -1,6 +1,6 @@
 package JJinBBang.app.domain.building.enums;
 
-// BuildType: 건물 타입
+// BuildingType: 건물 타입
 // 건물의 타입을 정의
 public enum BuildingType {
 	ROOM, // 원룸 및 투룸 이하
