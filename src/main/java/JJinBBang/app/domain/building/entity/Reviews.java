@@ -67,7 +67,7 @@ public class Reviews {
     // 건물 -> 리뷰
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "building_id", nullable = false)
-    private Buildings buildings; // 건물 id
+    private Buildings building; // 건물 id
 
     // 대학교 -> 리뷰
     @ManyToOne(fetch = FetchType.LAZY)
@@ -75,7 +75,7 @@ public class Reviews {
     private Universities university; // 대학교 id
 
     // 리뷰 -> 리뷰 좋아요
-    @OneToMany(mappedBy = "reviews", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private List<ReviewLikes> reviewLikes = new ArrayList<>();
 
 }

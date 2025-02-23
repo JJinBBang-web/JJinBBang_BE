@@ -43,9 +43,9 @@ public class Campuses {
 	// 대학교 -> 캠퍼스
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "university_id")
-	private Universities universities;
+	private Universities university;
 
 	// 캠퍼스 -> 건물
-	@OneToMany(mappedBy = "campuses", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "campus", cascade = CascadeType.ALL)
 	private List<Buildings> buildings = new ArrayList<>(); // 건물
 }

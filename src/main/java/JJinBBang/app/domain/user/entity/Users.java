@@ -58,7 +58,7 @@ public class Users {
 	// 대학교 -> 유저
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "university_id")
-	private Universities universities;
+	private Universities university;
 
 	// 유저 -> 리뷰
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

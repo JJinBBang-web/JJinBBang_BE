@@ -65,13 +65,13 @@ public class Buildings {
 	// 캠퍼스 -> 건물
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "campus_id")
-	private Campuses campuses;
+	private Campuses campus;
 
 	// 건물 -> 건물-좋아요
-	@OneToMany(mappedBy = "buildings", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
 	private List<BuildingLikes> buildingLikes = new ArrayList<>();
 
 	// 건물 -> 리뷰
-	@OneToMany(mappedBy = "buildings", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
 	private List<Reviews> reviews = new ArrayList<>();
 }

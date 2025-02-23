@@ -32,10 +32,10 @@ public class Universities {
 
 	// 연관관계 매핑
 	// 대학교 -> 캠퍼스
-	@OneToMany(mappedBy = "universities", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "university", cascade = CascadeType.ALL)
 	private List<Campuses> campuses = new ArrayList<>(); // 캠퍼스
 
 	// 대학교 -> 유저
-	@OneToMany(mappedBy = "universities", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "university", cascade = CascadeType.ALL)
 	private List<Users> users= new ArrayList<>(); // 유저
 }
