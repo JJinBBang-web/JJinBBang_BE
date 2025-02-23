@@ -30,27 +30,27 @@ public class Reviews {
     private Integer floor; // 층
 
     @Column(nullable = false)
-    private ContractType contract_type; // 계약 형태
+    private ContractType contractType; // 계약 형태
 
     private Integer deposit; // 보증금
 
     private Integer price; // 월세
 
-    private Integer maintenance_cost; // 관리비
+    private Integer maintenanceCost; // 관리비
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime created_at; // 작성일
+    private LocalDateTime createdAt; // 작성일
 
     @UpdateTimestamp
     @Column(nullable = false)
-    private LocalDateTime updated_at; // 수정일
+    private LocalDateTime updatedAt; // 수정일
 
     @Column(nullable = false, columnDefinition = "integer default 0")
-    private Integer likes_count; // 좋아요 수
+    private Integer likesCount; // 좋아요 수
 
     @Column(nullable = false,length = 2083)
-    private String thumbnail_image; // 썸네일 이미지
+    private String thumbnailImage; // 썸네일 이미지
 
     @Column(nullable = false)
     private String content; // 후기 내용
