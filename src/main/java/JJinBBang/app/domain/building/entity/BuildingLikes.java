@@ -12,7 +12,7 @@ public class BuildingLikes {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "building_id", nullable = false)
-    private Buildings buildings;
+    private Buildings building;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
