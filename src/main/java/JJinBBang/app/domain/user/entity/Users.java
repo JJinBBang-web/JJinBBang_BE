@@ -26,7 +26,7 @@ public class Users {
 	@Column(name = "provider", nullable = false)
 	private Provider provider;
 
-	@Column(name = "provider_id", length = 100, nullable = false)
+	@Column(name = "provider_id", length = 100, nullable = false, unique = true)
 	private String providerId;
 
 	@Column(name = "university_email", length = 255)
