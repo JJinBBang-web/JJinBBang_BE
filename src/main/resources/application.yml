@@ -17,6 +17,32 @@ spring:
         format_sql: true
     open-in-view: false
 
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${spring.security.oauth2.client.registration.kakao.client-id}
+            client-secret: ${spring.security.oauth2.client.registration.kakao.client-secret}
+            client-authentication-method: ${spring.security.oauth2.client.registration.kakao.client-authentication-method}
+            authorization-grant-type: ${spring.security.oauth2.client.registration.kakao.authorization-grant-type}
+            redirect-uri: ${spring.security.oauth2.client.registration.kakao.redirect-uri}
+            client-name: ${spring.security.oauth2.client.registration.kakao.client-name}
+#            scope: ${spring.security.oauth2.client.registration.kakao.scope} # 필요 시 활성화
+
+        provider:
+          kakao:
+            authorization-uri: ${spring.security.oauth2.client.provider.kakao.authorization-uri}
+            token-uri: ${spring.security.oauth2.client.provider.kakao.token-uri}
+            user-info-uri: ${spring.security.oauth2.client.provider.kakao.user-info-uri}
+            user-name-attribute: ${spring.security.oauth2.client.provider.kakao.user-name-attribute}
+
+jwt:
+  secret: ${jwt.secret}
+  expiration-time:
+    access-token: ${jwt.expiration-time.access-token}
+    refresh-token: ${jwt.expiration-time.refresh-token}
+
 logging:
   level:
     org.hibernate.sql: debug
