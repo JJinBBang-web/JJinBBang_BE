@@ -1,4 +1,4 @@
-package JJinBBang.app.global.util;
+package JJinBBang.app.global.jwt;
 
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.VerificationStatus;
@@ -9,6 +9,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -55,10 +56,15 @@ public class JwtUtils {
 	}
 
 
-
-	public String getTokenFromHeader(String authorizationHeader) {
+	public String extractToken(String authorizationHeader) {
 		return authorizationHeader.substring(7);
 	}
+
+	public String extractToken(HttpServletRequest request) {
+		String header = request.getHeader("Authorization");
+		return (header != null && header.startsWith("Bearer ")) ? header.substring(7) : null;
+	}
+
 
 	public String getProviderIdFromToken(String token) {
 		Claims claims = parseClaims(token);
@@ -75,7 +81,7 @@ public class JwtUtils {
 		return parseClaims(token);
 	}
 
-	private Claims parseClaims(String token) {
+	public Claims parseClaims(String token) {
 		return Jwts.parser()
 			.verifyWith(key)
 			.build()
@@ -83,7 +89,7 @@ public class JwtUtils {
 			.getPayload();
 	}
 
-	public void validateToken(String token) {
+	public boolean validateToken(String token) {
 		try {
 			Jwts.parser()
 				.verifyWith(key)
@@ -99,5 +105,6 @@ public class JwtUtils {
 			// throw InvalidTokenException.invalidToken();
 			throw e;
 		}
+		return true;
 	}
 }
