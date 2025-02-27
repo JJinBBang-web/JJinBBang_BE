@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.building.entity;
 
 import JJinBBang.app.domain.building.enums.ContractType;
+import JJinBBang.app.domain.building.enums.Floor;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.entity.Users;
 import jakarta.persistence.*;
@@ -22,12 +23,8 @@ public class Reviews {
     @Column(name="review_id")
     private Long id; // 리뷰 id
 
-    @Column(length = 100)
-    private String block; // 동
-
-    private Integer unit; // 호
-
-    private Integer floor; // 층
+    @Enumerated(EnumType.STRING)
+    private Floor floor; // 층
 
     @Column(nullable = false)
     private ContractType contractType; // 계약 형태
@@ -57,6 +54,9 @@ public class Reviews {
 
     @Column(length = 30)
     private  String tags; // 태그
+
+    @Column(nullable = false)
+    private Double reviewRating; // 후기 평점
 
     // 연관관계 매핑
     // 유저 -> 리뷰
