@@ -12,6 +12,7 @@ import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.jwt.JwtUtils;
+import JJinBBang.app.global.jwt.exception.InvalidTokenException;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @SpringBootTest
@@ -101,6 +102,6 @@ public class JwtUtilsTest {
 			1000);
 		String token = shortLivedJwtUtils.generateAccessToken(testUser);
 		Thread.sleep(1500); // 토큰 만료 대기
-		assertThrows(ExpiredJwtException.class, () -> shortLivedJwtUtils.validateToken(token));
+		assertThrows(InvalidTokenException.class, () -> shortLivedJwtUtils.validateToken(token));
 	}
 }
