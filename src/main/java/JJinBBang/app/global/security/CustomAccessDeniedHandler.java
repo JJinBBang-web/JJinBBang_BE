@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import JJinBBang.app.global.security.exception.SecurityAuthException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -18,12 +19,15 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response,
 		AccessDeniedException accessDeniedException) throws IOException {
+
+		SecurityAuthException exception = SecurityAuthException.noPermission(); // 예외 들고오기
+
 		response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 		response.setContentType("application/json;charset=UTF-8");
 
 		Map<String, Object> errorDetails = new HashMap<>();
-		errorDetails.put("code", 403);
-		errorDetails.put("message", "해당 요청에 대한 권한이 없습니다."); // TODO : 이메일 관련 메세지로 변경해야 함
+		errorDetails.put("code", HttpServletResponse.SC_FORBIDDEN);
+		errorDetails.put("message", exception.getMessage());
 
 		ObjectMapper mapper = new ObjectMapper();
 		response.getWriter().write(mapper.writeValueAsString(errorDetails));
