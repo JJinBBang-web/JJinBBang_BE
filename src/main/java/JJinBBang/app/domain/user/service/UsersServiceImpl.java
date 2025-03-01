@@ -3,6 +3,7 @@ package JJinBBang.app.domain.user.service;
 import org.springframework.stereotype.Service;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.UserNotFoundException;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,7 @@ public class UsersServiceImpl implements UsersService {
 
 	@Override
 	public Users findByProviderId(String providerId) {
-		// 나중에 예외처리 방식 바꿔야 함
-		return usersRepository.findByProviderId(providerId).orElse(null);
+		return usersRepository.findByProviderId(providerId).orElseThrow(UserNotFoundException::notFound);
 	}
 
 	@Override
