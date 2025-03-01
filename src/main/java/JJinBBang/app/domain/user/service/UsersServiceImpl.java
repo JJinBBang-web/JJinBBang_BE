@@ -17,7 +17,14 @@ public class UsersServiceImpl implements UsersService {
 
 	@Override
 	public Users findByProviderId(String providerId) {
-		return usersRepository.findByProviderId(providerId).orElseThrow(UserNotFoundException::notFound);
+		try {
+			return usersRepository.findByProviderId(providerId).orElseThrow(UserNotFoundException::notFound);
+		} catch (UserNotFoundException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			throw UserNotFoundException.searchFailed();
+		}
 	}
 
 	@Override
