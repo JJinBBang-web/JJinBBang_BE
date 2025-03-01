@@ -26,7 +26,7 @@ public class JwtUtilsTest {
 
 	@BeforeEach
 	public void setUp() {
-		long accessTokenExpiration = 1;//1000 * 60 * 60; // 1시간
+		long accessTokenExpiration = 1000 * 60 * 60; // 1시간
 		long refreshTokenExpiration = 1000 * 60 * 60 * 24 * 7; // 7일
 
 		jwtUtils = new JwtUtils(secretKey, accessTokenExpiration, refreshTokenExpiration);
@@ -96,7 +96,7 @@ public class JwtUtilsTest {
 	@Test
 	void validateExpiredTokenTest() throws InterruptedException {
 		JwtUtils shortLivedJwtUtils = new JwtUtils(
-			"b2qzzeohY7dsOBjKDxFDpVb4oXy0KNHVPEZoujByTBSHTpjyjX15jxqZ82ELXX95WTMhVZARzNxcC4ePd49hJg==",
+			secretKey,
 			1000,
 			1000);
 		String token = shortLivedJwtUtils.generateAccessToken(testUser);
