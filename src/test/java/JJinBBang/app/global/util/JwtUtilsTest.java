@@ -4,23 +4,29 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
-import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.jwt.JwtUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 
 @SpringBootTest
 public class JwtUtilsTest {
+	@Value("${jwt.secret}")
+	private String secretKey;
 
 	private JwtUtils jwtUtils;
 	private Users testUser;
+	@Autowired
+	private UsersService usersService;
 
 	@BeforeEach
 	public void setUp() {
-		String secretKey = "b2qzzeohY7dsOBjKDxFDpVb4oXy0KNHVPEZoujByTBSHTpjyjX15jxqZ82ELXX95WTMhVZARzNxcC4ePd49hJg"; // Base64 encoded key
-		long accessTokenExpiration = 1000 * 60 * 60; // 1시간
+		long accessTokenExpiration = 1;//1000 * 60 * 60; // 1시간
 		long refreshTokenExpiration = 1000 * 60 * 60 * 24 * 7; // 7일
 
 		jwtUtils = new JwtUtils(secretKey, accessTokenExpiration, refreshTokenExpiration);
@@ -28,6 +34,12 @@ public class JwtUtilsTest {
 			.provider(Provider.kakao)
 			.providerId("123541" + Provider.kakao.name())
 			.build();
+		try {
+			testUser = usersService.save(testUser);
+		} catch (Exception e) {
+			System.out.println("e.getMessage() = " + e.getMessage());
+			System.out.println("User already exists");
+		}
 	}
 
 	@Test
