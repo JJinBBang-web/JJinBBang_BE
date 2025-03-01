@@ -2,13 +2,17 @@ package JJinBBang.app.global.jwt;
 
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.error.exception.AuthGroupException;
+import JJinBBang.app.global.jwt.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,12 +102,11 @@ public class JwtUtils {
 				.getPayload();
 		} catch (ExpiredJwtException e) {
 			log.error("JWT expired.");
-			// throw InvalidTokenException.expired();
-			throw e;
-		} catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException e) {
+			throw InvalidTokenException.expired();
+		} catch (JwtException | IllegalArgumentException e) {
+			// 토큰 만료 이외의 JWT 오류는 보안상 유효하지 않은 토큰 예외로 통일
 			log.error("Invalid JWT format.");
-			// throw InvalidTokenException.invalidToken();
-			throw e;
+			throw InvalidTokenException.invalidToken();
 		}
 		return true;
 	}
