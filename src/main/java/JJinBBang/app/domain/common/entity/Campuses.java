@@ -35,7 +35,10 @@ public class Campuses {
 	private String campusAddress; // 캠퍼스 주소
 
 	@Column(nullable = false)
-	private Point2D.Double campusCoordinate; // 캠퍼스 좌표
+	private Double campusLat; // 캠퍼스 위도
+
+	@Column(nullable = false)
+	private Double campusLot; // 캠퍼스 경도
 
 	private String image; // 캠퍼스 이미지
 
