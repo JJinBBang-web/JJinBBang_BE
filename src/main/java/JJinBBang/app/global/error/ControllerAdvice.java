@@ -14,9 +14,11 @@ import JJinBBang.app.global.error.exception.AccessDeniedGroupException;
 import JJinBBang.app.global.error.exception.AuthGroupException;
 import JJinBBang.app.global.error.exception.ConflictGroupException;
 import JJinBBang.app.global.error.exception.InvalidGroupException;
+import JJinBBang.app.global.error.exception.ManyRequestsGroupException;
 import JJinBBang.app.global.error.exception.NotFoundGroupException;
 import JJinBBang.app.global.error.exception.TeapotGroupException;
 import JJinBBang.app.global.error.exception.TimeoutGroupException;
+import JJinBBang.app.global.error.exception.UnprocessableGroupException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -62,6 +64,18 @@ public class ControllerAdvice {
 	@ExceptionHandler({TeapotGroupException.class})
 	public ResponseEntity<ErrorResponse> handleTeapotGroupException(RuntimeException e) {
 		return createErrorResponse(e, HttpStatus.I_AM_A_TEAPOT);
+	}
+
+	// 422, UnprocessableGroupException
+	@ExceptionHandler({UnprocessableGroupException.class})
+	public ResponseEntity<ErrorResponse> handleUnprocessable(RuntimeException e) {
+		return createErrorResponse(e, HttpStatus.UNPROCESSABLE_ENTITY);
+	}
+	
+	// 429, ManyRequestsGroupException
+	@ExceptionHandler({ManyRequestsGroupException.class})
+	public ResponseEntity<ErrorResponse> handleManyRequest(RuntimeException e) {
+		return createErrorResponse(e, HttpStatus.TOO_MANY_REQUESTS);
 	}
 
 	// 메서드 인자 문제 생겼을 때

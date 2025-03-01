@@ -38,14 +38,14 @@ public class Buildings {
 	@Column(nullable = false)
 	private BuildingType buildingType; // 건물 유형
 
-	@Column(nullable = false, length = 100)
-	private String addressRoadName; // 건물 도로명 주소
-
-	@Column(nullable = false, length = 100)
-	private String addressNumber; // 건물 지번 주소
+	@Column(nullable = false, length = 255)
+	private String buildingAddress; // 건물 주소
 
 	@Column(nullable = false)
-	private Point2D.Double buildingCoordinate; // 건물 좌표
+	private Double buildingLat; // 건물 위도
+
+	@Column(nullable = false)
+	private Double buildingLot; // 건물 경도
 
 	private Double area; // 건물 면적
 
