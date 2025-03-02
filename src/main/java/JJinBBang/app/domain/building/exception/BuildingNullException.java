@@ -1,8 +1,8 @@
 package JJinBBang.app.domain.building.exception;
 
-import JJinBBang.app.global.error.exception.NotFoundGroupException;
+import JJinBBang.app.global.error.exception.UnprocessableGroupException;
 
-public class BuildingNullException extends NotFoundGroupException {
+public class BuildingNullException extends UnprocessableGroupException {
 	public BuildingNullException(String message) {
 		super(message);
 	}
