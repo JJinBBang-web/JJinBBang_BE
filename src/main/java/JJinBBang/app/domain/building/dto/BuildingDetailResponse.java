@@ -9,9 +9,9 @@ import lombok.Builder;
 public record BuildingDetailResponse(
 	BasicInfo basicInfo,
 	BuildingImages buildingImages,
-	List<Keyword> keywords
+	List<KeywordCount> keywords
 ) {
-	public static BuildingDetailResponse of(Buildings building, Boolean liked, List<Keyword> keywords) {
+	public static BuildingDetailResponse of(Buildings building, Boolean liked, List<KeywordCount> keywords) {
 		return BuildingDetailResponse.builder()
 			.basicInfo(BasicInfo.from(building, liked))
 			.buildingImages(BuildingImages.from(building))

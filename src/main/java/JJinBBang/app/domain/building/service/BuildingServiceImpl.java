@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import JJinBBang.app.domain.building.dto.BuildingDetailResponse;
-import JJinBBang.app.domain.building.dto.Keyword;
+import JJinBBang.app.domain.building.dto.KeywordCount;
 import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.exception.BuildingNullException;
@@ -30,7 +30,7 @@ public class BuildingServiceImpl implements BuildingService{
 			.anyMatch(like -> like.getUser().getUserId().equals(userId));
 
 		//TODO 건물에 대한 키워드 상위 5개는 몽고 DB 설정 후 구현
-		List<Keyword> keywords = new ArrayList<>();
+		List<KeywordCount> keywords = new ArrayList<>();
 
 		return BuildingDetailResponse.of(building, liked, keywords);
 	}
