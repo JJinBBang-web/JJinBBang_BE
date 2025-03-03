@@ -17,7 +17,63 @@ spring:
         format_sql: true
     open-in-view: false
 
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${spring.security.oauth2.client.registration.kakao.client-id}
+            client-secret: ${spring.security.oauth2.client.registration.kakao.client-secret}
+            client-authentication-method: ${spring.security.oauth2.client.registration.kakao.client-authentication-method}
+            authorization-grant-type: ${spring.security.oauth2.client.registration.kakao.authorization-grant-type}
+            redirect-uri: ${spring.security.oauth2.client.registration.kakao.redirect-uri}
+            client-name: ${spring.security.oauth2.client.registration.kakao.client-name}
+#            scope: ${spring.security.oauth2.client.registration.kakao.scope} # 필요 시 활성화
+
+        provider:
+          kakao:
+            authorization-uri: ${spring.security.oauth2.client.provider.kakao.authorization-uri}
+            token-uri: ${spring.security.oauth2.client.provider.kakao.token-uri}
+            user-info-uri: ${spring.security.oauth2.client.provider.kakao.user-info-uri}
+            user-name-attribute: ${spring.security.oauth2.client.provider.kakao.user-name-attribute}
+
+jwt:
+  secret: ${jwt.secret}
+  expiration-time:
+    access-token: ${jwt.expiration-time.access-token}
+    refresh-token: ${jwt.expiration-time.refresh-token}
+
 logging:
   level:
     org.hibernate.sql: debug
     org.hibernate.typ e: trace
+
+security:
+  path:
+    permit-all:
+      - "/swagger-ui/**"
+      - "/v3/api-docs/**"
+#      - "/api/v1/user/**"
+#      - "/api/v1/map/**"
+    authenticated:
+      - "/api/v1/auth/emailCode"
+      - "/api/v1/auth/emailCode/verify"
+      - "/api/v1/auth/tokenRefresh"
+      - "/api/v1/auth/logout"
+#      - "/api/v1/certificates/**"
+#      - "/api/v1/user/**"
+#      - "/api/v1/building/**"
+#      - "/api/v1/review/**"
+#      - "/api/v1/notification/**"
+    anonymous:
+      - "/api/v1/auth"
+      - "/api/v1/auth/signup"
+    verification-status-based:
+      VERIFIED:
+        - "/api/v1/verifiedTest"
+      UNVERIFIED:
+        - "/api/v1/unverifiedTest"
+      PENDING:
+        - "/api/v1/pendingTest"
+    any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
+

@@ -26,7 +26,7 @@ public class Users {
 	@Column(name = "provider", nullable = false)
 	private Provider provider;
 
-	@Column(name = "provider_id", length = 100, nullable = false)
+	@Column(name = "provider_id", length = 100, nullable = false, unique = true)
 	private String providerId;
 
 	@Column(name = "university_email", length = 255)
@@ -35,12 +35,12 @@ public class Users {
 	@Column(name = "admission_certificate", length = 225)
 	private String admissionCertificate;
 
+	@Column(name = "admission_certificate_upload_date")
+	private LocalDateTime admissionCertificateUploadDate;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "verification_status", nullable = false)
 	private VerificationStatus verificationStatus;
-
-	@Column(name = "admission_certificate_upload_date")
-	private LocalDateTime admissionCertificateUploadDate;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
@@ -50,8 +50,12 @@ public class Users {
 
 	@PrePersist
 	protected void onCreate() {
+		this.universityEmail = null;
+		this.admissionCertificate = null;
+		this.admissionCertificateUploadDate = null;
 		this.createdAt = LocalDateTime.now();
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
+		this.disabledAt = null;
 	}
 
 	// 연관관계 매핑
@@ -71,4 +75,21 @@ public class Users {
 	// 유저 -> 리뷰-좋아요
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private List<ReviewLikes> reviewLikes = new ArrayList<>();
+
+
+	@Builder
+	private Users(
+		Provider provider,
+		String providerId
+
+	){
+		this.provider = provider;
+		this.providerId = providerId;
+		this.universityEmail = null;
+		this.admissionCertificate = null;
+		this.admissionCertificateUploadDate = null;
+		this.createdAt = LocalDateTime.now();
+		this.verificationStatus = VerificationStatus.UNVERIFIED;
+		this.disabledAt = null;
+	}
 }
