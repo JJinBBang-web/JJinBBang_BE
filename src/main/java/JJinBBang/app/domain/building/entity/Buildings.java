@@ -34,9 +34,8 @@ public class Buildings {
 	@Column(nullable = false)
 	private String buildingName; // 건물 이름
 
-	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private BuildingType buildingType; // 건물 유형
+	private String buildingType; // 건물 유형
 
 	@Column(nullable = false, length = 255)
 	private String buildingAddress; // 건물 주소
