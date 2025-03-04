@@ -14,7 +14,7 @@ public record BasicInfo(
 	Double rating,
 	Integer reviewCount
 ) {
-	public static BasicInfo from(Buildings building, Boolean liked) {
+	public static BasicInfo of(Buildings building, Boolean liked) {
 		return BasicInfo.builder()
 			.liked(liked)
 			.id(building.getId())
