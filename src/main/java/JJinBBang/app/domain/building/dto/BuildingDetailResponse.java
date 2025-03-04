@@ -13,7 +13,7 @@ public record BuildingDetailResponse(
 ) {
 	public static BuildingDetailResponse of(Buildings building, Boolean liked, List<KeywordCount> keywords) {
 		return BuildingDetailResponse.builder()
-			.basicInfo(BasicInfo.from(building, liked))
+			.basicInfo(BasicInfo.of(building, liked))
 			.buildingImages(BuildingImages.from(building))
 			.keywords(keywords)
 			.build();
