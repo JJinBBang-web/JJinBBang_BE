@@ -7,5 +7,5 @@ import java.util.List;
 
 @Service
 public interface CampusesService {
-    List<Campuses> findCampuses(Long universityId);
+    List<Campuses> findCampuses(String universityName);
 }

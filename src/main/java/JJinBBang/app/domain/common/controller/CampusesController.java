@@ -23,8 +23,8 @@ public class CampusesController {
     private final CampusesService campusesService;
 
     @GetMapping("")
-    public ResTemplate<UnivCampusListResponse> getCampuses(@RequestParam Long universityId) { //추후 universityName로 변경
-        List<Campuses> campuses = campusesService.findCampuses(universityId);
+    public ResTemplate<UnivCampusListResponse> getCampuses(@RequestParam(name = "universityName") String universityName) {
+        List<Campuses> campuses = campusesService.findCampuses(universityName);
 
         UnivCampusListResponse responseDTO = UnivCampusListResponse.CampusDTO.from(campuses);
 
