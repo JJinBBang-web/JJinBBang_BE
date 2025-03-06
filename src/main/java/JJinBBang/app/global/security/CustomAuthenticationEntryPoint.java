@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -20,17 +21,41 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
 		throws IOException {
+		System.out.println("CustomAuthenticationEntryPoint.commence");
 
-		SecurityAuthException exception = SecurityAuthException.noAuthentication(); // 예외 들고오기
+		if(authException instanceof SecurityAccessDeniedException) {
+			makeAccessDeniedResponse(authException, response);
+		} else if (authException instanceof SecurityAuthException) {
+			makeUnauthorizedResponse(authException, response);
+		}
+		else {
+			makeUnauthorizedResponse(SecurityAuthException.noAuthentication(), response);
+		}
+	}
+
+	private void makeAccessDeniedResponse(Exception e, HttpServletResponse response) throws IOException {
+		response.setContentType("application/json;charset=UTF-8");
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, Object> errorDetails = new HashMap<>();
+
+		response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+		errorDetails.put("code", HttpServletResponse.SC_FORBIDDEN);
+		errorDetails.put("message", e.getMessage());
+
+		response.getWriter().write(mapper.writeValueAsString(errorDetails));
+	}
+
+	private void makeUnauthorizedResponse(Exception e, HttpServletResponse response) throws IOException {
+		response.setContentType("application/json;charset=UTF-8");
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, Object> errorDetails = new HashMap<>();
 
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-		response.setContentType("application/json;charset=UTF-8");
 
-		Map<String, Object> errorDetails = new HashMap<>();
 		errorDetails.put("code", HttpServletResponse.SC_UNAUTHORIZED);
-		errorDetails.put("message", exception.getMessage());
+		errorDetails.put("message", e.getMessage());
 
-		ObjectMapper mapper = new ObjectMapper();
 		response.getWriter().write(mapper.writeValueAsString(errorDetails));
 	}
 

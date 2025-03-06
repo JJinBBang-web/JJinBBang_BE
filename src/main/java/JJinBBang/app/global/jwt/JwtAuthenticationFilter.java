@@ -61,7 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				if(tokenType.equals("signup")){
 					// 회원가입용 토큰인 경우
 					if (!isPendingUserPath) {
-						throw new InvalidTokenException("회원가입 토큰은 회원가입 시에만 사용할 수 있습니다.");
+						throw InvalidTokenException.signupTokenNotAllowed();
 					}
 
 					String provider = claims.get("provider", String.class);
@@ -73,7 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				} else if (tokenType.equals("auth")) {
 					// 인증용 토큰인 경우
 					if (isPendingUserPath) {
-						throw new InvalidTokenException("인증 토큰은 회원가입 시에 사용할 수 없습니다.");
+						throw InvalidTokenException.authTokenNotAllowed();
 					}
 
 					VerificationStatus status = VerificationStatus.valueOf(claims.get("verificationStatus", String.class));
