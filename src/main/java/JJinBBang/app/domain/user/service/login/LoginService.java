@@ -9,7 +9,7 @@ public interface LoginService {
 
     String makeProviderId(String id);
 
-    Users login(String oauthAccessToken);
+    Users login(String oauthCode);
 
-    Users signup(String oauthAccessToken);
+    Users signup(String oauthCode);
 }

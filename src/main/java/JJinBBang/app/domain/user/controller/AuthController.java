@@ -26,7 +26,7 @@ public class AuthController {
 
     @PostMapping
     public ResTemplate<LoginResponse> signIn(@RequestBody LoginRequest loginRequest){
-        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthAccessToken());
+        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode());
         String accessToken = jwtUtils.generateAccessToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(user);
 
@@ -36,7 +36,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResTemplate<LoginResponse> signUp(@RequestBody SignupRequest signupRequest){
-        Users user = oAuthService.signup(signupRequest.oauthProvider(), signupRequest.oauthAccessToken());
+        Users user = oAuthService.signup(signupRequest.oauthProvider(), signupRequest.oauthCode());
         String accessToken = jwtUtils.generateAccessToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(user);
 
