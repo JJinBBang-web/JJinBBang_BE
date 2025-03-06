@@ -12,10 +12,10 @@ public class KakaoAuthException extends AuthGroupException {
     }
 
     public static KakaoAuthException accessTokenGenerateError(){
-        return new KakaoAuthException("엑세스 토큰 발급에 실패하였습니다.");
+        return new KakaoAuthException("카카오 API 엑세스 토큰 발급에 실패하였습니다.");
     }
 
     public static KakaoAuthException userInfoFetchFailed(){
-        return new KakaoAuthException("엑세스 토큰으로 유저 정보 조회에 실패하였습니다.");
+        return new KakaoAuthException("카카오 API 엑세스 토큰으로 유저 정보 조회에 실패하였습니다.");
     }
 }

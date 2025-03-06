@@ -4,6 +4,7 @@ import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.KakaoAuthException;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,9 @@ public class KakaoLoginServiceImpl implements LoginService{
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+    private String clientSecret;
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String redirectUri;
@@ -57,7 +61,17 @@ public class KakaoLoginServiceImpl implements LoginService{
 
         String providerId = makeProviderId(Long.toString(kakaoId));
 
-        return usersService.findByProviderId(providerId);
+        if(usersService.existsByProviderId(providerId)){
+            // 이미 존재하는 계정
+            return usersService.findByProviderId(providerId);
+        }
+
+        Users users = Users.builder()
+                .provider(Provider.kakao)
+                .providerId(providerId)
+                .build();
+
+        return usersService.save(users);
     }
 
     @Override
@@ -94,6 +108,7 @@ public class KakaoLoginServiceImpl implements LoginService{
             params.add("grant_type", "authorization_code");
             params.add("client_id", clientId);  // 실제론 yml나 env에서 주입
             params.add("redirect_uri", redirectUri); // 카카오 개발자센터에 등록된 Redirect URI
+            params.add("client_secret", clientSecret); // 카카오 개발자센터에 등록된 Client Secret
             params.add("code", code);
 
             // 헤더

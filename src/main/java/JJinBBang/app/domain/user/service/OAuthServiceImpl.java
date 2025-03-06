@@ -3,6 +3,7 @@ package JJinBBang.app.domain.user.service;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.AuthNotFoundException;
 import JJinBBang.app.domain.user.service.login.LoginService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OAuthServiceImpl implements OAuthService {
 
+    private final List<LoginService> loginServices;
     private final Map<String, LoginService> loginServiceMap = new HashMap<>();
 
-    // 생성자 주입: @Autowired로 KakaoLoginService, GoogleLoginService, NaverLoginService 받아옴
-    public OAuthServiceImpl(List<LoginService> loginServices) {
+    // KakaoLoginService, GoogleLoginService, NaverLoginService 받아오기
+    @PostConstruct
+    public void init() {
         // 구현체들을 순회하면서, providerName()을 키로 매핑
         for (LoginService service : loginServices) {
             loginServiceMap.put(service.getProviderName(), service);

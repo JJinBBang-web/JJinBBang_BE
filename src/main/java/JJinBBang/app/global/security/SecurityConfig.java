@@ -36,7 +36,8 @@ public class SecurityConfig {
 
 		CorsConfiguration globalConfig = new CorsConfiguration();
 		// globalConfig.setAllowedOrigins(List.of("http://localhost:3000"));
-		globalConfig.setAllowedOrigins(List.of("*")); // 테스트용 TODO: 위에 패턴으로 변경해야 함
+//		globalConfig.setAllowedOrigins(List.of("*")); // 테스트용 TODO: 위에 패턴으로 변경해야 함
+		globalConfig.setAllowedOriginPatterns(List.of("*")); // 모든 도메인 허용
 		globalConfig.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE"));
 		globalConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 		// globalConfig.setAllowedHeaders(List.of("*"));
