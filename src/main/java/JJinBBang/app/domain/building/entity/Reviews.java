@@ -4,6 +4,7 @@ import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Reviews {
+public class Reviews extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,14 +35,6 @@ public class Reviews {
     private Integer price; // 월세
 
     private Integer maintenanceCost; // 관리비
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt; // 작성일
-
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDateTime updatedAt; // 수정일
 
     @Column(nullable = false, columnDefinition = "integer default 0")
     private Integer likesCount; // 좋아요 수
