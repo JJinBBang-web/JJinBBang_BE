@@ -29,8 +29,9 @@ public class JwtUtilsTest {
 	public void setUp() {
 		long accessTokenExpiration = 1000 * 60 * 60; // 1시간
 		long refreshTokenExpiration = 1000 * 60 * 60 * 24 * 7; // 7일
+		long signupTokenExpiration = 1000 * 60 * 5; // 5분
 
-		jwtUtils = new JwtUtils(secretKey, accessTokenExpiration, refreshTokenExpiration);
+		jwtUtils = new JwtUtils(secretKey, accessTokenExpiration, refreshTokenExpiration, signupTokenExpiration);
 		testUser = Users.builder()
 			.provider(Provider.kakao)
 			.providerId("123541" + Provider.kakao.name())
@@ -99,7 +100,8 @@ public class JwtUtilsTest {
 		JwtUtils shortLivedJwtUtils = new JwtUtils(
 			secretKey,
 			1000,
-			1000);
+			1000,
+				1000);
 		String token = shortLivedJwtUtils.generateAccessToken(testUser);
 		Thread.sleep(1500); // 토큰 만료 대기
 		assertThrows(InvalidTokenException.class, () -> shortLivedJwtUtils.validateToken(token));
