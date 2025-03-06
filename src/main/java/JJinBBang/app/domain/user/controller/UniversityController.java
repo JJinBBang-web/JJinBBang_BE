@@ -1,10 +1,11 @@
 package JJinBBang.app.domain.user.controller;
 
-import JJinBBang.app.domain.user.dto.ApiResponse;
 import JJinBBang.app.domain.user.dto.UniversityResponseDto;
 import JJinBBang.app.domain.user.exception.UniversityNotFoundException;
 import JJinBBang.app.domain.user.service.UniversityService;
+import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,16 +22,11 @@ public class UniversityController {
     private final UniversityService universityService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UniversityResponseDto>>> getUniversityList(
+    public ResponseEntity<ResTemplate<List<UniversityResponseDto>>> getUniversityList(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "15") int limit) {
 
-        List<UniversityResponseDto> universityList = universityService.getUniversityList(offset, limit);
-
-        if (universityList.isEmpty()) {
-            throw new UniversityNotFoundException();
-        }
-
-        return ResponseEntity.ok(new ApiResponse<>(200, "조회 성공", universityList));
+        ResTemplate<List<UniversityResponseDto>> response = universityService.getUniversityList(offset, limit);
+        return ResponseEntity.status(response.getCode()).body(response);
     }
 }
