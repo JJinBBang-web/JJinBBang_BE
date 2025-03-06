@@ -2,6 +2,7 @@ package JJinBBang.app.domain.user.service;
 
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.AuthNotFoundException;
+import JJinBBang.app.domain.user.exception.UserAuthException;
 import JJinBBang.app.domain.user.service.login.LoginService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ public class OAuthServiceImpl implements OAuthService {
 
     private final List<LoginService> loginServices;
     private final Map<String, LoginService> loginServiceMap = new HashMap<>();
+
+    private final UsersService usersService;
 
     // KakaoLoginService, GoogleLoginService, NaverLoginService 받아오기
     @PostConstruct
@@ -43,16 +46,13 @@ public class OAuthServiceImpl implements OAuthService {
     }
 
     @Override
-    public Users signup(String oauthProvider, String oauthCode) {
-        LoginService loginService = loginServiceMap.get(oauthProvider);
+    public Users signup(Users user) {
 
-        if (loginService == null) {
-            // 지원하지 않는 소셜 타입 입니다.
-            throw AuthNotFoundException.socialProviderNotFound();
+        if(usersService.existsByProviderId(user.getProviderId())){
+            // 이미 가입된 회원입니다.
+            throw UserAuthException.alreadyExists();
         }
 
-        return loginService.signup(oauthCode);
+        return usersService.save(user);
     }
-
-
 }
