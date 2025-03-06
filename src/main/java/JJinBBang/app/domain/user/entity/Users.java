@@ -10,13 +10,14 @@ import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Users {
+public class Users extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "user_id")
@@ -42,9 +43,6 @@ public class Users {
 	@Column(name = "verification_status", nullable = false)
 	private VerificationStatus verificationStatus;
 
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
-
 	@Column(name = "disabled_at")
 	private LocalDateTime disabledAt;
 
@@ -53,7 +51,6 @@ public class Users {
 		this.universityEmail = null;
 		this.admissionCertificate = null;
 		this.admissionCertificateUploadDate = null;
-		this.createdAt = LocalDateTime.now();
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 		this.disabledAt = null;
 	}
@@ -88,7 +85,6 @@ public class Users {
 		this.universityEmail = null;
 		this.admissionCertificate = null;
 		this.admissionCertificateUploadDate = null;
-		this.createdAt = LocalDateTime.now();
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 		this.disabledAt = null;
 	}
