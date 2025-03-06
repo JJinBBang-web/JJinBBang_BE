@@ -6,5 +6,5 @@ public interface OAuthService {
 
     Users login(String oauthProvider, String oauthCode);
 
-    Users signup(String oauthProvider, String oauthCode);
+    Users signup(Users user);
 }
