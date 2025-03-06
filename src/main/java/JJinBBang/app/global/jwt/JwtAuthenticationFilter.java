@@ -5,9 +5,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import JJinBBang.app.global.common.enums.Provider;
+import JJinBBang.app.global.security.SecurityPathProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtils jwtUtils;
 	private final UsersService usersService;
+	private final SecurityPathProperties securityPathProperties;
+	private final AntPathMatcher pathMatcher = new AntPathMatcher(); // Ant 패턴 매칭 객체
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -46,10 +51,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				// 3. 토큰에서 클레임 추출
 				Claims claims = jwtUtils.parseClaims(token);
 				String providerId = claims.getSubject();
-				VerificationStatus status = VerificationStatus.valueOf(claims.get("verificationStatus", String.class));
+				String tokenType = claims.get("tokenType", String.class);
+				Users user;
 
-				// 4. DB에서 유저 정보 조회
-				Users user = usersService.findByProviderId(providerId);
+				String requestURI = request.getRequestURI();
+				boolean isPendingUserPath = securityPathProperties.getPendingUser().stream()
+						.anyMatch(pattern -> pathMatcher.match(pattern, requestURI)); // AntPathMatcher 사용
+
+				if(tokenType.equals("signup")){
+					// 회원가입용 토큰인 경우
+					if (!isPendingUserPath) {
+						throw new InvalidTokenException("회원가입 토큰은 회원가입 시에만 사용할 수 있습니다.");
+					}
+
+					String provider = claims.get("provider", String.class);
+
+					user = Users.builder()
+						.providerId(providerId)
+						.provider(Provider.valueOf(provider))
+						.build();
+				} else if (tokenType.equals("auth")) {
+					// 인증용 토큰인 경우
+					if (isPendingUserPath) {
+						throw new InvalidTokenException("인증 토큰은 회원가입 시에 사용할 수 없습니다.");
+					}
+
+					VerificationStatus status = VerificationStatus.valueOf(claims.get("verificationStatus", String.class));
+
+					// 4. DB에서 유저 정보 조회
+					user = usersService.findByProviderId(providerId);
+				}
+				else {
+					throw new InvalidTokenException("유효하지 않은 토큰 타입입니다.");
+				}
 
 				// 5. SecurityContextHolder에 인증 정보 저장
 				var authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());

@@ -67,7 +67,6 @@ security:
 #      - "/api/v1/notification/**"
     anonymous:
       - "/api/v1/auth"
-      - "/api/v1/auth/signup"
     verification-status-based:
       VERIFIED:
         - "/api/v1/verifiedTest"
@@ -75,5 +74,7 @@ security:
         - "/api/v1/unverifiedTest"
       PENDING:
         - "/api/v1/pendingTest"
+    pending-user:
+      - "/api/v1/auth/signup"
     any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
 
