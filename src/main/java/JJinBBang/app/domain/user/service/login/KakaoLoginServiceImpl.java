@@ -46,7 +46,10 @@ public class KakaoLoginServiceImpl implements LoginService{
     }
 
     @Override
-    public Users login(String oauthAccessToken) {
+    public Users login(String oauthCode) {
+
+        String oauthAccessToken = getAccessToken(oauthCode);
+
         Map<String, Object> kakaoUserInfo = getKakaoUserInfo(oauthAccessToken);
 
         // 카카오에서 내려주는 'id' (고유 회원번호), Long/Integer 형태 가능
@@ -58,9 +61,13 @@ public class KakaoLoginServiceImpl implements LoginService{
     }
 
     @Override
-    public Users signup(String oauthAccessToken) {
+    public Users signup(String oauthCode) {
+
+        String oauthAccessToken = getAccessToken(oauthCode);
+
         Map<String, Object> kakaoUserInfo = getKakaoUserInfo(oauthAccessToken);
 
+        
         // 카카오에서 내려주는 'id' (고유 회원번호), Long/Integer 형태 가능
         Long kakaoId = ((Number) kakaoUserInfo.get("id")).longValue();
 

@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.user.service;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.AuthNotFoundException;
 import JJinBBang.app.domain.user.service.login.LoginService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,27 +28,27 @@ public class OAuthServiceImpl implements OAuthService {
 
 
     @Override
-    public Users login(String oauthProvider, String oauthAccessToken) {
+    public Users login(String oauthProvider, String oauthCode) {
         LoginService loginService = loginServiceMap.get(oauthProvider);
 
         if (loginService == null) {
-            // TODO : 지원하지 않는 소셜 타입 입니다.
-            return null;
+            // 지원하지 않는 소셜 타입 입니다.
+            throw AuthNotFoundException.socialProviderNotFound();
         }
 
-        return loginService.login(oauthAccessToken);
+        return loginService.login(oauthCode);
     }
 
     @Override
-    public Users signup(String oauthProvider, String oauthAccessToken) {
+    public Users signup(String oauthProvider, String oauthCode) {
         LoginService loginService = loginServiceMap.get(oauthProvider);
 
         if (loginService == null) {
-            // TODO : 지원하지 않는 소셜 타입 입니다.
-            return null;
+            // 지원하지 않는 소셜 타입 입니다.
+            throw AuthNotFoundException.socialProviderNotFound();
         }
 
-        return loginService.signup(oauthAccessToken);
+        return loginService.signup(oauthCode);
     }
 
 
