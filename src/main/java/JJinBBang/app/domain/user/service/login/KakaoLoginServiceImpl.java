@@ -66,38 +66,11 @@ public class KakaoLoginServiceImpl implements LoginService{
             return usersService.findByProviderId(providerId);
         }
 
-        Users users = Users.builder()
+        // DB에 저장하지 않은 유저 객체 반환 (약관동의 필요)
+        return Users.builder()
                 .provider(Provider.kakao)
                 .providerId(providerId)
                 .build();
-
-        return usersService.save(users);
-    }
-
-    @Override
-    public Users signup(String oauthCode) {
-
-        String oauthAccessToken = getAccessToken(oauthCode);
-
-        Map<String, Object> kakaoUserInfo = getKakaoUserInfo(oauthAccessToken);
-
-        
-        // 카카오에서 내려주는 'id' (고유 회원번호), Long/Integer 형태 가능
-        Long kakaoId = ((Number) kakaoUserInfo.get("id")).longValue();
-
-        String providerId = makeProviderId(Long.toString(kakaoId));
-
-        if(usersService.existsByProviderId(providerId)){
-            // 이미 존재하는 계정
-            throw KakaoAuthException.existAccount();
-        }
-
-        Users users = Users.builder()
-                .provider(Provider.kakao)
-                .providerId(providerId)
-                .build();
-
-        return usersService.save(users);
     }
 
 

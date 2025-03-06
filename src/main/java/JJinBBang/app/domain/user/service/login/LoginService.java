@@ -10,6 +10,4 @@ public interface LoginService {
     String makeProviderId(String id);
 
     Users login(String oauthCode);
-
-    Users signup(String oauthCode);
 }
