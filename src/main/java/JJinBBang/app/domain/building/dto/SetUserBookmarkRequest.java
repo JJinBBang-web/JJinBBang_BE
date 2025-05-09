@@ -11,7 +11,7 @@ public class SetUserBookmarkRequest {
 
     String type;
 
-    Long typeId;
+    Long id;
 
-    boolean liked;
+    Boolean bookmark;
 }
