@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.building.controller;
 
 import JJinBBang.app.domain.building.dto.SetUserBookmarkRequest;
+import JJinBBang.app.domain.building.exception.BodyInvalidGroupException;
 import JJinBBang.app.domain.building.service.BookmarkService;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.template.ResTemplate;
@@ -22,13 +23,31 @@ public class BookmarkController {
     private final BookmarkService bookmarkService;
 
     @PostMapping("")
-    public ResTemplate postBookmarks(@AuthenticationPrincipal Users user, @RequestBody SetUserBookmarkRequest request) {
+    public ResTemplate<String> postBookmarks(@AuthenticationPrincipal Users user, @RequestBody SetUserBookmarkRequest request) {
+        String errorMessage = "";
+        if (request.getType() == null) {
+            errorMessage += "type ";
+        }
+        if (request.getId() == null) {
+            errorMessage += "id ";
+        }
+        if (request.getBookmark() == null) {
+            errorMessage += "bookmark ";
+        }
+        if (!errorMessage.isEmpty()) {
+            throw new BodyInvalidGroupException(errorMessage+"요소가 누락되었습니다.");
+        }
         if (request.getType().equals("building")){
-            bookmarkService.BuildingBookmark(request.getTypeId(),user.getUserId(),request.isLiked());
+
+            bookmarkService.BuildingBookmark(request.getId(),user.getUserId(),request.getBookmark());
         }
         else if (request.getType().equals("review")){
-            bookmarkService.ReviewBookmark(request.getTypeId(),user.getUserId(),request.isLiked());
+            // 위와 동일
+            bookmarkService.ReviewBookmark(request.getId(),user.getUserId(),request.getBookmark());
         }
-        return new ResTemplate(HttpStatus.OK,"qwe");
+        else {
+            throw new BodyInvalidGroupException("type 값이 잘못되었습니다. ('building' 또는 'review'여야 합니다.)");
+        }
+        return new ResTemplate<>(HttpStatus.OK,"처리 완료");
     }
 }
