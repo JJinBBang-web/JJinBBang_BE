@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.entity;
 
+import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -13,12 +14,18 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "DTYPE", discriminatorType = DiscriminatorType.STRING)
 public class Reviews extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="review_id")
     private Long id; // 리뷰 id
+
+    // DTYPE 컬럼 읽기 전용으로만 맵핑
+    @Enumerated(EnumType.STRING)
+    @Column(name="DTYPE", insertable = false, updatable = false)
+    private ReviewType dtype;
 
     @Column(name = "likes_count", nullable = false, columnDefinition = "integer default 0")
     private Integer likesCount; // 좋아요 수
