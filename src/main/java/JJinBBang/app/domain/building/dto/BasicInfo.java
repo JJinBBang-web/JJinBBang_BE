@@ -1,7 +1,6 @@
 package JJinBBang.app.domain.building.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
-import JJinBBang.app.domain.building.enums.BuildingType;
 import lombok.Builder;
 
 @Builder
