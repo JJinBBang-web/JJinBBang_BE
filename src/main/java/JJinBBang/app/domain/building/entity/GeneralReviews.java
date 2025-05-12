@@ -7,14 +7,14 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "general_reviews")
 @PrimaryKeyJoinColumn(name = "review_id")
+@DiscriminatorValue("GENERAL")
 public class GeneralReviews extends Reviews {
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Floor floor;
 
 	@Column(nullable = false)
-	private Double area;            // DECIMAL(5,2) → double OK
+	private Double area;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "contract_type", nullable = false)
