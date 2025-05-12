@@ -8,7 +8,7 @@ import lombok.Builder;
 public record BasicInfo(
 	Boolean liked,
 	Long id,
-	BuildingType type,
+	String type,
 	String name,
 	String address,
 	Double rating,

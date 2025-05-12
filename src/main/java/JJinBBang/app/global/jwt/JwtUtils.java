@@ -31,14 +31,18 @@ public class JwtUtils {
 	private final long accessTokenExpiration;
 	private final long refreshTokenExpiration;
 
+	private final long signupTokenExpiration;
+
 	public JwtUtils(
 		@Value("${jwt.secret}") String secretKey,
 		@Value("${jwt.expiration-time.access-token}") long accessTokenExpiration,
-		@Value("${jwt.expiration-time.refresh-token}") long refreshTokenExpiration
+		@Value("${jwt.expiration-time.refresh-token}") long refreshTokenExpiration,
+		@Value("${jwt.expiration-time.signup-token}") long signupTokenExpiration
 	) {
 		this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
 		this.accessTokenExpiration = accessTokenExpiration;
 		this.refreshTokenExpiration = refreshTokenExpiration;
+		this.signupTokenExpiration = signupTokenExpiration;
 	}
 
 	public String generateAccessToken(Users user) {
@@ -49,10 +53,26 @@ public class JwtUtils {
 		return generateToken(user, refreshTokenExpiration);
 	}
 
+	public String generateSignupToken(Users user) {
+		return signupToken(user, signupTokenExpiration);
+	}
+
 	private String generateToken(Users user, long expirationTime) {
 		return Jwts.builder()
 			.subject(user.getProviderId())
 			.claim("verificationStatus", user.getVerificationStatus().name())
+			.claim("tokenType", "auth")
+			.issuedAt(new Date())
+			.expiration(new Date(System.currentTimeMillis() + expirationTime))
+			.signWith(key)
+			.compact();
+	}
+
+	private String signupToken(Users user, long expirationTime) {
+		return Jwts.builder()
+			.subject(user.getProviderId())
+			.claim("provider", user.getProvider().name())
+			.claim("tokenType", "signup")
 			.issuedAt(new Date())
 			.expiration(new Date(System.currentTimeMillis() + expirationTime))
 			.signWith(key)
