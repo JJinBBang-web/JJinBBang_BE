@@ -4,19 +4,21 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import JJinBBang.app.domain.building.entity.AgencyLikes;
 import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Users {
+public class Users extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "user_id")
@@ -28,6 +30,9 @@ public class Users {
 
 	@Column(name = "provider_id", length = 100, nullable = false, unique = true)
 	private String providerId;
+
+	@Column(name = "student_number", length = 50, nullable = true)
+	private String studentNumber;
 
 	@Column(name = "university_email", length = 255)
 	private String universityEmail;
@@ -42,9 +47,6 @@ public class Users {
 	@Column(name = "verification_status", nullable = false)
 	private VerificationStatus verificationStatus;
 
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
-
 	@Column(name = "disabled_at")
 	private LocalDateTime disabledAt;
 
@@ -53,7 +55,6 @@ public class Users {
 		this.universityEmail = null;
 		this.admissionCertificate = null;
 		this.admissionCertificateUploadDate = null;
-		this.createdAt = LocalDateTime.now();
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 		this.disabledAt = null;
 	}
@@ -76,6 +77,9 @@ public class Users {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private List<ReviewLikes> reviewLikes = new ArrayList<>();
 
+	// 유저 -> 공인중개사-좋아요
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private List<AgencyLikes> agencyLikes = new ArrayList<>();
 
 	@Builder
 	private Users(
@@ -88,7 +92,6 @@ public class Users {
 		this.universityEmail = null;
 		this.admissionCertificate = null;
 		this.admissionCertificateUploadDate = null;
-		this.createdAt = LocalDateTime.now();
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 		this.disabledAt = null;
 	}
