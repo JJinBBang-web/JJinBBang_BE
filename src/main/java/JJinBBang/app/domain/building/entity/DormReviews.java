@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "dorm_reviews")
 @PrimaryKeyJoinColumn(name = "review_id")
+@DiscriminatorValue("DORM")
 public class DormReviews extends Reviews {
 
 	@Enumerated(EnumType.STRING)
