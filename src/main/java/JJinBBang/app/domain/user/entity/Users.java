@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import JJinBBang.app.domain.building.entity.AgencyLikes;
 import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
@@ -29,6 +30,9 @@ public class Users extends BaseEntity {
 
 	@Column(name = "provider_id", length = 100, nullable = false, unique = true)
 	private String providerId;
+
+	@Column(name = "student_number", length = 50, nullable = true)
+	private String studentNumber;
 
 	@Column(name = "university_email", length = 255)
 	private String universityEmail;
@@ -73,6 +77,9 @@ public class Users extends BaseEntity {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private List<ReviewLikes> reviewLikes = new ArrayList<>();
 
+	// 유저 -> 공인중개사-좋아요
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private List<AgencyLikes> agencyLikes = new ArrayList<>();
 
 	@Builder
 	private Users(
