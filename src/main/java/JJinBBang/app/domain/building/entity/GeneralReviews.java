@@ -3,8 +3,10 @@ package JJinBBang.app.domain.building.entity;
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
+@Getter
 @Table(name = "general_reviews")
 @PrimaryKeyJoinColumn(name = "review_id")
 public class GeneralReviews extends Reviews {
