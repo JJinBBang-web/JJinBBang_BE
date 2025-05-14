@@ -2,6 +2,7 @@ package JJinBBang.app.global.error;
 
 import java.util.Objects;
 
+import JJinBBang.app.global.error.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,15 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import JJinBBang.app.global.error.dto.ErrorResponse;
-import JJinBBang.app.global.error.exception.AccessDeniedGroupException;
-import JJinBBang.app.global.error.exception.AuthGroupException;
-import JJinBBang.app.global.error.exception.ConflictGroupException;
-import JJinBBang.app.global.error.exception.InvalidGroupException;
-import JJinBBang.app.global.error.exception.ManyRequestsGroupException;
-import JJinBBang.app.global.error.exception.NotFoundGroupException;
-import JJinBBang.app.global.error.exception.TeapotGroupException;
-import JJinBBang.app.global.error.exception.TimeoutGroupException;
-import JJinBBang.app.global.error.exception.UnprocessableGroupException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -76,6 +68,12 @@ public class ControllerAdvice {
 	@ExceptionHandler({ManyRequestsGroupException.class})
 	public ResponseEntity<ErrorResponse> handleManyRequest(RuntimeException e) {
 		return createErrorResponse(e, HttpStatus.TOO_MANY_REQUESTS);
+	}
+
+	// 500, InternalServerError (이메일 전송 과정에서 발생하는 오류를 위해 추가)
+	@ExceptionHandler({InternalServerErrorGroupException.class})
+	public ResponseEntity<ErrorResponse> handleInternalServerDate(RuntimeException e) {
+		return createErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	// 메서드 인자 문제 생겼을 때
