@@ -1,13 +1,17 @@
 package JJinBBang.app.domain.building.service;
 
 import JJinBBang.app.domain.building.dto.GetUserBookmarkRequest;
-import JJinBBang.app.domain.building.dto.GetUserBookmarkResponse;
+import JJinBBang.app.domain.building.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.*;
+import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
+import JJinBBang.app.domain.common.entity.Campuses;
+import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.UserNotFoundException;
 import JJinBBang.app.domain.user.repository.UsersRepository;
+import JJinBBang.app.global.error.exception.UnprocessableGroupException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +27,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BookmarkServiceImpl implements BookmarkService{
 
+    private final SearchInfo searchInfo;
+
     private final UsersRepository usersRepository;
     private final BuildingsRepository buildingsRepository;
     private final BuildingLikesRepository buildingLikesRepository;
@@ -31,6 +37,8 @@ public class BookmarkServiceImpl implements BookmarkService{
     private final AgenciesRepository agenciesRepository;
     private final AgencyLikesRepository agencyLikesRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final GeneralReviewsRepository generalReviewsRepository;
+    private final DormReviewsRepository dormReviewsRepository;
 
     @Override
     @Transactional
@@ -80,33 +88,27 @@ public class BookmarkServiceImpl implements BookmarkService{
 
     @Override
     @Transactional
-    public Page<Object[]> SearchBookmark(Long userId, Pageable pageable , GetUserBookmarkRequest request) {
+    public List<InfoDto> SearchBookmark(Long userId, Pageable pageable , GetUserBookmarkRequest request) {
         Page<Object[]> resultPage = bookmarkRepository.findLikedItemsByUserIdNative(userId, pageable,request);
-        List<Object[]> resultList = new ArrayList<>();
+        List<InfoDto> resultList = new ArrayList<>();
         List<Object[]> contentList = resultPage.getContent();
         for (Object[] row : contentList) {
             Long itemId = ((Number) row[0]).longValue();
             String itemType = (String) row[1];
             switch (itemType){
                 case "review":
-                    Reviews item = reviewsRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("해당 Review이 존재하지 않습니다."));
-
+                    resultList.add(searchInfo.ReviewSearch(itemId));
                     break;
                 case "building":
+                    resultList.add(searchInfo.BuildingSearch(itemId));
                     break;
                 case "agency":
+                    resultList.add(searchInfo.AgencySearch(itemId));
                     break;
             }
         }
 
-        return resultPage;
+        return resultList;
     }
 
-    private GetUserBookmarkResponse ReviewSearch(Long reviewId){
-        Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("해당 Review이 존재하지 않습니다."));
-
-
-
-        return null;
-    }
 }
