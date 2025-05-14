@@ -1,11 +1,13 @@
 package JJinBBang.app.domain.building.entity;
 
 import java.awt.geom.Point2D;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.common.entity.Campuses;
+import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Buildings {
+public class Buildings extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "building_id")
@@ -34,9 +36,8 @@ public class Buildings {
 	@Column(nullable = false)
 	private String buildingName; // 건물 이름
 
-	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private BuildingType buildingType; // 건물 유형
+	private String buildingType; // 건물 유형
 
 	@Column(nullable = false, length = 255)
 	private String buildingAddress; // 건물 주소
@@ -49,8 +50,8 @@ public class Buildings {
 
 	private Double area; // 건물 면적
 
-	@Column(nullable = false)
-	private Double buildingRating; // 건물 평점
+	@Column(name = "rating", precision = 3, scale = 2, nullable = false)
+	private BigDecimal buildingRating; // 건물 평점
 
 	@Column(nullable = false)
 	private Integer reviewCount; // 후기 수

@@ -1,17 +1,24 @@
 package JJinBBang.app.domain.building.controller;
 
+import JJinBBang.app.domain.building.dto.GetUserBookmarkRequest;
+import JJinBBang.app.domain.building.dto.InfoDto;
 import JJinBBang.app.domain.building.dto.SetUserBookmarkRequest;
+import JJinBBang.app.domain.building.exception.UserBookmarkInvalidGroupException;
 import JJinBBang.app.domain.building.service.BookmarkService;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -20,15 +27,41 @@ import org.springframework.web.bind.annotation.RestController;
 public class BookmarkController {
 
     private final BookmarkService bookmarkService;
+    @GetMapping("")
+    public ResTemplate<List<InfoDto>> getBookmarks(@AuthenticationPrincipal Users user, @PageableDefault(size = 10, page = 0)Pageable pageable , @Valid @ModelAttribute GetUserBookmarkRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.joining(" / "));
+
+            throw new UserBookmarkInvalidGroupException(errorMessage);
+        }
+
+        return new ResTemplate<>(HttpStatus.OK, "처리 완료",bookmarkService.SearchBookmark(user.getUserId(),pageable,request));
+    }
 
     @PostMapping("")
-    public ResTemplate postBookmarks(@AuthenticationPrincipal Users user, @RequestBody SetUserBookmarkRequest request) {
-        if (request.getType().equals("building")){
-            bookmarkService.BuildingBookmark(request.getTypeId(),user.getUserId(),request.isLiked());
+    public ResTemplate<String> postBookmarks(@AuthenticationPrincipal Users user,
+                                             @Valid @RequestBody SetUserBookmarkRequest request,
+                                             BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.joining(" / "));
+
+            throw new UserBookmarkInvalidGroupException(errorMessage);
         }
-        else if (request.getType().equals("review")){
-            bookmarkService.ReviewBookmark(request.getTypeId(),user.getUserId(),request.isLiked());
+        if (request.type().equals("building")){
+
+            bookmarkService.BuildingBookmark(request.id(),user.getUserId(),request.bookmark());
         }
-        return new ResTemplate(HttpStatus.OK,"qwe");
+        else if (request.type().equals("review")){
+            // 위와 동일
+            bookmarkService.ReviewBookmark(request.id(),user.getUserId(),request.bookmark());
+        }
+        else if (request.type().equals("agency")){
+            bookmarkService.AgencyBookmark(request.id(),user.getUserId(),request.bookmark());
+        }
+        return new ResTemplate<>(HttpStatus.OK,"처리 완료");
     }
 }
