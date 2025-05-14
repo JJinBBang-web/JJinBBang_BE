@@ -8,5 +8,6 @@ public enum BuildingType {
 	OFFICETEL, // 오피스텔
 	APARTMENT, // 아파트
 	DORMITORY, // 기숙사
-	BOARDING_HOUSE // 하숙집/고시원
+	BOARDING_HOUSE, // 하숙집/고시원
+	AGENCY // 공인중개사
 }
