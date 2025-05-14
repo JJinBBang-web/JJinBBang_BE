@@ -18,7 +18,7 @@ public class Agencies extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "agency_id")
-	private Long agencyId;
+	private Long id;
 
 	@Column(name = "agency_serial")
 	private Long agencySerial;
@@ -50,4 +50,7 @@ public class Agencies extends BaseEntity {
 	// 공인중개사 -> 공인중개사-좋아요
 	@OneToMany(mappedBy = "agency", cascade = CascadeType.ALL)
 	private List<AgencyLikes> agencyLikes = new ArrayList<>();
+
+	@OneToMany(mappedBy = "agency", cascade = CascadeType.ALL)
+	private List<Reviews> reviews = new ArrayList<>();
 }
