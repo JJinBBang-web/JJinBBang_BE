@@ -1,17 +1,14 @@
 package JJinBBang.app.domain.building.entity;
 
-import java.awt.geom.Point2D;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.common.entity.Campuses;
 import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -49,8 +46,8 @@ public class Buildings extends BaseEntity {
 
 	private Double area; // 건물 면적
 
-	@Column(nullable = false)
-	private Double buildingRating; // 건물 평점
+	@Column(name = "rating", precision = 3, scale = 2, nullable = false)
+	private BigDecimal buildingRating; // 건물 평점
 
 	@Column(nullable = false)
 	private Integer reviewCount; // 후기 수
