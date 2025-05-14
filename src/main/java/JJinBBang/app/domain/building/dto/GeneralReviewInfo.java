@@ -6,6 +6,7 @@ import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
+import JJinBBang.app.domain.building.enums.ReviewType;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 public record GeneralReviewInfo(
         Long id,
         String name,
-        String type,
+        ReviewType type,
         ContractType contractType,
         Integer deposit,
         Integer monthlyRent,
@@ -24,19 +25,19 @@ public record GeneralReviewInfo(
         BigDecimal rating,
         Boolean liked
 ) {
-    public static GeneralReviewInfo of(Reviews review, GeneralReviews generalReview, Buildings building) {
+    public static GeneralReviewInfo of(GeneralReviews generalReview, Buildings building, Boolean liked) {
         return GeneralReviewInfo.builder()
-                .id(review.getId())
+                .id(generalReview.getId())
                 .name(building.getBuildingName())
-                .type("s")
+                .type(generalReview.getDtype())
                 .contractType(generalReview.getContractType())
                 .deposit(generalReview.getDeposit())
                 .monthlyRent(generalReview.getPrice())
                 .floor(generalReview.getFloor())
                 .space(generalReview.getArea())
                 .maintenanceCost(generalReview.getMaintenanceCost())
-                .rating(review.getRating())
-                .liked(true)
+                .rating(generalReview.getRating())
+                .liked(liked)
                 .build();
     }
 }

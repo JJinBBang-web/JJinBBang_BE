@@ -3,6 +3,8 @@ package JJinBBang.app.domain.building.dto;
 import JJinBBang.app.domain.building.entity.Buildings;
 import lombok.Builder;
 
+import java.math.BigDecimal;
+
 @Builder
 public record BasicInfo(
 	Boolean liked,
@@ -10,7 +12,7 @@ public record BasicInfo(
 	String type,
 	String name,
 	String address,
-	Double rating,
+	BigDecimal rating,
 	Integer reviewCount
 ) {
 	public static BasicInfo of(Buildings building, Boolean liked) {

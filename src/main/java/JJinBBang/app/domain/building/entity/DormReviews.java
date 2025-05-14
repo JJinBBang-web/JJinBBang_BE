@@ -2,8 +2,10 @@ package JJinBBang.app.domain.building.entity;
 
 import JJinBBang.app.domain.building.enums.Floor;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
+@Getter
 @Table(name = "dorm_reviews")
 @PrimaryKeyJoinColumn(name = "review_id")
 @DiscriminatorValue("DORM")

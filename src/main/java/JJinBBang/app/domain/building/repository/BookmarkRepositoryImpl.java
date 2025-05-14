@@ -49,7 +49,7 @@ public class BookmarkRepositoryImpl implements BookmarkRepository {
                         item_id, item_type, item_created_at, item_like_count, item_rating
                     FROM (
                         SELECT b.building_id AS item_id, 'building' AS item_type, b.created_at AS item_created_at,
-                               b.like_count AS item_like_count, b.building_rating AS item_rating
+                               b.like_count AS item_like_count, b.rating AS item_rating
                         FROM buildings b JOIN building_likes bl ON b.building_id = bl.building_id WHERE bl.user_id = ?1
 
                         UNION ALL
@@ -82,7 +82,7 @@ public class BookmarkRepositoryImpl implements BookmarkRepository {
                         UNION ALL
 
                         SELECT b.building_id AS item_id, 'building' AS item_type, b.created_at AS item_created_at,
-                               b.like_count AS item_like_count, b.building_rating AS item_rating
+                               b.like_count AS item_like_count, b.rating AS item_rating
                         FROM buildings b JOIN building_likes bl ON b.building_id = bl.building_id WHERE bl.user_id = ?1
 
                         UNION ALL
