@@ -46,6 +46,7 @@ dependencies {
 	implementation 'com.google.apis:google-api-services-drive:v3-rev20250511-2.0.0' // Google Drive
 	implementation 'com.google.apis:google-api-services-sheets:v4-rev20250509-2.0.0' // Google Sheets
 	implementation 'com.google.auth:google-auth-library-oauth2-http:1.20.0' // Google Auth
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {
