@@ -3,6 +3,7 @@ package JJinBBang.app.domain.building.entity;
 import java.awt.geom.Point2D;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
@@ -75,4 +76,10 @@ public class Buildings extends BaseEntity {
 	// 건물 -> 리뷰
 	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
 	private List<Reviews> reviews = new ArrayList<>();
+
+	public List<String> getBuildingType() {
+		return Arrays.stream(buildingType.split(","))
+				.map(String::trim)
+				.toList();
+	}
 }
