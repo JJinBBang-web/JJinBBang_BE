@@ -62,8 +62,8 @@ jwt:
     signup-token: ${jwt.expiration-time.signup-token}
 
 mail-auth:
-  expiration-time: ${mail-auth.code.expiration-time}
-  auth-code-length: ${mail-auth.code.length}
+  expiration-time: ${mail-auth.expiration-time}
+  auth-code-length: ${mail-auth.auth-code-length}
   allowed-domain:
     - gnu.ac.kr
     - gmail.com
