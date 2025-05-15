@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.user.service;
 
+import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import JJinBBang.app.domain.user.entity.Users;
 
 public interface UsersService {
@@ -9,4 +10,6 @@ public interface UsersService {
 	Users findByProviderId(String providerId);
 
 	Users save(Users user);
+
+	UserInfoResponseDto getUserInfo(Users user);
 }
