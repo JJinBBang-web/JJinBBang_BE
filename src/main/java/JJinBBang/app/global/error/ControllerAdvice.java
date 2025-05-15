@@ -72,7 +72,7 @@ public class ControllerAdvice {
 
 	// 500, InternalServerError (이메일 전송 과정에서 발생하는 오류를 위해 추가)
 	@ExceptionHandler({InternalServerErrorGroupException.class})
-	public ResponseEntity<ErrorResponse> handleInternalServerErrorHandler(RuntimeException e) {
+	public ResponseEntity<ErrorResponse> handleInternalServerError(RuntimeException e) {
 		return createErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
