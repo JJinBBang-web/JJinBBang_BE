@@ -24,7 +24,7 @@ public class SearchInfo {
     private final DormReviewsRepository dormReviewsRepository;
 
     public InfoDto ReviewSearch(Long reviewId){
-        Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("해당 Review이 존재하지 않습니다."));
+        Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("id: " + reviewId + " 해당 Review이 존재하지 않습니다."));
         switch (item.getDtype()){
             case ReviewType.GENERAL:
                 GeneralReviews generalReviews = generalReviewsRepository.findById(reviewId).orElseThrow(()-> new BookmarkNotFoundException("해당 GeneralReview이 존재하지 않습니다."));

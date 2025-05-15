@@ -8,7 +8,6 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.List;
 
 public interface ReviewsRepository extends CrudRepository<Reviews,Long> {
-    List<Reviews> findByIdIn(List<Long> reveiwIds);
     Reviews findFirstByBuildingOrderByCreatedAtDesc(Buildings building);
     Reviews findFirstByAgencyAndDtypeOrderByCreatedAtDesc(Agencies agency, String reviewType);
 }

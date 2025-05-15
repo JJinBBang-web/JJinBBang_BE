@@ -37,8 +37,6 @@ public class BookmarkServiceImpl implements BookmarkService{
     private final AgenciesRepository agenciesRepository;
     private final AgencyLikesRepository agencyLikesRepository;
     private final BookmarkRepository bookmarkRepository;
-    private final GeneralReviewsRepository generalReviewsRepository;
-    private final DormReviewsRepository dormReviewsRepository;
 
     @Override
     @Transactional

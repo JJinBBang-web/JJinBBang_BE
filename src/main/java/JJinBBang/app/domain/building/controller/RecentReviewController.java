@@ -1,7 +1,6 @@
 package JJinBBang.app.domain.building.controller;
 
-import JJinBBang.app.domain.building.dto.ReviewDTO;
-import JJinBBang.app.domain.building.entity.Reviews;
+import JJinBBang.app.domain.building.dto.InfoDto;
 import JJinBBang.app.domain.building.service.RecentReviewService;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +22,9 @@ public class RecentReviewController {
     private final RecentReviewService recentReviewService;
 
     @GetMapping("")
-    public ResTemplate<List<ReviewDTO>> test(@RequestParam(name = "reviewIds") List<Long> reviewIds) {
-        List<Reviews> recentReviews = recentReviewService.findRecentReviews(reviewIds);
-        List<ReviewDTO> reviewDTOS = recentReviews.stream().map(ReviewDTO::new).toList();
-        return new ResTemplate<>(HttpStatus.OK, "qwe",reviewDTOS);
+    public ResTemplate<List<InfoDto>> test(@RequestParam(name = "reviewIds") List<Long> reviewIds) {
+        List<InfoDto> recentReviews = recentReviewService.findRecentReviews(reviewIds);
+        return new ResTemplate<>(HttpStatus.OK, "처리 완료",recentReviews);
     }
 
 
