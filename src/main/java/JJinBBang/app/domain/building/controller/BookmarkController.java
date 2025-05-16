@@ -51,16 +51,10 @@ public class BookmarkController {
 
             throw new UserBookmarkInvalidGroupException(errorMessage);
         }
-        if (request.type().equals("building")){
-
-            bookmarkService.buildingBookmark(request.id(),user,request.bookmark());
-        }
-        else if (request.type().equals("review")){
-            // 위와 동일
-            bookmarkService.reviewBookmark(request.id(),user,request.bookmark());
-        }
-        else if (request.type().equals("agency")){
-            bookmarkService.agencyBookmark(request.id(),user,request.bookmark());
+        switch (request.type()) {
+            case "building" -> bookmarkService.buildingBookmark(request.id(), user, request.bookmark());
+            case "review" -> bookmarkService.reviewBookmark(request.id(), user, request.bookmark());
+            case "agency" -> bookmarkService.agencyBookmark(request.id(), user, request.bookmark());
         }
         return new ResTemplate<>(HttpStatus.OK,"처리 완료");
     }

@@ -1,5 +1,6 @@
 package JJinBBang.app.global.common.dto;
 
+import JJinBBang.app.domain.building.dto.GeneralReviewInfo;
 import JJinBBang.app.domain.building.dto.ReviewInfo;
 import JJinBBang.app.domain.building.entity.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -62,7 +63,7 @@ public record InfoDto(
 
     public static InfoDto ofAgencyReviewInfo(Reviews review, Agencies agency, Boolean liked) {
         return InfoDto.builder()
-                .agencyReviewInfo(AgencyReviewInfo.of(agency,liked))
+                .agencyReviewInfo(AgencyReviewInfo.of(review,agency,liked))
                 .reviewInfo(ReviewInfo.of(review))
                 .image("http://localhost:8080/image/1.jpg")
                 .build();

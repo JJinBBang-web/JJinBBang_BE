@@ -1,10 +1,10 @@
 package JJinBBang.app.domain.building.service;
 
-import JJinBBang.app.domain.building.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.repository.ReviewLikesRepository;
 import JJinBBang.app.domain.building.repository.ReviewsRepository;
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.common.dto.InfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
