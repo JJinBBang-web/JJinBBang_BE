@@ -1,6 +1,6 @@
 package JJinBBang.app.domain.building.service;
 
-import JJinBBang.app.domain.building.dto.InfoDto;
+import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.*;
 import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.building.exception.BookmarkNotFoundException;
@@ -58,7 +58,7 @@ public class SearchInfo {
 
     public InfoDto agencySearch(Long itemId, Boolean liked){
         Agencies agencies = agenciesRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
-        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies,ReviewType.AGENCY);
+        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies,"AGENCY");
         return InfoDto.ofAgencyReviewInfo(reviews,agencies,liked);
     }
 }

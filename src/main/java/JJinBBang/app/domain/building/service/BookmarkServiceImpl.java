@@ -1,13 +1,11 @@
 package JJinBBang.app.domain.building.service;
 
 import JJinBBang.app.domain.building.dto.GetUserBookmarkRequest;
-import JJinBBang.app.domain.building.dto.InfoDto;
+import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.*;
 import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.user.entity.Users;
-import JJinBBang.app.domain.user.exception.UserNotFoundException;
-import JJinBBang.app.domain.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
 import org.springframework.data.domain.Page;

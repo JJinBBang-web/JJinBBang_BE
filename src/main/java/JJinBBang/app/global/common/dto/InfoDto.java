@@ -1,5 +1,6 @@
-package JJinBBang.app.domain.building.dto;
+package JJinBBang.app.global.common.dto;
 
+import JJinBBang.app.domain.building.dto.ReviewInfo;
 import JJinBBang.app.domain.building.entity.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
