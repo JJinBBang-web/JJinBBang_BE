@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.user.service;
 
+import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import org.springframework.stereotype.Service;
 
 import JJinBBang.app.domain.user.entity.Users;
@@ -37,5 +38,13 @@ public class UsersServiceImpl implements UsersService {
 	@Override
 	public Users save(Users user) {
 		return usersRepository.save(user);
+	}
+
+	@Override
+	public UserInfoResponseDto getUserInfo(Users user) {
+		if (user == null) {
+			throw UserNotFoundException.notFound();
+		}
+		return UserInfoResponseDto.of(user);
 	}
 }

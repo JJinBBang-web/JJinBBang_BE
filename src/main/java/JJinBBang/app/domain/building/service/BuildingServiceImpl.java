@@ -54,8 +54,9 @@ public class BuildingServiceImpl implements BuildingService {
 				.toList();
 
 		// Dormitory 가 있다면 기숙사 상세 정보 반환
-		if (building.getBuildingType().contains(BuildingType.DORMITORY.name())){
-			return BuildingDetailResponse.ofDormitory(building, liked, top5Positive);
+		if (building.getBuildingType().contains(BuildingType.DORMITORY)){
+			String universityName = building.getCampus().getUniversity().getUniversityName();
+			return BuildingDetailResponse.ofDormitory(building, universityName, liked, top5Positive);
 		} else {
 			return BuildingDetailResponse.ofGeneral(building, liked, top5Positive);
 		}

@@ -32,9 +32,9 @@ public record BuildingDetailResponse(
 			.build();
 	}
 
-	public static BuildingDetailResponse ofDormitory(Buildings building, Boolean liked, List<KeywordCount> keywords) {
+	public static BuildingDetailResponse ofDormitory(Buildings building, String universityName, Boolean liked, List<KeywordCount> keywords) {
 		return BuildingDetailResponse.builder()
-				.dormitoryBuildingInfo(DormitoryBuildingInfo.of(building, liked))
+				.dormitoryBuildingInfo(DormitoryBuildingInfo.of(building, universityName, liked))
 				.reviewImages(ReviewImages.from(building))
 				.keywords(keywords)
 				.build();

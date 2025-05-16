@@ -1,6 +1,8 @@
 package JJinBBang.app.domain.user.controller;
 
+import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import JJinBBang.app.domain.user.dto.response.UserInfoResponse;
+import JJinBBang.app.domain.user.exception.InvalidTokenException;
 import JJinBBang.app.global.template.ResTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,10 +23,14 @@ public class UsersController {
 
 	private final UsersService usersService;
 
-	@GetMapping("")
-	public ResTemplate<UserInfoResponse> getUserInfo(@AuthenticationPrincipal Users user) {
+	@GetMapping
+	public ResTemplate<UserInfoResponseDto> getUserInfo(@AuthenticationPrincipal Users user) {
+		if (user == null) {
+			throw InvalidTokenException.unauthorized();
+		}
 		log.info("유저 조회 성공 : {}", user.getUserId());
-		UserInfoResponse response = UserInfoResponse.from(user);
-		return new ResTemplate<>(HttpStatus.OK, "유저 정보 조회 성공", response);
+
+		UserInfoResponseDto response = usersService.getUserInfo(user);
+		return new ResTemplate<>(HttpStatus.OK, "유저 정보조회 성공", response);
 	}
 }

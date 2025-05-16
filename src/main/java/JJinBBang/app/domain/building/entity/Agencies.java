@@ -18,7 +18,7 @@ public class Agencies extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "agency_id")
-	private Long id;
+	private Long agencyId;
 
 	@Column(name = "agency_serial")
 	private Long agencySerial;

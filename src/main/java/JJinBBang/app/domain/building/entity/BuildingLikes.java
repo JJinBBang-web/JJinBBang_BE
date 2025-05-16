@@ -20,4 +20,13 @@ public class BuildingLikes {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
+
+    public static BuildingLikes create(Buildings building, Users user) {
+        BuildingLikeId buildingLikeId = BuildingLikeId.of(building.getId(), user.getUserId());
+        BuildingLikes buildingLikes = new BuildingLikes();
+        buildingLikes.id = buildingLikeId;
+        buildingLikes.building = building;
+        buildingLikes.user = user;
+        return buildingLikes;
+    }
 }

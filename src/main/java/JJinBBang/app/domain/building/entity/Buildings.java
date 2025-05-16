@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.common.entity.Campuses;
 import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
@@ -73,9 +74,10 @@ public class Buildings extends BaseEntity {
 	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
 	private List<Reviews> reviews = new ArrayList<>();
 
-	public List<String> getBuildingType() {
+	public List<BuildingType> getBuildingType() {
 		return Arrays.stream(buildingType.split(","))
 				.map(String::trim)
+				.map(BuildingType::valueOf)
 				.toList();
 	}
 }

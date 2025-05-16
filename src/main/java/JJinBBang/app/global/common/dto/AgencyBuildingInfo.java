@@ -1,32 +1,31 @@
 package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Agencies;
+import JJinBBang.app.domain.building.enums.BuildingType;
 import lombok.Builder;
-import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Getter
 @Builder
-public class AgencyBuildingInfo {
-    private Long id;
-    private Boolean liked;
-    private List<String> type;
-    private String name;
-    private String address;
-    private BigDecimal rating;
-    private Integer reviewCount;
-
-    public static AgencyBuildingInfo of(Agencies agency, Boolean liked) {
+public record AgencyBuildingInfo(
+        Long id,
+        String name,
+        List<BuildingType> type,
+        String address,
+        BigDecimal rating,
+        Boolean liked,
+        Integer reviewCount
+) {
+    public static AgencyBuildingInfo of(Agencies agencies, Boolean liked) {
         return AgencyBuildingInfo.builder()
-                .id(agency.getId())
+                .id(agencies.getAgencyId())
+                .name(agencies.getName())
+                .type(List.of(BuildingType.AGENCY))
+                .address(agencies.getAddress())
+                .rating(agencies.getRating())
                 .liked(liked)
-                .type(List.of("AGENCY"))
-                .name(agency.getName())
-                .address(agency.getAddress())
-                .rating(agency.getRating())
-                .reviewCount(agency.getReviewCount())
+                .reviewCount(agencies.getReviewCount())
                 .build();
     }
 }
