@@ -37,7 +37,7 @@ public class BookmarkController {
             throw new UserBookmarkInvalidGroupException(errorMessage);
         }
 
-        return new ResTemplate<>(HttpStatus.OK, "처리 완료",bookmarkService.SearchBookmark(user.getUserId(),pageable,request));
+        return new ResTemplate<>(HttpStatus.OK, "처리 완료",bookmarkService.searchBookmark(user.getUserId(),pageable,request));
     }
 
     @PostMapping("")
@@ -53,14 +53,14 @@ public class BookmarkController {
         }
         if (request.type().equals("building")){
 
-            bookmarkService.BuildingBookmark(request.id(),user.getUserId(),request.bookmark());
+            bookmarkService.buildingBookmark(request.id(),user,request.bookmark());
         }
         else if (request.type().equals("review")){
             // 위와 동일
-            bookmarkService.ReviewBookmark(request.id(),user.getUserId(),request.bookmark());
+            bookmarkService.reviewBookmark(request.id(),user,request.bookmark());
         }
         else if (request.type().equals("agency")){
-            bookmarkService.AgencyBookmark(request.id(),user.getUserId(),request.bookmark());
+            bookmarkService.agencyBookmark(request.id(),user,request.bookmark());
         }
         return new ResTemplate<>(HttpStatus.OK,"처리 완료");
     }
