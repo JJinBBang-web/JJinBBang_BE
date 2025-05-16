@@ -1,17 +1,16 @@
-package JJinBBang.app.domain.building.dto;
+package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
-import JJinBBang.app.domain.building.entity.Reviews;
-import JJinBBang.app.domain.building.enums.Floor;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Builder
 public record DormitoryBuildingInfo(
         Long id,
         String name,
-        String type,
+        List<String> type,
         String universityName,
         String address,
         BigDecimal rating,
@@ -21,7 +20,7 @@ public record DormitoryBuildingInfo(
         return DormitoryBuildingInfo.builder()
                 .id(building.getId())
                 .name(building.getBuildingName())
-                .type(building.getBuildingType())
+                .type(List.of("기숙사"))
                 .universityName(universityName)
                 .address(building.getBuildingAddress())
                 .rating(building.getBuildingRating())

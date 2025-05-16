@@ -1,16 +1,16 @@
-package JJinBBang.app.domain.building.dto;
+package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Agencies;
-import JJinBBang.app.domain.building.entity.Buildings;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Builder
 public record AgencyBuildingInfo(
         Long id,
         String name,
-        String type,
+        List<String> type,
         String address,
         BigDecimal rating,
         Boolean liked,
@@ -20,7 +20,7 @@ public record AgencyBuildingInfo(
         return AgencyBuildingInfo.builder()
                 .id(agencies.getAgencyId())
                 .name(agencies.getName())
-                .type("공인중개사")
+                .type(List.of("공인중개사"))
                 .address(agencies.getAddress())
                 .rating(agencies.getRating())
                 .liked(liked)
