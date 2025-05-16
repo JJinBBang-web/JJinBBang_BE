@@ -1,7 +1,7 @@
 package JJinBBang.app.domain.building.controller;
 
 import JJinBBang.app.domain.building.dto.GetUserBookmarkRequest;
-import JJinBBang.app.domain.building.dto.InfoDto;
+import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.domain.building.dto.SetUserBookmarkRequest;
 import JJinBBang.app.domain.building.exception.UserBookmarkInvalidGroupException;
 import JJinBBang.app.domain.building.service.BookmarkService;

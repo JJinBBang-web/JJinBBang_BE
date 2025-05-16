@@ -1,21 +1,22 @@
-package JJinBBang.app.domain.building.dto;
+package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
-import JJinBBang.app.domain.building.entity.ReviewLikes;
-import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
 import JJinBBang.app.domain.building.enums.ReviewType;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Builder
 public record GeneralReviewInfo(
         Long id,
         String name,
-        ReviewType type,
+        List<String> type,
         ContractType contractType,
         Integer deposit,
         Integer monthlyRent,
@@ -29,7 +30,10 @@ public record GeneralReviewInfo(
         return GeneralReviewInfo.builder()
                 .id(generalReview.getId())
                 .name(building.getBuildingName())
-                .type(generalReview.getDtype())
+                .type(
+                        Arrays.stream(building.getBuildingType().split(",\\s*"))
+                                .collect(Collectors.toList())
+                )
                 .contractType(generalReview.getContractType())
                 .deposit(generalReview.getDeposit())
                 .monthlyRent(generalReview.getPrice())

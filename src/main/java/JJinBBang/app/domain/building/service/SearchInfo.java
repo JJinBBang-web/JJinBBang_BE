@@ -1,6 +1,6 @@
 package JJinBBang.app.domain.building.service;
 
-import JJinBBang.app.domain.building.dto.InfoDto;
+import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.*;
 import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.building.exception.BookmarkNotFoundException;
