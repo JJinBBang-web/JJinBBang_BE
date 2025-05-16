@@ -13,7 +13,7 @@ public record DormitoryReviewInfo(
         String name,
         String type,
         String universityName,
-        Floor floor,
+        String floor,
         Integer capacity,
         Integer dormFee,
         BigDecimal rating,
@@ -25,7 +25,7 @@ public record DormitoryReviewInfo(
                 .name(building.getBuildingName())
                 .type(building.getBuildingType())
                 .universityName(universityName)
-                .floor(dormReviews.getFloor())
+                .floor(dormReviews.getFloor().getDescription())
                 .capacity(dormReviews.getCapacity())
                 .dormFee(dormReviews.getDormFee())
                 .rating(dormReviews.getRating())

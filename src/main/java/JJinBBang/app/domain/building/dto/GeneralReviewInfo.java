@@ -15,11 +15,11 @@ import java.math.BigDecimal;
 public record GeneralReviewInfo(
         Long id,
         String name,
-        ReviewType type,
-        ContractType contractType,
+        String type,
+        String contractType,
         Integer deposit,
         Integer monthlyRent,
-        Floor floor,
+        String floor,
         Double space,
         Integer maintenanceCost,
         BigDecimal rating,
@@ -29,11 +29,11 @@ public record GeneralReviewInfo(
         return GeneralReviewInfo.builder()
                 .id(generalReview.getId())
                 .name(building.getBuildingName())
-                .type(generalReview.getDtype())
-                .contractType(generalReview.getContractType())
+                .type(building.getBuildingType())
+                .contractType(generalReview.getContractType().getDescription())
                 .deposit(generalReview.getDeposit())
                 .monthlyRent(generalReview.getPrice())
-                .floor(generalReview.getFloor())
+                .floor(generalReview.getFloor().getDescription())
                 .space(generalReview.getArea())
                 .maintenanceCost(generalReview.getMaintenanceCost())
                 .rating(generalReview.getRating())
