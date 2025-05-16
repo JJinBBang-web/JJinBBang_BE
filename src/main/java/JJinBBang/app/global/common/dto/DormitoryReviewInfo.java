@@ -22,7 +22,7 @@ public record DormitoryReviewInfo(
 ) {
     public static DormitoryReviewInfo of(DormReviews dormReviews,Buildings building,String universityName, Boolean liked) {
         return DormitoryReviewInfo.builder()
-                .id(building.getId())
+                .id(dormReviews.getId())
                 .name(building.getBuildingName())
                 .type(List.of("기숙사"))
                 .universityName(universityName)
