@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.building.entity;
 
 import java.awt.geom.Point2D;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,8 +50,8 @@ public class Buildings extends BaseEntity {
 
 	private Double area; // 건물 면적
 
-	@Column(nullable = false)
-	private Double buildingRating; // 건물 평점
+	@Column(name = "rating", precision = 3, scale = 2, nullable = false)
+	private BigDecimal buildingRating; // 건물 평점
 
 	@Column(nullable = false)
 	private Integer reviewCount; // 후기 수

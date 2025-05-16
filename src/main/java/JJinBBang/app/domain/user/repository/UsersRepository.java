@@ -8,5 +8,5 @@ import JJinBBang.app.domain.user.entity.Users;
 
 public interface UsersRepository extends JpaRepository<Users, Long> {
 
-	Optional<Users> findByProviderId(String providerId);
+    Optional<Users> findByProviderId(String providerId);
 }
