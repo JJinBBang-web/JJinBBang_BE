@@ -61,7 +61,7 @@ public class SearchInfo {
 
     public InfoDto AgencySearch(Long itemId){
         Agencies agencies = agenciesRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("해당 Agencies이 존재하지 않습니다."));
-        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies,"AGENCY");
+        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies,ReviewType.AGENCY);
         return InfoDto.ofAgencyReviewInfo(reviews,agencies,true);
     }
 }
