@@ -3,6 +3,7 @@ package JJinBBang.app.domain.user.controller;
 import JJinBBang.app.domain.user.dto.request.IssueEmailCodeRequest;
 import JJinBBang.app.domain.user.dto.request.LoginRequest;
 import JJinBBang.app.domain.user.dto.request.SignupRequest;
+import JJinBBang.app.domain.user.dto.request.VerifyEmailCodeRequest;
 import JJinBBang.app.domain.user.dto.response.LoginResponse;
 import JJinBBang.app.domain.user.dto.response.SignupRequiredResponse;
 import JJinBBang.app.domain.user.entity.Users;
@@ -85,11 +86,11 @@ public class AuthController {
     @PostMapping("/emailCode/verify")
     public ResTemplate<?> verifyEmailCode(
             @AuthenticationPrincipal Users user,
-            @RequestBody IssueEmailCodeRequest request
+            @RequestBody VerifyEmailCodeRequest request
     ) {
         // 여기서도 VerificationFilter에서 Users의 VerificationStatus가 UNVERIFIED인 요청만 허용하도록 필터링됨
         String email = request.emailAddress();
-        String code = request.emailAddress();
+        String code = request.authCode();
 
         // 인증코드 검증
         // 인증코드 만료 또는 미발급은 예외 반환
