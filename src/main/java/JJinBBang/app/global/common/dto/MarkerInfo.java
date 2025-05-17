@@ -6,15 +6,13 @@ import lombok.Builder;
 public record MarkerInfo (
 	Long id,
 	Double latitude,
-	Double longitude,
-	Boolean isReviews
+	Double longitude
 ){
-	public static MarkerInfo from(Long id, Double latitude, Double longitude, Boolean isReviews) {
+	public static MarkerInfo from(Long id, Double latitude, Double longitude) {
 		return MarkerInfo.builder()
 			.id(id)
 			.latitude(latitude)
 			.longitude(longitude)
-			.isReviews(isReviews)
 			.build();
 	}
 }
