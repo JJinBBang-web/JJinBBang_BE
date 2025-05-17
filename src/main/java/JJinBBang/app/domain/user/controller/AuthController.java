@@ -94,7 +94,7 @@ public class AuthController {
         // 인증코드 검증
         // 인증코드 만료 또는 미발급은 예외 반환
         boolean verifyResult = mailAuthService.verifyAuthCode(user.getUserId(), email, code);
-        if(!verifyResult) {
+        if(verifyResult) {
             usersService.verifyUniversityEmail(user, email);
             return new ResTemplate<>(HttpStatus.OK, "인증이 완료되었습니다.", null);
         } else {
