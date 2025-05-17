@@ -1,5 +1,6 @@
 package JJinBBang.app.global.mail.service.impl;
 
+import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.exception.MailInvalidException;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import JJinBBang.app.global.mail.repository.EmailAuthCodeRepository;
@@ -21,20 +22,20 @@ public class MailAuthServiceImpl implements MailAuthService {
     private final EmailAuthCodeRepository emailAuthCodeRepository;
 
     @Override
-    public void sendAuthCode(String toEmail) {
+    public void sendAuthCode(Long userId, String toEmail) {
         validateEmail(toEmail);
 
         String authCode = generateAuthCode();
-        saveAuthCode(toEmail, authCode);
+        saveAuthCode(userId, toEmail, authCode);
 
         mailSendService.sendMail(toEmail, properties.getSubjectText(), buildEmailBody(authCode));
     }
 
     @Override
-    public boolean verifyAuthCode(String email, String authCode) {
-        String savedAuthCode = emailAuthCodeRepository.findAuthCodeByEmail(email)
+    public boolean verifyAuthCode(Long userId, String email, String authCode) {
+        EmailAuthInfo savedAuthCode = emailAuthCodeRepository.findEmailAndAuthCodeByUserId(userId)
                 .orElseThrow(MailInvalidException::notFoundAuthCode);
-        return savedAuthCode.equals(authCode);
+        return savedAuthCode.email().equals(email) && savedAuthCode.code().equals(authCode);
     }
 
 
@@ -49,13 +50,13 @@ public class MailAuthServiceImpl implements MailAuthService {
         return code.toString();
     }
 
-    public void saveAuthCode(String email, String authCode) {
-        if(emailAuthCodeRepository.isExistByEmail(email)) {
+    public void saveAuthCode(Long userId, String email, String authCode) {
+        if(emailAuthCodeRepository.isExistByUserId(userId)) {
             // 이미 인증 코드가 발급된 이메일인 경우
-            log.info("이미 인증 코드가 발급된 이메일입니다. [email: {}]. 기존 인증 코드를 삭제합니다.", email);
-            emailAuthCodeRepository.deleteByEmail(email);
+            log.info("이미 인증 코드가 발급된 이메일입니다. [userId: {}]. 기존 인증 코드를 삭제합니다.", userId);
+            emailAuthCodeRepository.deleteByUserId(userId);
         }
-        emailAuthCodeRepository.save(email, authCode);
+        emailAuthCodeRepository.save(userId, email, authCode);
     }
 
     private String buildEmailBody(String code) {

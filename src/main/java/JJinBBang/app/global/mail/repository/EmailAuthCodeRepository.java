@@ -1,13 +1,15 @@
 package JJinBBang.app.global.mail.repository;
 
+import JJinBBang.app.global.mail.dto.EmailAuthInfo;
+
 import java.util.Optional;
 
 public interface EmailAuthCodeRepository {
-    void save(String email, String authCode);
+    void save(Long userId, String email, String authCode);
 
-    boolean isExistByEmail(String email);
+    boolean isExistByUserId(Long userId);
 
-    Optional<String> findAuthCodeByEmail(String email);
+    Optional<EmailAuthInfo> findEmailAndAuthCodeByUserId(Long userId);
 
-    void deleteByEmail(String email);
+    void deleteByUserId(Long userId);
 }

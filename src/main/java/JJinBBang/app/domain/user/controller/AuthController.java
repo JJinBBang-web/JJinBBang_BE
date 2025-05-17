@@ -67,7 +67,7 @@ public class AuthController {
         // -> 여기서는 VerificationStatus를 확인할 필요 없음
         // (기획 요구사항에 따라 학교 이메일 인증이 완료된 후, 다른 이메일로 변경할 수 있어야 한다면 추가 로직 필요함)
         String email = request.emailAddress();
-        mailAuthService.sendAuthCode(email);
+        mailAuthService.sendAuthCode(user.getUserId(), email);
         return new ResTemplate<>(HttpStatus.OK, "인증코드 전송 완료", null);
     }
 
@@ -82,7 +82,7 @@ public class AuthController {
 
         // 인증코드 검증
         // 인증코드 만료 또는 미발급은 예외 반환
-        boolean verifyResult = mailAuthService.verifyAuthCode(email, code);
+        boolean verifyResult = mailAuthService.verifyAuthCode(user.getUserId(), email, code);
         if(!verifyResult) {
             usersService.verifyUniversityEmail(user, email);
             return new ResTemplate<>(HttpStatus.OK, "인증이 완료되었습니다.", null);
