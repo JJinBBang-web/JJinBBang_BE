@@ -10,16 +10,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         show_sql: true
         format_sql: true
     open-in-view: false
 
-#  data:
-#    mongodb:
-#      uri: ${spring.data.mongodb.uri}
+  data:
+    mongodb:
+      uri: ${spring.data.mongodb.uri}
 
   security:
     oauth2:
