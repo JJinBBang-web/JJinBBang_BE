@@ -1,0 +1,98 @@
+package JJinBBang.app.domain.building.repository;
+
+import java.util.List;
+
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import JJinBBang.app.domain.building.entity.Buildings;
+import JJinBBang.app.domain.building.entity.GeneralReviews;
+import JJinBBang.app.domain.building.enums.BuildingType;
+import JJinBBang.app.domain.building.enums.ContractType;
+import JJinBBang.app.global.common.enums.KeywordType;
+import lombok.RequiredArgsConstructor;
+
+import JJinBBang.app.domain.building.entity.QBuildings;
+import JJinBBang.app.domain.building.entity.QReviews;
+import JJinBBang.app.domain.building.entity.QGeneralReviews;
+import JJinBBang.app.domain.common.entity.QCampuses;
+import JJinBBang.app.domain.building.enums.ReviewType;
+
+@RequiredArgsConstructor
+public class BuildingRepositoryImpl implements BuildingRepositoryCustom {
+
+	private final JPAQueryFactory queryFactory;
+
+	@Override
+	public List<Buildings> findMarkersWithinBounds(
+		Double neLat, Double neLng,
+		Double swLat, Double swLng,
+		List<BuildingType> buildTypes,
+		ContractType contractType,
+		Integer depositMin, Integer depositMax,
+		Integer monthlyRentMin, Integer monthlyRentMax,
+		Boolean inMaintenanceCost,
+		List<KeywordType> reviewKeywords,
+		List<String> campusNames
+	) {
+		QBuildings b = QBuildings.buildings;
+		QCampuses c = QCampuses.campuses;
+		QReviews r = QReviews.reviews;
+		QGeneralReviews gr = QGeneralReviews.generalReviews;
+
+		BooleanBuilder builder = new BooleanBuilder();
+
+		// 1. 위치 필터
+		builder.and(b.buildingLat.between(swLat, neLat));
+		builder.and(b.buildingLot.between(swLng, neLng));
+
+		// 2. 건물 유형 필터
+		if (buildTypes != null && !buildTypes.contains(BuildingType.ALL)) {
+			BooleanBuilder typeBuilder = new BooleanBuilder();
+			for (BuildingType type : buildTypes) {
+				typeBuilder.or(b.buildingType.containsIgnoreCase(type.name()));
+			}
+			builder.and(typeBuilder);
+		}
+
+		// 3. 캠퍼스 필터
+		if (campusNames != null && !campusNames.isEmpty()) {
+			builder.and(b.campus.campusName.in(campusNames));
+		}
+
+		// 4. Treat()를 이용한 GeneralReviews 전용 조인
+		PathBuilder<GeneralReviews> grPath = new PathBuilder<>(GeneralReviews.class, "generalReview");
+		QGeneralReviews treated = new QGeneralReviews(grPath);
+
+		JPAQuery<Buildings> query = queryFactory.selectDistinct(b)
+			.from(b)
+			.leftJoin(b.reviews, r)
+			.leftJoin(treated).on(r.id.eq(treated.id))
+			.leftJoin(b.campus, c).fetchJoin()
+			.where(builder);
+
+		// 5. 계약 조건 필터
+		if (contractType != null && contractType != ContractType.ALL) {
+			query.where(treated.contractType.eq(contractType));
+		}
+		if (depositMin != null) {
+			query.where(treated.deposit.goe(depositMin));
+		}
+		if (depositMax != null) {
+			query.where(treated.deposit.loe(depositMax));
+		}
+		if (monthlyRentMin != null) {
+			query.where(treated.price.goe(monthlyRentMin));
+		}
+		if (monthlyRentMax != null) {
+			query.where(treated.price.loe(monthlyRentMax));
+		}
+		if (inMaintenanceCost != null && inMaintenanceCost) {
+			query.where(treated.maintenanceCost.isNotNull());
+		}
+
+		return query.fetch();
+	}
+}
