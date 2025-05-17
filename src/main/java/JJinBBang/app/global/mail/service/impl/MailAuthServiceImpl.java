@@ -2,6 +2,7 @@ package JJinBBang.app.global.mail.service.impl;
 
 import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.exception.MailInvalidException;
+import JJinBBang.app.global.mail.exception.MailNotFoundException;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import JJinBBang.app.global.mail.repository.EmailAuthCodeRepository;
 import JJinBBang.app.global.mail.service.MailAuthService;
@@ -34,7 +35,7 @@ public class MailAuthServiceImpl implements MailAuthService {
     @Override
     public boolean verifyAuthCode(Long userId, String email, String authCode) {
         EmailAuthInfo savedAuthCode = emailAuthCodeRepository.findEmailAndAuthCodeByUserId(userId)
-                .orElseThrow(MailInvalidException::notFoundAuthCode);
+                .orElseThrow(MailNotFoundException::notFoundAuthCode);
         return savedAuthCode.email().equals(email) && savedAuthCode.code().equals(authCode);
     }
 
