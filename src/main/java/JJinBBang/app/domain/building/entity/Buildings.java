@@ -1,8 +1,8 @@
 package JJinBBang.app.domain.building.entity;
 
-import java.awt.geom.Point2D;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
@@ -11,8 +11,6 @@ import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -75,4 +73,11 @@ public class Buildings extends BaseEntity {
 	// 건물 -> 리뷰
 	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
 	private List<Reviews> reviews = new ArrayList<>();
+
+	public List<BuildingType> getBuildingType() {
+		return Arrays.stream(buildingType.split(","))
+				.map(String::trim)
+				.map(BuildingType::valueOf)
+				.toList();
+	}
 }

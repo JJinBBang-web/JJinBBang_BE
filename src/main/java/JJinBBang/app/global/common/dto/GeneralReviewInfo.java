@@ -2,6 +2,7 @@ package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
+import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
 import JJinBBang.app.domain.building.enums.ReviewType;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public record GeneralReviewInfo(
         Long id,
         String name,
-        List<String> type,
+        List<BuildingType> type,
         ContractType contractType,
         Integer deposit,
         Integer monthlyRent,
@@ -30,10 +31,7 @@ public record GeneralReviewInfo(
         return GeneralReviewInfo.builder()
                 .id(generalReview.getId())
                 .name(building.getBuildingName())
-                .type(
-                        Arrays.stream(building.getBuildingType().split(",\\s*"))
-                                .collect(Collectors.toList())
-                )
+                .type(building.getBuildingType())
                 .contractType(generalReview.getContractType())
                 .deposit(generalReview.getDeposit())
                 .monthlyRent(generalReview.getPrice())

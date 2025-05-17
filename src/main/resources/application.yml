@@ -17,6 +17,10 @@ spring:
         format_sql: true
     open-in-view: false
 
+  data:
+    mongodb:
+      uri: ${spring.data.mongodb.uri}
+
   security:
     oauth2:
       client:
@@ -75,6 +79,7 @@ logging:
   level:
     org.hibernate.sql: debug
     org.hibernate.typ e: trace
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 security:
   path:
