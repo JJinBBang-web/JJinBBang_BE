@@ -4,6 +4,8 @@ import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.error.exception.AuthGroupException;
 import JJinBBang.app.global.jwt.exception.InvalidTokenException;
+import JJinBBang.app.global.jwt.repository.RefreshTokenRepository;
+import JJinBBang.app.global.jwt.service.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -15,6 +17,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -28,55 +31,34 @@ import javax.crypto.SecretKey;
 public class JwtUtils {
 
 	private final SecretKey key;
-	private final long accessTokenExpiration;
-	private final long refreshTokenExpiration;
 
-	private final long signupTokenExpiration;
+	private final TokenService accessTokenService;
+	private final TokenService refreshTokenService;
+	private final TokenService signupTokenService;
+
 
 	public JwtUtils(
-		@Value("${jwt.secret}") String secretKey,
-		@Value("${jwt.expiration-time.access-token}") long accessTokenExpiration,
-		@Value("${jwt.expiration-time.refresh-token}") long refreshTokenExpiration,
-		@Value("${jwt.expiration-time.signup-token}") long signupTokenExpiration
-	) {
+            @Value("${jwt.secret}") String secretKey,
+			@Qualifier("accessTokenService") TokenService accessTokenService,
+			@Qualifier("refreshTokenService") TokenService refreshTokenService,
+			@Qualifier("signupTokenService") TokenService signupTokenService
+    ) {
 		this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
-		this.accessTokenExpiration = accessTokenExpiration;
-		this.refreshTokenExpiration = refreshTokenExpiration;
-		this.signupTokenExpiration = signupTokenExpiration;
-	}
+		this.accessTokenService = accessTokenService;
+		this.refreshTokenService = refreshTokenService;
+		this.signupTokenService = signupTokenService;
+    }
 
 	public String generateAccessToken(Users user) {
-		return generateToken(user, accessTokenExpiration);
+		return accessTokenService.generateToken(user);
 	}
 
 	public String generateRefreshToken(Users user) {
-		return generateToken(user, refreshTokenExpiration);
+		return refreshTokenService.generateToken(user);
 	}
 
 	public String generateSignupToken(Users user) {
-		return signupToken(user, signupTokenExpiration);
-	}
-
-	private String generateToken(Users user, long expirationTime) {
-		return Jwts.builder()
-			.subject(user.getProviderId())
-			.claim("verificationStatus", user.getVerificationStatus().name())
-			.claim("tokenType", "auth")
-			.issuedAt(new Date())
-			.expiration(new Date(System.currentTimeMillis() + expirationTime))
-			.signWith(key)
-			.compact();
-	}
-
-	private String signupToken(Users user, long expirationTime) {
-		return Jwts.builder()
-			.subject(user.getProviderId())
-			.claim("provider", user.getProvider().name())
-			.claim("tokenType", "signup")
-			.issuedAt(new Date())
-			.expiration(new Date(System.currentTimeMillis() + expirationTime))
-			.signWith(key)
-			.compact();
+		return signupTokenService.generateToken(user);
 	}
 
 
