@@ -63,6 +63,9 @@ public class AuthController {
             @AuthenticationPrincipal Users user,
             @RequestBody IssueEmailCodeRequest request
     ) {
+        // VerificationFilter에서 Users의 VerificationStatus가 UNVERIFIED인 요청만 허용하도록 필터링됨
+        // -> 여기서는 VerificationStatus를 확인할 필요 없음
+        // (기획 요구사항에 따라 학교 이메일 인증이 완료된 후, 다른 이메일로 변경할 수 있어야 한다면 추가 로직 필요함)
         String email = request.emailAddress();
         mailAuthService.sendAuthCode(email);
         return new ResTemplate<>(HttpStatus.OK, "인증코드 전송 완료", null);
@@ -73,6 +76,7 @@ public class AuthController {
             @AuthenticationPrincipal Users user,
             @RequestBody IssueEmailCodeRequest request
     ) {
+        // 여기서도 VerificationFilter에서 Users의 VerificationStatus가 UNVERIFIED인 요청만 허용하도록 필터링됨
         String email = request.emailAddress();
         String code = request.emailAddress();
 
