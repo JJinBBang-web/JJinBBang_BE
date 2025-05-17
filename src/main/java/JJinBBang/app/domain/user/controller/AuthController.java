@@ -38,7 +38,7 @@ public class AuthController {
             String signupToken = jwtUtils.generateSignupToken(user);
 
             SignupRequiredResponse signupRequiredResponse = SignupRequiredResponse.of(signupToken);
-            return new ResTemplate<>(HttpStatus.OK, "약관동의가 필요합니다.", signupRequiredResponse);
+            return new ResTemplate<>(HttpStatus.PRECONDITION_REQUIRED, "약관동의가 필요합니다.", signupRequiredResponse);
         } else {
             String accessToken = jwtUtils.generateAccessToken(user);
             String refreshToken = jwtUtils.generateRefreshToken(user);
@@ -87,7 +87,7 @@ public class AuthController {
             usersService.verifyUniversityEmail(user, email);
             return new ResTemplate<>(HttpStatus.OK, "인증이 완료되었습니다.", null);
         } else {
-            return new ResTemplate<>(HttpStatus.BAD_REQUEST, "인증코드 검증에 실패하였습니다.", null);
+            return new ResTemplate<>(HttpStatus.I_AM_A_TEAPOT, "인증코드 검증에 실패하였습니다.", null);
         }
     }
 }
