@@ -1,17 +1,18 @@
 package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Agencies;
+import JJinBBang.app.domain.building.entity.AgencyReviews;
 import JJinBBang.app.domain.building.entity.Reviews;
+import JJinBBang.app.domain.building.enums.BuildingType;
 import lombok.Builder;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Builder
 public record AgencyReviewInfo(
         Long id,
         String name,
-        List<String> type,
+        BuildingType type,
         BigDecimal rating,
         Boolean liked
 ) {
@@ -19,10 +20,21 @@ public record AgencyReviewInfo(
         return AgencyReviewInfo.builder()
                 .id(reviews.getId())
                 .name(agencies.getName())
-                .type(List.of("공인중개사"))
+                .type(BuildingType.AGENCY)
                 .rating(agencies.getRating())
                 .liked(liked)
                 .build();
+
+    }
+
+    public static AgencyReviewInfo of(AgencyReviews agencyReview, Boolean liked) {
+        return AgencyReviewInfo.builder()
+            .id(agencyReview.getId())
+            .name(agencyReview.getAgency().getName())
+            .type(BuildingType.AGENCY)
+            .rating(agencyReview.getAgency().getRating())
+            .liked(liked)
+            .build();
 
     }
 }
