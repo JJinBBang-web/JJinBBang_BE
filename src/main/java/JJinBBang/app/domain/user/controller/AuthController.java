@@ -33,13 +33,22 @@ public class AuthController {
 
     @PostMapping
     public ResTemplate<?> signIn(@RequestBody LoginRequest loginRequest) {
+        // 소셜 로그인 API
+
+        // 전달받은 provider에 따라 매칭되는 LoginService 인터페이스 구현체를 실행하여 소셜 로그인 진행
         Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode());
+
         if (user.getUserId() == null) {
+            // 약관 동의가 필요한 경우
+            // user 객체는 DB에 저장되지 않은 상태. (provider, providerId 만 존재)
+            // -> 약관동의를 위한 임시 토큰 발급 (토큰에 provider, providerId 포함)
             String signupToken = jwtUtils.generateSignupToken(user);
 
             SignupRequiredResponse signupRequiredResponse = SignupRequiredResponse.of(signupToken);
             return new ResTemplate<>(HttpStatus.PRECONDITION_REQUIRED, "약관동의가 필요합니다.", signupRequiredResponse);
         } else {
+            // 약관 동의가 완료된 유저의 경우
+            // user 객체는 DB에 저장된 상태 -> 엑세스 토큰, 리프레시 토큰 발급
             String accessToken = jwtUtils.generateAccessToken(user);
             String refreshToken = jwtUtils.generateRefreshToken(user);
 
@@ -50,6 +59,8 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResTemplate<LoginResponse> signUp(@AuthenticationPrincipal Users user) {
+        // 로그인 한 유저에 대해 약관 동의를 수행하는 API 입니다.
+
         user = oAuthService.signup(user);
         String accessToken = jwtUtils.generateAccessToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(user);

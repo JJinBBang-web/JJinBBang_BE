@@ -7,6 +7,9 @@ public interface MailAuthService {
 
     /**
      * 주어진 유저 아이디와 이메일로 인증 코드를 생성해서 전송합니다.
+     * 인증 코드는 application.yml -> mail-auth.expiration-time 분간 유효합니다.
+     * 인증 코드는 application.yml -> mail-auth.auth-code-length 길이로 생성됩니다.
+     * 이미 인증 코드가 발급된 경우에는 기존 인증 코드를 삭제하고 새로 발급합니다.
      *
      * @param userId 인증 코드 발급을 요청한 유저의 아이디
      * @param email 인증 코드를 받을 이메일 주소
@@ -17,6 +20,8 @@ public interface MailAuthService {
 
     /**
      * 사용자가 제출한 인증 코드가 저장된 코드와 일치하는지 검증합니다.
+     * userId 키 값에 대한 인증코드가 존재하지 않거나 만료되었으면 예외를 발생시킵니다.
+     * 저장된 인증코드에 대해 이메일과 인증코드가 일치하는지 검증합니다.
      *
      * @param userId  인증 코드 발급을 요청한 유저의 아이디
      * @param email    인증 대상 이메일

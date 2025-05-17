@@ -40,7 +40,7 @@ public class MailAuthServiceImpl implements MailAuthService {
 
 
     // utility --------------------------------------------------------------------------------------------------------
-    public String generateAuthCode() {
+    private String generateAuthCode() {
         // emailAuthCodeLength 자리 숫자로 구성된 인증 코드 생성
         // 앞자리 0이 있어도 텍스트로 생성
         StringBuilder code = new StringBuilder();
@@ -50,7 +50,7 @@ public class MailAuthServiceImpl implements MailAuthService {
         return code.toString();
     }
 
-    public void saveAuthCode(Long userId, String email, String authCode) {
+    private void saveAuthCode(Long userId, String email, String authCode) {
         if(emailAuthCodeRepository.isExistByUserId(userId)) {
             // 이미 인증 코드가 발급된 이메일인 경우
             log.info("이미 인증 코드가 발급된 이메일입니다. [userId: {}]. 기존 인증 코드를 삭제합니다.", userId);
