@@ -20,7 +20,7 @@ import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/building")
+@RequestMapping("/api/v1/building")
 @RequiredArgsConstructor
 public class BuildingController {
 	private final BuildingService buildingService;
