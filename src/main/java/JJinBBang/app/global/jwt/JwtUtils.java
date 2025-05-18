@@ -60,6 +60,7 @@ public class JwtUtils {
 	}
 
 	public String reissueAccessToken(Users user, String refreshToken) {
+		// refreshToken이 refresh 타입인지는 JwtAuthenticationFilter에서 확인
 		// 리프레시 토큰 검증
 		if (!validateToken(refreshToken)) {
 			log.error("Invalid refresh token.");

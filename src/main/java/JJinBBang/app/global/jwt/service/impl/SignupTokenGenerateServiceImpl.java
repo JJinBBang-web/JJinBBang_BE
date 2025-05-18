@@ -1,6 +1,7 @@
 package JJinBBang.app.global.jwt.service.impl;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.jwt.enums.TokenType;
 import JJinBBang.app.global.jwt.service.AbstractTokenGenerateService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -19,7 +20,7 @@ public class SignupTokenGenerateServiceImpl extends AbstractTokenGenerateService
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.expiration-time.signup-token}") long signupTokenExpiration
     ) {
-        super(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)), signupTokenExpiration, "signup");
+        super(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)), signupTokenExpiration, TokenType.SIGNUP.getType());
     }
 
 
@@ -28,7 +29,7 @@ public class SignupTokenGenerateServiceImpl extends AbstractTokenGenerateService
         return Jwts.builder()
                 .subject(user.getProviderId())
                 .claim("provider", user.getProvider().name())
-                .claim("tokenType", "signup")
+                .claim("tokenType", super.tokenType)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + super.expirationTime))
                 .signWith(super.secretKey)

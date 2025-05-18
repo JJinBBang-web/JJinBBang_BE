@@ -19,10 +19,10 @@ public class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
 
     @Override
     public Optional<String> findByUserId(Long userId) {
-        String refreshToken = refreshTokenStore.get(userId).token;
-        if(refreshToken == null) {
+        if(!refreshTokenStore.containsKey(userId)) {
             return Optional.empty();
         }
+        String refreshToken = refreshTokenStore.get(userId).token;
         return Optional.of(refreshToken);
     }
 

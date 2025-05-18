@@ -1,6 +1,7 @@
 package JJinBBang.app.global.jwt.service.impl;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.jwt.enums.TokenType;
 import JJinBBang.app.global.jwt.repository.RefreshTokenRepository;
 import JJinBBang.app.global.jwt.service.AbstractTokenGenerateService;
 import JJinBBang.app.global.jwt.service.RefreshTokenService;
@@ -23,7 +24,7 @@ public class RefreshTokenGenerateServiceImpl extends AbstractTokenGenerateServic
             @Value("${jwt.expiration-time.refresh-token}") long refreshTokenExpiration,
             RefreshTokenRepository refreshTokenRepository
     ) {
-        super(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)), refreshTokenExpiration, "auth");
+        super(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)), refreshTokenExpiration, TokenType.REFRESH.getType());
         this.refreshTokenRepository = refreshTokenRepository;
     }
 

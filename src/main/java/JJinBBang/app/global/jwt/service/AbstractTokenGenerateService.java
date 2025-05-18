@@ -10,7 +10,7 @@ public abstract class AbstractTokenGenerateService implements TokenGenerateServi
 
     protected final SecretKey secretKey;
     protected final long expirationTime;
-    private final String tokenType;
+    protected final String tokenType;
 
     public AbstractTokenGenerateService(SecretKey secretKey, long expirationTime, String tokenType) {
         this.secretKey = secretKey;

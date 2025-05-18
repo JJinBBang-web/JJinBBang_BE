@@ -1,5 +1,6 @@
 package JJinBBang.app.global.jwt.service.impl;
 
+import JJinBBang.app.global.jwt.enums.TokenType;
 import JJinBBang.app.global.jwt.service.AbstractTokenGenerateService;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -15,6 +16,6 @@ public class AccessTokenGenerateServiceImpl extends AbstractTokenGenerateService
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.expiration-time.access-token}") long accessTokenExpiration
     ) {
-        super(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)), accessTokenExpiration, "auth");
+        super(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)), accessTokenExpiration, TokenType.ACCESS.getType());
     }
 }
