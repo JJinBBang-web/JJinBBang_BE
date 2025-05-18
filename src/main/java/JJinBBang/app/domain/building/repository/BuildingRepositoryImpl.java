@@ -68,7 +68,7 @@ public class BuildingRepositoryImpl implements BuildingRepositoryCustom {
 
 		JPAQuery<Buildings> query = queryFactory.selectDistinct(b)
 			.from(b)
-			.leftJoin(b.reviews, r)
+			.leftJoin(b.reviews, r).fetchJoin()
 			.leftJoin(treated).on(r.id.eq(treated.id))
 			.leftJoin(b.campus, c).fetchJoin()
 			.where(builder);
