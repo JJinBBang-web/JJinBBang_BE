@@ -6,13 +6,13 @@ import io.jsonwebtoken.Jwts;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-public abstract class AbstractTokenService implements TokenService {
+public abstract class AbstractTokenGenerateService implements TokenGenerateService {
 
     protected final SecretKey secretKey;
     protected final long expirationTime;
     private final String tokenType;
 
-    public AbstractTokenService(SecretKey secretKey, long expirationTime, String tokenType) {
+    public AbstractTokenGenerateService(SecretKey secretKey, long expirationTime, String tokenType) {
         this.secretKey = secretKey;
         this.expirationTime = expirationTime;
         this.tokenType = tokenType;

@@ -1,7 +1,7 @@
 package JJinBBang.app.global.jwt.service.impl;
 
 import JJinBBang.app.domain.user.entity.Users;
-import JJinBBang.app.global.jwt.service.AbstractTokenService;
+import JJinBBang.app.global.jwt.service.AbstractTokenGenerateService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -13,9 +13,9 @@ import java.util.Date;
 
 @Slf4j
 @Service("signupTokenService")
-public class SignupTokenServiceImpl extends AbstractTokenService {
+public class SignupTokenGenerateServiceImpl extends AbstractTokenGenerateService {
 
-    public SignupTokenServiceImpl(
+    public SignupTokenGenerateServiceImpl(
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.expiration-time.signup-token}") long signupTokenExpiration
     ) {

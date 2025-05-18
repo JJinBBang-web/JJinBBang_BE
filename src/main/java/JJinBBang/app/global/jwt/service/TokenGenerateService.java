@@ -2,7 +2,7 @@ package JJinBBang.app.global.jwt.service;
 
 import JJinBBang.app.domain.user.entity.Users;
 
-public interface TokenService {
+public interface TokenGenerateService {
 
     String generateToken(Users user);
 }
