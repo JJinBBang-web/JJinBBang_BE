@@ -63,4 +63,13 @@ public class AuthController {
         ReissueAccessTokenResponse response = ReissueAccessTokenResponse.of(accessToken);
         return new ResTemplate<>(HttpStatus.OK, "엑세스 토큰 재발급 성공", response);
     }
+
+    @DeleteMapping("/logout")
+    public ResTemplate<?> logout(
+            @AuthenticationPrincipal Users user
+    ){
+        // TODO : 엑세스, 리프레시 토큰 블랙리스트 처리
+        jwtUtils.deleteRefreshToken(user.getUserId());
+        return new ResTemplate<>(HttpStatus.OK, "로그아웃 성공", null);
+    }
 }

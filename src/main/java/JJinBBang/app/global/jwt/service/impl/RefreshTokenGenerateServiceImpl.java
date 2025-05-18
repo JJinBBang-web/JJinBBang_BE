@@ -32,7 +32,7 @@ public class RefreshTokenGenerateServiceImpl extends AbstractTokenGenerateServic
     public String generateToken(Users user) {
         String refreshToken = super.generateToken(user);
 
-        if(refreshTokenRepository.findByUserId(user.getUserId()).isEmpty()){
+        if (refreshTokenRepository.findByUserId(user.getUserId()).isEmpty()) {
             return refreshTokenRepository.save(user.getUserId(), refreshToken, super.expirationTime);
         }
         // 기존 리프레시 토큰이 존재하는 경우, 새로운 리프레시 토큰을 저장하고 반환
@@ -44,10 +44,18 @@ public class RefreshTokenGenerateServiceImpl extends AbstractTokenGenerateServic
     @Override
     public boolean validateRefreshToken(Long userId, String refreshToken) {
         Optional<String> opt = refreshTokenRepository.findByUserId(userId);
-        if(opt.isPresent()){
+        if (opt.isPresent()) {
             String token = opt.get();
             return token.equals(refreshToken);
         }
         return false;
+    }
+
+    @Override
+    public void deleteRefreshToken(Long userId) {
+        Optional<String> opt = refreshTokenRepository.findByUserId(userId);
+        if (opt.isPresent()) {
+            refreshTokenRepository.deleteByUserId(userId);
+        }
     }
 }

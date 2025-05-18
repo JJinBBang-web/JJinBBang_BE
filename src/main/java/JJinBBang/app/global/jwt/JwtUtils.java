@@ -75,6 +75,10 @@ public class JwtUtils {
 		return generateAccessToken(user);
 	}
 
+	public void deleteRefreshToken(Long userId) {
+		refreshTokenService.deleteRefreshToken(userId);
+	}
+
 
 	public String extractToken(String authorizationHeader) {
 		return authorizationHeader.substring(7);
