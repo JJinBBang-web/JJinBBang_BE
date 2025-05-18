@@ -1,21 +1,19 @@
 package JJinBBang.app.domain.user.controller;
 
 import JJinBBang.app.domain.user.dto.request.LoginRequest;
-import JJinBBang.app.domain.user.dto.request.SignupRequest;
 import JJinBBang.app.domain.user.dto.response.LoginResponse;
+import JJinBBang.app.domain.user.dto.response.ReissueAccessTokenResponse;
 import JJinBBang.app.domain.user.dto.response.SignupRequiredResponse;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.OAuthService;
 import JJinBBang.app.global.jwt.JwtUtils;
 import JJinBBang.app.global.template.ResTemplate;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -52,5 +50,17 @@ public class AuthController {
 
         LoginResponse loginResponse = LoginResponse.of(accessToken, refreshToken);
         return new ResTemplate<>(HttpStatus.OK, "회원가입 성공", loginResponse);
+    }
+
+    @PutMapping("/tokenRefresh")
+    public ResTemplate<ReissueAccessTokenResponse> reissueAccessToken(
+            HttpServletRequest request,
+            @AuthenticationPrincipal Users user
+    ){
+        String refreshToken = jwtUtils.extractToken(request);
+        String accessToken = jwtUtils.reissueAccessToken(user, refreshToken);
+
+        ReissueAccessTokenResponse response = ReissueAccessTokenResponse.of(accessToken);
+        return new ResTemplate<>(HttpStatus.OK, "엑세스 토큰 재발급 성공", response);
     }
 }
