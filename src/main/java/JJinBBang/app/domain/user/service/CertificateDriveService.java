@@ -1,5 +1,10 @@
 package JJinBBang.app.domain.user.service;
 
+import JJinBBang.app.domain.user.exception.CertificateBadRequestException;
+import JJinBBang.app.domain.user.exception.CertificateProcessException;
+import JJinBBang.app.domain.user.exception.UserAuthException;
+import JJinBBang.app.global.error.exception.UnprocessableGroupException;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
@@ -18,27 +23,50 @@ public class CertificateDriveService {
         this.folderId = folderId;
     }
 
-    public String uploadPdf(MultipartFile file) throws IOException {
-        var meta = new File()
-                .setName(file.getOriginalFilename())
-                .setParents(Collections.singletonList(folderId));
+    public String uploadPdf(MultipartFile file) {
 
-        var content = new InputStreamContent(
-                file.getContentType(),
-                file.getInputStream()
-        );
+        if (file == null || file.isEmpty()) {
+            throw CertificateBadRequestException.PDFUploadException();
+        }
 
-        var uploadedFile = drive.files()
-                .create(meta, content)
-                .setFields("id")
-                .execute();
+        try {
+            var metadata = new File()
+                    .setName(file.getOriginalFilename())
+                    .setParents(Collections.singletonList(folderId));
 
-        String fileId = uploadedFile.getId();
+            var content = new InputStreamContent(
+                    file.getContentType(),
+                    file.getInputStream()
+            );
 
-        drive.permissions()
-                .create(fileId, new Permission().setType("anyone").setRole("reader"))
-                .execute();
+            var uploadedFile = drive.files()
+                    .create(metadata, content)
+                    .setFields("id")
+                    .execute();
 
-        return "https://drive.google.com/file/d/" + fileId + "/view?usp=sharing";
+            String fileId = uploadedFile.getId();
+
+            drive.permissions()
+                    .create(fileId, new Permission().setType("anyone").setRole("reader"))
+                    .execute();
+
+            return "https://drive.google.com/file/d/" + fileId + "/view?usp=sharing";
+        } catch (GoogleJsonResponseException e) {
+            switch (e.getStatusCode()) {
+                case 400:
+                    throw CertificateBadRequestException.DriveAPIException();
+                case 401:
+                    throw UserAuthException.InvalidToken();
+                default:
+                    throw CertificateProcessException.ProcessException();
+            }
+        } catch (IOException e) {
+            throw new UnprocessableGroupException("파일 처리 중 오류가 발생했습니다.");
+        }
+
+
+
+
+
     }
 }
