@@ -1,12 +1,12 @@
 package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
+import java.math.BigDecimal;
+
 import JJinBBang.app.domain.building.entity.DormReviews;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.Floor;
 import lombok.Builder;
-
-import java.math.BigDecimal;
 
 @Builder
 public record DormitoryReviewInfo(

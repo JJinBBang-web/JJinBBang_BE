@@ -5,10 +5,10 @@ import JJinBBang.app.domain.building.entity.GeneralReviews;
 import JJinBBang.app.domain.building.entity.ReviewDetails;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
+import java.math.BigDecimal;
+
 import JJinBBang.app.domain.building.enums.Floor;
 import lombok.Builder;
-
-import java.math.BigDecimal;
 
 @Builder
 public record GeneralReviewInfo(
