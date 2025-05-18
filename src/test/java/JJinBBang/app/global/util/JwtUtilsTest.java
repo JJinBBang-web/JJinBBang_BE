@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.jwt.JwtUtils;
+import JJinBBang.app.global.jwt.enums.TokenType;
 import JJinBBang.app.global.jwt.exception.InvalidTokenException;
 import JJinBBang.app.global.jwt.repository.InMemoryRefreshTokenRepository;
 import JJinBBang.app.global.jwt.service.RefreshTokenService;
@@ -152,7 +153,7 @@ class JwtUtilsTest {
 				claims.get("verificationStatus", String.class)
 		);
 		assertEquals(
-				"auth",
+				TokenType.ACCESS.getType(),
 				claims.get("tokenType", String.class)
 		);
 	}
@@ -187,7 +188,7 @@ class JwtUtilsTest {
 				user.getVerificationStatus().name(),
 				map.get("verificationStatus")
 		);
-		assertEquals("auth", map.get("tokenType"));
+		assertEquals(TokenType.ACCESS.getType(), map.get("tokenType"));
 	}
 
 	@Test
