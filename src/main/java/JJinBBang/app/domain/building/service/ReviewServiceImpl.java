@@ -108,14 +108,7 @@ public class ReviewServiceImpl implements ReviewService {
 		GeneralReviews savedReview = reviewsRepository.save(generalReviewEntity);
 
 		// 3. review_details 저장
-		ReviewDetails details = ReviewDetails.builder()
-			.reviewId(savedReview.getId())
-			.buildingId(building.getId())
-			.buildingType(dto.buildingRequest().type())
-			.images(dto.imageUrls())
-			.imageCount(dto.imageUrls().size())
-			.keywords(dto.keywords())
-			.build();
+		ReviewDetails details = dto.toReviewDetails(savedReview.getId(), building.getId());
 		reviewDetailsRepository.save(details);
 
 		// 4. 키워드 집계
@@ -143,14 +136,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 
 		// 4. review_details 저장
-		ReviewDetails details = ReviewDetails.builder()
-			.reviewId(savedReview.getId())
-			.buildingId(building.getId())
-			.buildingType(dto.buildingRequest().type())
-			.images(dto.imageUrls())
-			.imageCount(dto.imageUrls().size())
-			.keywords(dto.keywords())
-			.build();
+		ReviewDetails details = dto.toReviewDetails(savedReview.getId(), building.getId());
 		reviewDetailsRepository.save(details);
 
 		// 5. 키워드 집계
@@ -174,14 +160,7 @@ public class ReviewServiceImpl implements ReviewService {
 		AgencyReviews savedReview = reviewsRepository.save(agencyReview);
 
 		// 3. review_details 저장
-		ReviewDetails details = ReviewDetails.builder()
-			.reviewId(savedReview.getId())
-			.buildingId(agency.getAgencyId())
-			.buildingType(dto.buildingRequest().type())
-			.images(dto.imageUrls())
-			.imageCount(dto.imageUrls().size())
-			.keywords(dto.keywords())
-			.build();
+		ReviewDetails details = dto.toReviewDetails(savedReview.getId(), agency.getAgencyId());
 		reviewDetailsRepository.save(details);
 
 		// 4. 키워드 집계
