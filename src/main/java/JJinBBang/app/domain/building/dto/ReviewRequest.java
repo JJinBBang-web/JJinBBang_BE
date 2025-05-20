@@ -2,11 +2,7 @@ package JJinBBang.app.domain.building.dto;
 
 import java.util.List;
 
-import JJinBBang.app.domain.building.entity.Agencies;
-import JJinBBang.app.domain.building.entity.AgencyReviews;
-import JJinBBang.app.domain.building.entity.Buildings;
-import JJinBBang.app.domain.building.entity.DormReviews;
-import JJinBBang.app.domain.building.entity.GeneralReviews;
+import JJinBBang.app.domain.building.entity.*;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.user.entity.Users;
@@ -124,5 +120,17 @@ public record ReviewRequest (
 			.user(user)
 			.agency(agency)
 			.build();
+	}
+
+
+	public ReviewDetails toReviewDetails(Long reviewId, Long buildingId) {
+		return ReviewDetails.builder()
+				.reviewId(reviewId)
+				.buildingId(buildingId)
+				.buildingType(buildingRequest.type())
+				.images(imageUrls)
+				.imageCount(imageUrls.size())
+				.keywords(keywords)
+				.build();
 	}
 }
