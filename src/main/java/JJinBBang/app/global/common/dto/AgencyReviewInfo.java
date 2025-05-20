@@ -1,8 +1,8 @@
 package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Agencies;
-import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.entity.AgencyReviews;
+import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import lombok.Builder;
 
@@ -26,13 +26,15 @@ public record AgencyReviewInfo(
                 .build();
 
     }
-	public static AgencyReviewInfo of(AgencyReviews agencyReview, Boolean liked) {
-		return AgencyReviewInfo.builder()
-			.id(agencyReview.getId())
-			.name(agencyReview.getAgency().getName())
-			.type(BuildingType.AGENCY)
-			.rating(agencyReview.getRating())
-			.liked(liked)
-			.build();
-	}
+
+    public static AgencyReviewInfo of(AgencyReviews agencyReview, Boolean liked) {
+        return AgencyReviewInfo.builder()
+            .id(agencyReview.getId())
+            .name(agencyReview.getAgency().getName())
+            .type(BuildingType.AGENCY)
+            .rating(agencyReview.getAgency().getRating())
+            .liked(liked)
+            .build();
+
+    }
 }

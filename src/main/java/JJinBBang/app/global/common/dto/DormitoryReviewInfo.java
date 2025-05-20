@@ -10,40 +10,41 @@ import lombok.Builder;
 
 @Builder
 public record DormitoryReviewInfo(
-		Long id,
-		String name,
-		BuildingType type,
-		String universityName,
-		Floor floor,
-		Integer capacity,
-		Integer dormFee,
-		BigDecimal rating,
-		Boolean liked
+        Long id,
+        String name,
+        BuildingType type,
+        String universityName,
+        Floor floor,
+        Integer capacity,
+        Integer dormFee,
+        BigDecimal rating,
+        Boolean liked
 ) {
     public static DormitoryReviewInfo of(DormReviews dormReviews,Buildings building,String universityName, Boolean liked) {
         return DormitoryReviewInfo.builder()
-                .id(dormReviews.getId())
-                .name(building.getBuildingName())
-                .type(BuildingType.DORMITORY)
-                .universityName(universityName)
-                .floor(dormReviews.getFloor())
-                .capacity(dormReviews.getCapacity())
-                .dormFee(dormReviews.getDormFee())
-                .rating(dormReviews.getRating())
-                .liked(liked)
-                .build();
+            .id(dormReviews.getId())
+            .name(building.getBuildingName())
+            .type(BuildingType.DORMITORY)
+            .universityName(universityName)
+            .floor(dormReviews.getFloor())
+            .capacity(dormReviews.getCapacity())
+            .dormFee(dormReviews.getDormFee())
+            .rating(dormReviews.getRating())
+            .liked(liked)
+            .build();
     }
-	public static DormitoryReviewInfo of(DormReviews dormitoryReview, Boolean liked) {
-			return DormitoryReviewInfo.builder()
-				.id(dormitoryReview.getId())
-				.name(dormitoryReview.getBuilding().getBuildingName())
-				.type(BuildingType.DORMITORY)
-				.universityName(dormitoryReview.getBuilding().getCampus().getUniversity().getUniversityName())
-				.floor(dormitoryReview.getFloor())
-				.capacity(dormitoryReview.getCapacity())
-				.dormFee(dormitoryReview.getDormFee())
-				.rating(dormitoryReview.getRating())
-				.liked(liked)
-				.build();
-		}
+
+    public static DormitoryReviewInfo of(DormReviews dormReviews, Boolean liked) {
+        return DormitoryReviewInfo.builder()
+            .id(dormReviews.getId())
+            .name(dormReviews.getBuilding().getBuildingName())
+            .type(BuildingType.DORMITORY)
+            .universityName(dormReviews.getBuilding().getCampus().getCampusName())
+            .floor(dormReviews.getFloor())
+            .capacity(dormReviews.getCapacity())
+            .dormFee(dormReviews.getDormFee())
+            .rating(dormReviews.getRating())
+            .liked(liked)
+            .build();
+    }
 }

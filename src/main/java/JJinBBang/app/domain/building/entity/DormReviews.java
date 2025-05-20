@@ -1,5 +1,8 @@
 package JJinBBang.app.domain.building.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import JJinBBang.app.domain.building.enums.Floor;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,4 +29,9 @@ public class DormReviews extends Reviews {
 
 	@Column(name = "current_grade", nullable = true)
 	private Double currentGrade;
+
+	// 기숙사 리뷰 -> 기숙사 시설
+	@OneToMany(mappedBy = "dormitoryReview", cascade = CascadeType.ALL)
+	private List<DormitoryFacilities> dormitoryFacilities = new ArrayList<>();
+
 }

@@ -5,10 +5,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "dorm_facilities")
+@Table(name = "dormitory_facilities")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class DormFacility {
+public class DormitoryFacilities {
 
     @EmbeddedId
     private DormFacilityId id;
@@ -17,13 +17,13 @@ public class DormFacility {
     @MapsId("reviewId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "review_id")
-    private Reviews review;
+    private DormReviews dormitoryReview;
 
     // PK(facility_id) → Facility 엔티티와 N:1
     @MapsId("facilityId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "facility_id")
-    private Facility facility;
+    private Facilities facility;
 
     @Column(name = "available", nullable = false)
     private Boolean available;      // TINYINT(1) → Boolean
