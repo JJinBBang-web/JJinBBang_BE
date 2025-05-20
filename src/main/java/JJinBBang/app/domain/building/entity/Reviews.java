@@ -68,4 +68,28 @@ public class Reviews extends BaseEntity {
         return Arrays.stream(tags.split(","))
             .map(x->KeywordType.valueOf(x.trim())).toList();
     }
+
+    public void setTags(List<KeywordType> tags) {
+        this.tags = String.join(",", tags.stream().map(KeywordType::toString).toList());
+    }
+
+    // Reviews.java
+    protected Reviews(Long id, ReviewType dtype, Integer likesCount,
+                      String thumbnailImage, String content,
+                      List<KeywordType> tagsList,
+                      BigDecimal rating, Users user,
+                      Buildings building, Agencies agency,
+                      List<ReviewLikes> reviewLikes) {
+        this.id             = id;
+        this.dtype          = dtype;
+        this.likesCount     = likesCount;
+        this.thumbnailImage = thumbnailImage;
+        this.content        = content;
+        setTags(tagsList);
+        this.rating         = rating;
+        this.user           = user;
+        this.building       = building;
+        this.agency         = agency;
+        this.reviewLikes    = reviewLikes;
+    }
 }
