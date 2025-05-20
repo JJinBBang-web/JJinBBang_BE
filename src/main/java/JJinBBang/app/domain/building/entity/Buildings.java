@@ -1,9 +1,11 @@
 package JJinBBang.app.domain.building.entity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.common.entity.Campuses;
@@ -19,17 +21,24 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Buildings extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "building_id")
 	private Long id; // 건물 id
+
+	@Column(nullable = false, unique = true)
+	private String buildingCode; // 카카오 건물 관리 번호
 
 	@Column(nullable = false)
 	private String buildingName; // 건물 이름
@@ -46,9 +55,7 @@ public class Buildings extends BaseEntity {
 	@Column(nullable = false)
 	private Double buildingLot; // 건물 경도
 
-	private Double area; // 건물 면적
-
-	@Column(name = "rating", precision = 3, scale = 2, nullable = false)
+	@Column(name = "rating", precision = 3, scale = 2, nullable = true)
 	private BigDecimal buildingRating; // 건물 평점
 
 	@Column(nullable = false)
@@ -63,7 +70,7 @@ public class Buildings extends BaseEntity {
 	// 연관관계 매핑
 	// 캠퍼스 -> 건물
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "campus_id")
+	@JoinColumn(name = "campus_id", nullable = true)
 	private Campuses campus;
 
 	// 건물 -> 건물-좋아요
@@ -79,5 +86,34 @@ public class Buildings extends BaseEntity {
 				.map(String::trim)
 				.map(BuildingType::valueOf)
 				.toList();
+	}
+
+	public void setBuildingType(List<BuildingType> buildingTypeList) {
+		this.buildingType = buildingTypeList.stream().map(BuildingType::toString).collect(Collectors.joining(","));
+	}
+
+	public void incrementReviewCount() {
+		this.reviewCount++;
+	}
+
+	public void updateAverageRating(BigDecimal newRating) {
+		if (this.buildingRating == null) {
+			this.buildingRating = newRating;
+			return;
+		}
+
+		int count = this.reviewCount;
+
+		BigDecimal previousTotal = this.buildingRating
+			.multiply(BigDecimal.valueOf(count - 1));
+
+		BigDecimal newTotal = previousTotal.add(newRating);
+
+		this.buildingRating = newTotal
+			.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
+	}
+
+	public void incrementImagesCount() {
+		this.imagesCount++;
 	}
 }
