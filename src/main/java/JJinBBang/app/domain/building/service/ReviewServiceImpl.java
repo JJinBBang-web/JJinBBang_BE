@@ -6,6 +6,12 @@ import java.util.List;
 import JJinBBang.app.domain.building.dto.*;
 import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import JJinBBang.app.domain.building.dto.*;
+import JJinBBang.app.domain.building.exception.*;
+import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.entity.Campuses;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -129,7 +135,7 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	private Long createDormitoryReview(ReviewRequest dto, Users user) {
-		Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus()).orElseThrow(CampusNotFoundException::missingCampus);
+        Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus()).orElseThrow(CampusNotFoundException::missingCampus);
 		Buildings building = findOrCreateBuilding(dto.buildingRequest(), campus);
 
 
