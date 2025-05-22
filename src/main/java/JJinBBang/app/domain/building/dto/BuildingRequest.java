@@ -4,6 +4,7 @@ package JJinBBang.app.domain.building.dto;
 import JJinBBang.app.domain.building.entity.Agencies;
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.enums.BuildingType;
+import JJinBBang.app.domain.common.entity.Campuses;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -23,7 +24,7 @@ public record BuildingRequest (
         @NotNull
         Double longitude
 ){
-    public Buildings toBuildingEntity() {
+    public Buildings toBuildingEntity(Campuses campus) {
         return Buildings.builder()
                 .buildingCode(buildingCode)
                 .buildingName(name)
@@ -35,6 +36,7 @@ public record BuildingRequest (
                 .reviewCount(0)
                 .likeCount(0)
                 .imagesCount(0)
+                .campus(campus)
                 .build();
     }
     public Agencies toAgencyEntity() {
