@@ -4,11 +4,7 @@ import java.math.BigDecimal;
 
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 @Getter
@@ -31,4 +27,18 @@ public class GeneralReviewDto {
 	@NotBlank
 	private String content;
 
+	@AssertTrue(message = "계약 타입에 따라 deposit, monthlyRent, maintenanceCost 필드를 올바르게 설정해주세요.")
+	private boolean isContractTypeValid() {
+		if (contractType == null) {
+			return true;  // @NotNull 에서 잡아줌
+		}
+        return switch (contractType) {
+            case MONTHLY_RENT -> deposit != null
+                    && monthlyRent != null
+                    && maintenanceCost != null;
+            case DEPOSIT_RENT -> deposit != null
+                    && maintenanceCost != null
+                    && monthlyRent == null;
+        };
+	}
 }
