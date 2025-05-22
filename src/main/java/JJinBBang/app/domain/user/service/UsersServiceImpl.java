@@ -8,10 +8,12 @@ import JJinBBang.app.domain.user.exception.UserNotFoundException;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UsersServiceImpl implements UsersService {
 
 	private final UsersRepository usersRepository;
@@ -39,10 +41,15 @@ public class UsersServiceImpl implements UsersService {
 	}
 
 	@Override
-	public UserInfoResponseDto getUserInfo(Users user) {
-		if (user == null) {
-			throw UserNotFoundException.notFound();
-		}
+	public UserInfoResponseDto getUserInfo(Users authUser) {
+		Users user = usersRepository.findWithUniversityByProviderId(authUser.getProviderId())
+				.orElseThrow(UserNotFoundException::notFound);
 		return UserInfoResponseDto.of(user);
+	}
+
+	@Override
+	public Users findWithUniversity(String providerId) {
+		return usersRepository.findWithUniversityByProviderId(providerId)
+				.orElseThrow(UserNotFoundException::notFound);
 	}
 }

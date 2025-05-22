@@ -12,4 +12,6 @@ public interface UsersService {
 	Users save(Users user);
 
 	UserInfoResponseDto getUserInfo(Users user);
+
+	Users findWithUniversity(String providerId);
 }
