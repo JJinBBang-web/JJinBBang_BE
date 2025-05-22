@@ -6,12 +6,6 @@ import java.util.List;
 import JJinBBang.app.domain.building.dto.*;
 import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import JJinBBang.app.domain.building.dto.*;
-import JJinBBang.app.domain.building.exception.*;
-import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.entity.Campuses;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
