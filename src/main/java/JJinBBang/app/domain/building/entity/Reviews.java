@@ -32,16 +32,17 @@ public class Reviews extends BaseEntity {
     @Column(name = "likes_count", nullable = false, columnDefinition = "integer default 0")
     private Integer likesCount; // 좋아요 수
 
-    @Column(name = "thumbnail_image", nullable = false, length = 2083)
+    // 공인중개사 이미지가 없을 수 있기 때문에 썸네일을 nullable로 설정함
+    @Column(name = "thumbnail_image", nullable = true, length = 2083)
     private String thumbnailImage; // 썸네일 이미지
 
     @Column(nullable = false)
     private String content; // 후기 내용
 
     @Column(length = 30)
-    private  String tags; // 태그
+    private String tags; // 태그
 
-    @Column(name = "rating", precision = 3, scale = 2, nullable = false)
+    @Column(name = "rating", precision = 3, scale = 2, nullable = true)
     private BigDecimal rating; // 후기 평점
 
     // 연관관계 매핑
@@ -65,6 +66,9 @@ public class Reviews extends BaseEntity {
     private List<ReviewLikes> reviewLikes = new ArrayList<>();
 
     public List<KeywordType> getTags() {
+        if (tags == null || tags.isBlank()) {
+            return List.of();
+        }
         return Arrays.stream(tags.split(","))
             .map(x->KeywordType.valueOf(x.trim())).toList();
     }
@@ -76,7 +80,7 @@ public class Reviews extends BaseEntity {
     // Reviews.java
     protected Reviews(Long id, ReviewType dtype, Integer likesCount,
                       String thumbnailImage, String content,
-                      List<KeywordType> tagsList,
+                      List<KeywordType> tags,
                       BigDecimal rating, Users user,
                       Buildings building, Agencies agency,
                       List<ReviewLikes> reviewLikes) {
@@ -85,11 +89,11 @@ public class Reviews extends BaseEntity {
         this.likesCount     = likesCount;
         this.thumbnailImage = thumbnailImage;
         this.content        = content;
-        setTags(tagsList);
+        setTags(tags == null ? List.of() : tags);
         this.rating         = rating;
         this.user           = user;
         this.building       = building;
         this.agency         = agency;
-        this.reviewLikes    = reviewLikes;
+        this.reviewLikes    = (reviewLikes == null) ? new ArrayList<>() : reviewLikes;
     }
 }
