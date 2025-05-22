@@ -44,6 +44,7 @@ out/
 
 ### yml ###
 src/**/application-prod.yml
-
-gcp_iam_key.json
 application-prod.yml
+
+# Google Cloud Platform IAM key
+gcp_iam_key.json
