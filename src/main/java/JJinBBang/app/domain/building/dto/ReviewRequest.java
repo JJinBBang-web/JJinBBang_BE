@@ -105,7 +105,27 @@ public record ReviewRequest (
 			.build();
 	}
 
-	public DormReviews toDormReviews(Users user, Buildings building, Conditions condition) {
+	public GeneralReviews toUpdatedGeneralReviews(GeneralReviews oldReview, Buildings building) {
+		return GeneralReviews.builder()
+				.id(oldReview.getId())
+				.dtype(oldReview.getDtype())
+				.likesCount(oldReview.getLikesCount())
+				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+				.content(generalReview.getContent())
+				.tags(keywords.positive().stream().limit(3).toList())
+				.rating(generalReview.getRating())
+				.user(oldReview.getUser())
+				.building(building)
+				.floor(generalReview.getFloor())
+				.area(generalReview.getSpace())
+				.contractType(generalReview.getContractType())
+				.deposit(generalReview.getDeposit())
+				.price(generalReview.getMonthlyRent())
+				.maintenanceCost(generalReview.getMaintenanceCost())
+				.build();
+	}
+
+	public DormReviews toDormReviews(Users user, Buildings building) {
 		return DormReviews.builder()
 			.dtype(ReviewType.DORM)
 			.likesCount(0)
@@ -123,6 +143,25 @@ public record ReviewRequest (
 			.build();
 	}
 
+	public DormReviews toUpdatedDormitoryReviews(DormReviews oldReview, Buildings building) {
+		return DormReviews.builder()
+				.id(oldReview.getId())
+				.dtype(oldReview.getDtype())
+				.likesCount(oldReview.getLikesCount())
+				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+				.content(dormitoryReview.getContent())
+				.tags(keywords.positive().stream().limit(3).toList())
+				.rating(dormitoryReview.getRating())
+				.user(oldReview.getUser())
+				.building(building)
+				.floor(dormitoryReview.getFloor())
+				.capacity(dormitoryReview.getCapacity())
+				.dormFee(dormitoryReview.getDormFee())
+				.currentRegion(condition.currentRegion())
+				.currentGrade(condition.currentGrade())
+				.build();
+	}
+
 	public AgencyReviews toAgencyReviews(Users user, Agencies agency) {
 		return AgencyReviews.builder()
 			.dtype(ReviewType.AGENCY)
@@ -136,12 +175,34 @@ public record ReviewRequest (
 			.build();
 	}
 
+	public AgencyReviews toUpdatedAgencyReviews(AgencyReviews oldReview, Agencies agency) {
+		return AgencyReviews.builder()
+				.id(oldReview.getId())
+				.dtype(oldReview.getDtype())
+				.likesCount(oldReview.getLikesCount())
+				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+				.content(agencyReview.getContent())
+				.tags(keywords.positive().stream().limit(3).toList())
+				.rating(agencyReview.getRating())
+				.user(oldReview.getUser())
+				.agency(agency)
+				.build();
+	}
 
 	public ReviewDetails toReviewDetails(Long reviewId, Long buildingId) {
 		return ReviewDetails.builder()
 				.reviewId(reviewId)
 				.buildingId(buildingId)
 				.buildingType(buildingRequest.type())
+				.images(imageUrls)
+				.imageCount(imageUrls.size())
+				.keywords(keywords)
+				.build();
+	}
+
+	public ReviewDetails toUpdatedReviewDetails(ReviewDetails oldDetails, Long buildingId) {
+		return oldDetails.toBuilder()
+				.buildingId(buildingId)
 				.images(imageUrls)
 				.imageCount(imageUrls.size())
 				.keywords(keywords)
