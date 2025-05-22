@@ -74,6 +74,18 @@ public record ReviewRequest (
 		return true;
 	}
 
+	@AssertTrue(message = "리뷰 유형에 따라 이미지 개수를 올바르게 설정해주세요. 일반/기숙사 리뷰는 2~20장, 중개사 리뷰는 최대 20장입니다.")
+	private boolean isImageCountValid() {
+		if (imageUrls != null) {
+			int size = imageUrls.size();
+			if (agencyReview != null) {
+				return size <= 20;
+			}
+			return size >= 2 && size <= 20;
+		}
+		return true;
+	}
+
 	public GeneralReviews toGeneralReviews(Users user, Buildings building) {
 		return GeneralReviews.builder()
 			.dtype(ReviewType.GENERAL)
@@ -99,6 +111,7 @@ public record ReviewRequest (
 			.likesCount(0)
 			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 			.content(dormitoryReview.getContent())
+			.tags(keywords.positive().stream().limit(3).toList())
 			.rating(dormitoryReview.getRating())
 			.user(user)
 			.building(building)
@@ -116,6 +129,7 @@ public record ReviewRequest (
 			.likesCount(0)
 			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 			.content(agencyReview.getContent())
+			.tags(keywords.positive().stream().limit(3).toList())
 			.rating(agencyReview.getRating())
 			.user(user)
 			.agency(agency)
