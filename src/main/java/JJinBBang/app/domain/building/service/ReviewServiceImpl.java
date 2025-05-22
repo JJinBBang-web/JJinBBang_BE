@@ -6,6 +6,7 @@ import java.util.List;
 import JJinBBang.app.domain.building.dto.*;
 import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
+import JJinBBang.app.domain.common.entity.Campuses;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,8 @@ public class ReviewServiceImpl implements ReviewService {
 	private final FacilitiesRepository facilitiesRepository;
 	private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
 	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
+	private final CampusesRepository campusesRepository;
+
 
 	@Override
 	@Transactional(readOnly = true)
@@ -100,9 +103,9 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 	}
 
-	public Long createGeneralReview(ReviewRequest dto, Users user) {
+	private Long createGeneralReview(ReviewRequest dto, Users user) {
 		// 1. Main review 생성
-		Buildings building = findOrCreateBuilding(dto.buildingRequest());
+		Buildings building = findOrCreateBuilding(dto.buildingRequest(), null);
 
 		GeneralReviews generalReviewEntity = dto.toGeneralReviews(user, building);
 		GeneralReviews savedReview = reviewsRepository.save(generalReviewEntity);
@@ -125,8 +128,9 @@ public class ReviewServiceImpl implements ReviewService {
 		return savedReview.getId();
 	}
 
-	public Long createDormitoryReview(ReviewRequest dto, Users user) {
-		Buildings building = findOrCreateBuilding(dto.buildingRequest());
+	private Long createDormitoryReview(ReviewRequest dto, Users user) {
+		Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus()).orElseThrow(CampusNotFoundException::missingCampus);
+		Buildings building = findOrCreateBuilding(dto.buildingRequest(), campus);
 
 
 		DormReviews dormitoryReview = dto.toDormReviews(user, building, dto.condition());
@@ -177,7 +181,7 @@ public class ReviewServiceImpl implements ReviewService {
 		return savedReview.getId();
 	}
 
-	private Buildings findOrCreateBuilding(BuildingRequest dto) {
+	private Buildings findOrCreateBuilding(BuildingRequest dto, Campuses campus) {
 		return buildingsRepository.findByBuildingCode(dto.buildingCode())
 			// 기존에 있는 건물인 경우,
 			.map(existing -> {
@@ -195,7 +199,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 			// 기존에 없는 건물은 새로 생성
 			.orElseGet(() -> {
-				Buildings saved = buildingsRepository.save(dto.toBuildingEntity());
+				Buildings saved = buildingsRepository.save(dto.toBuildingEntity(campus));
 				BuildingKeywordCounts kwCount = BuildingKeywordCounts.of(saved.getId(), false);
 				buildingKeywordCountsRepository.save(kwCount);
 				return saved;
