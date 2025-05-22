@@ -75,10 +75,12 @@ public class Buildings extends BaseEntity {
 
 	// 건물 -> 건물-좋아요
 	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
+	@Builder.Default
 	private List<BuildingLikes> buildingLikes = new ArrayList<>();
 
 	// 건물 -> 리뷰
 	@OneToMany(mappedBy = "building", cascade = CascadeType.ALL)
+	@Builder.Default
 	private List<Reviews> reviews = new ArrayList<>();
 
 	public List<BuildingType> getBuildingType() {
