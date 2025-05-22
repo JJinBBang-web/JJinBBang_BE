@@ -10,4 +10,5 @@ public interface ReviewService {
 	PaginatedResponse<ReviewSummaryResponse> getReviewList(Long buildingId, Boolean isAgency, Users user, PageRequest pageRequest);
 	CreateReviewResponse createReview(ReviewRequest reviewRequest, Users user, ReviewType reviewType);
 	void updateReview(ReviewRequest reviewRequest, Users user, Long reviewId);
+	void deleteReview(Users user, Long reviewId);
 }

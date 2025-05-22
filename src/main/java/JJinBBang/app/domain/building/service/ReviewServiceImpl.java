@@ -52,9 +52,10 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 특정 건물 또는 공인중개사에 대한 리뷰 목록을 페이징 조회
-     * @param buildingId 건물 또는 공인중개사 ID
-     * @param isAgency true면 공인중개사, false면 건물
-     * @param user 조회 요청 사용자(좋아요 여부 확인용)
+     *
+     * @param buildingId  건물 또는 공인중개사 ID
+     * @param isAgency    true면 공인중개사, false면 건물
+     * @param user        조회 요청 사용자(좋아요 여부 확인용)
      * @param pageRequest 페이징 및 정렬 정보
      * @return ReviewSummaryResponse 페이징 응답
      */
@@ -102,8 +103,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 단일 리뷰 상세 조회
+     *
      * @param reviewId 조회할 리뷰 ID
-     * @param user 조회 요청 사용자(좋아요 여부 확인용)
+     * @param user     조회 요청 사용자(좋아요 여부 확인용)
      * @return ReviewDetailResponse 상세 응답
      */
     @Override
@@ -136,9 +138,10 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 리뷰 생성 진입점
+     *
      * @param reviewRequest DTO로 전달된 리뷰 생성 정보
-     * @param user 작성자 엔티티
-     * @param reviewType 리뷰 타입(GENERAL/DORM/AGENCY)
+     * @param user          작성자 엔티티
+     * @param reviewType    리뷰 타입(GENERAL/DORM/AGENCY)
      * @return CreateReviewResponse 생성된 리뷰 ID
      */
     @Override
@@ -287,7 +290,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 건물 조회 또는 신규 생성 헬퍼
-     * @param dto BuildingRequest DTO
+     *
+     * @param dto    BuildingRequest DTO
      * @param campus 소속 캠퍼스(기숙사 리뷰용)
      * @return Buildings 엔티티
      */
@@ -314,6 +318,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 공인중개사 조회 또는 신규 생성 헬퍼
+     *
      * @param dto BuildingRequest DTO
      * @return Agencies 엔티티
      */
@@ -330,10 +335,11 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 키워드 통계 업데이트 헬퍼
+     *
      * @param buildingId 건물 또는 공인중개사 ID
-     * @param isAgency true=공인중개사, false=건물
-     * @param oldPos 이전 긍정 키워드 목록
-     * @param newPos 신규 긍정 키워드 목록
+     * @param isAgency   true=공인중개사, false=건물
+     * @param oldPos     이전 긍정 키워드 목록
+     * @param newPos     신규 긍정 키워드 목록
      */
     private void updateKeywordCounts(
             Long buildingId,
@@ -358,7 +364,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 기숙사 시설 변환 헬퍼
-     * @param dto FacilitiesDto
+     *
+     * @param dto    FacilitiesDto
      * @param review DormReviews 엔티티
      * @return DormitoryFacilities 리스트
      */
@@ -387,8 +394,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     /**
      * 리뷰 수정 진입점
-     * @param dto 업데이트할 리뷰 정보
-     * @param user 수정 요청 사용자
+     *
+     * @param dto      업데이트할 리뷰 정보
+     * @param user     수정 요청 사용자
      * @param reviewId 수정 대상 리뷰 ID
      */
     @Override
@@ -559,5 +567,123 @@ public class ReviewServiceImpl implements ReviewService {
         reviewsRepository.save(updatedReview);
         ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newAgency.getAgencyId());
         reviewDetailsRepository.save(updatedDetails);
+    }
+
+    /**
+     * 리뷰 수정 진입점
+     *
+     * @param user     삭제 요청 사용자
+     * @param reviewId 삭제 대상 리뷰 ID
+     */
+    @Override
+    @Transactional
+    public void deleteReview(Users user, Long reviewId) {
+        // 1) 리뷰 로드 및 존재 확인
+        Reviews review = reviewsRepository.findById(reviewId)
+                .orElseThrow(ReviewNotFoundException::missingReview);
+
+        // 2) 작성자 권한 확인
+        if (review.getUser() != null && !review.getUser().getUserId().equals(user.getUserId())) {
+            throw ReviewAccessDeniedException.onlyAuthorCanDelete();
+        }
+
+        // 3) 타입별 삭제 로직 분기
+        if (review instanceof GeneralReviews general) {
+            deleteGeneralReview(general);
+        } else if (review instanceof DormReviews dorm) {
+            deleteDormitoryReview(dorm);
+        } else if (review instanceof AgencyReviews agency) {
+            deleteAgencyReview(agency);
+        } else {
+            throw ReviewInternalServerErrorException.notSupportReviewType();
+        }
+    }
+
+    /**
+     * 일반 리뷰 삭제 로직:
+     * 1) 통계 반영: 평점 제거, 이미지 카운트 감소, 키워드 통계 감소
+     * 2) 연관 데이터 삭제: 상세 정보, 리뷰 엔티티 삭제
+     *
+     * @param review 삭제할 GeneralReviews 엔티티
+     */
+    private void deleteGeneralReview(GeneralReviews review) {
+        // a) 통계 반영
+        Buildings building = review.getBuilding();
+        ReviewDetails detail = reviewDetailsRepository.findByReviewId(review.getId())
+                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+
+        // 평점 제거
+        building.removeRating(review.getRating());
+        // 이미지 카운트 감소
+        if (review.getThumbnailImage() != null) {
+            building.decrementImagesCount();
+        }
+        // 키워드 통계 감소
+        updateKeywordCounts(building.getId(), false,
+                detail.getKeywords().positive(), Collections.emptyList());
+        buildingsRepository.save(building);
+
+        // b) 연관 데이터 삭제
+        reviewDetailsRepository.deleteByReviewId(review.getId());
+        reviewsRepository.delete(review);
+    }
+
+    /**
+     * 기숙사 리뷰 삭제 로직:
+     * 1) 통계 반영: 평점 제거, 이미지 카운트 감소, 키워드 통계 감소
+     * 2) 연관된 시설, 상세 정보, 리뷰 엔티티 삭제
+     *
+     * @param review 삭제할 DormReviews 엔티티
+     */
+    private void deleteDormitoryReview(DormReviews review) {
+        // a) 통계 반영
+        Buildings building = review.getBuilding();
+        ReviewDetails detail = reviewDetailsRepository.findByReviewId(review.getId())
+                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+
+        // 평점 제거
+        building.removeRating(review.getRating());
+        // 이미지 카운트 감소
+        if (review.getThumbnailImage() != null) {
+            building.decrementImagesCount();
+        }
+        // 키워드 통계 감소
+        updateKeywordCounts(building.getId(), false,
+                detail.getKeywords().positive(), Collections.emptyList());
+        buildingsRepository.save(building);
+
+        // b) 연관된 시설, 상세정보, 리뷰 삭제
+        dormitoryFacilitiesRepository.deleteAllByDormitoryReview(review);
+        reviewDetailsRepository.deleteByReviewId(review.getId());
+        reviewsRepository.delete(review);
+    }
+
+    /**
+     * 공인중개사 리뷰 삭제 로직:
+     * 1) 통계 반영: 평점 제거, 이미지 카운트 감소, 키워드 통계 감소
+     * 2) 연관 상세 정보 및 리뷰 엔티티 삭제
+     *
+     * @param review 삭제할 AgencyReviews 엔티티
+     */
+    private void deleteAgencyReview(AgencyReviews review) {
+        // a) 통계 반영
+        Agencies agency = review.getAgency();
+        ReviewDetails detail = reviewDetailsRepository.findByReviewId(review.getId())
+                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+
+        // 평점 제거
+        agency.removeRating(review.getRating());
+        // 이미지 카운트 감소
+        if (review.getThumbnailImage() != null) {
+            agency.decrementImagesCount();
+        }
+        // 키워드 통계 감소
+        updateKeywordCounts(agency.getAgencyId(), true,
+                detail.getKeywords().positive(), Collections.emptyList());
+        agenciesRepository.save(agency);
+
+        // b) 상세정보 및 리뷰 삭제
+        reviewDetailsRepository.deleteByReviewId(review.getId());
+        reviewsRepository.delete(review);
     }
 }
