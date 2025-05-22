@@ -12,4 +12,6 @@ import JJinBBang.app.domain.building.entity.ReviewDetails;
 public interface ReviewDetailsRepository extends MongoRepository<ReviewDetails, ObjectId> {
 
 	Optional<ReviewDetails> findByReviewId(Long reviewId);
+
+    void deleteByReviewId(Long reviewId);
 }
