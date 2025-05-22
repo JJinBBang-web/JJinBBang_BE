@@ -7,12 +7,12 @@ public class CertificateBadRequestException extends InvalidGroupException {
         super(message);
     }
 
-    public static CertificateBadRequestException PDFUploadException() {
-      return new CertificateBadRequestException("업로드할 PDF를 확인해주세요.");
+    public static CertificateBadRequestException FileUploadException() {
+      return new CertificateBadRequestException("업로드할 파일을 확인해주세요.");
     }
 
     public static CertificateBadRequestException DriveAPIException() {
-        return new CertificateBadRequestException("PDF 업로드 요청이 잘못되었습니다.");
+        return new CertificateBadRequestException("파일 업로드 요청이 잘못되었습니다.");
     }
 
     public static CertificateBadRequestException SheetsRequestException() {
