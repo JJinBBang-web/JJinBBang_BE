@@ -1,6 +1,8 @@
 package JJinBBang.app.domain.user.service;
 
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
+import JJinBBang.app.global.common.enums.VerificationStatus;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import JJinBBang.app.domain.user.entity.Users;
@@ -46,5 +48,12 @@ public class UsersServiceImpl implements UsersService {
 			throw UserNotFoundException.notFound();
 		}
 		return UserInfoResponseDto.of(user);
+	}
+
+	@Override
+	public Users verifyUniversityEmail(Users user, String universityEmail) {
+		user.updateUniversityEmail(universityEmail);
+		user.updateVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
+		return usersRepository.save(user);
 	}
 }

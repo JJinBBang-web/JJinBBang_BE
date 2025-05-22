@@ -85,7 +85,6 @@ public class Users extends BaseEntity {
 	private Users(
 		Provider provider,
 		String providerId
-
 	){
 		this.provider = provider;
 		this.providerId = providerId;
@@ -94,5 +93,13 @@ public class Users extends BaseEntity {
 		this.admissionCertificateUploadDate = null;
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 		this.disabledAt = null;
+	}
+
+	public void updateUniversityEmail(String universityEmail) {
+		this.universityEmail = universityEmail;
+	}
+
+	public void updateVerificationStatus(VerificationStatus verificationStatus) {
+		this.verificationStatus = verificationStatus;
 	}
 }
