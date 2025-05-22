@@ -56,4 +56,10 @@ public class UsersServiceImpl implements UsersService {
 		user.updateVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
 		return usersRepository.save(user);
 	}
+
+	@Override
+	public Users findWithUniversity(String providerId) {
+		return usersRepository.findWithUniversityByProviderId(providerId)
+				.orElseThrow(UserNotFoundException::notFound);
+	}
 }
