@@ -48,6 +48,13 @@ dependencies {
 	implementation 'com.google.apis:google-api-services-sheets:v4-rev20250509-2.0.0' // Google Sheets
 	implementation 'com.google.auth:google-auth-library-oauth2-http:1.20.0' // Google Auth
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation platform('com.google.api-client:google-api-client-bom:2.7.2') // Google API 버전 관리
+	implementation 'com.google.api-client:google-api-client' // Google API 호출
+	implementation 'com.google.http-client:google-http-client:1.41.8' // Google API 클라이언트 통신
+	implementation 'com.google.http-client:google-http-client-gson:1.41.8' // Gson 파싱
+	implementation 'com.google.auth:google-auth-library-oauth2-http:1.20.0' // Google Auth
+	implementation 'com.google.apis:google-api-services-drive:v3-rev20250511-2.0.0' // Google Drive
+	implementation 'com.google.apis:google-api-services-sheets:v4-rev20250509-2.0.0' // Google Sheets
 }
 
 tasks.named('test') {
