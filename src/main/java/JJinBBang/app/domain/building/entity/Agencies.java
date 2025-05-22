@@ -64,28 +64,82 @@ public class Agencies extends BaseEntity {
 	@Builder.Default
 	private List<Reviews> reviews = new ArrayList<>();
 
-	public void incrementReviewCount() {
+	/**
+	 * 새로운 평점을 추가하고, 리뷰 수와 평균 평점을 갱신합니다.
+	 *
+	 * @param newRating 새로 추가된 평점
+	 */
+	public void addRating(BigDecimal newRating) {
+		// 1) 기존 총합 계산: oldAvg * oldCount + newRating
+		BigDecimal total =
+				(this.rating == null ? BigDecimal.ZERO : this.rating.multiply(BigDecimal.valueOf(this.reviewCount)))
+						.add(newRating);
+
+		// 2) 리뷰 수 증가
 		this.reviewCount++;
+
+		// 3) 평균 평점 재계산 (소수점 둘째 자리 반올림)
+		this.rating = total
+				.divide(BigDecimal.valueOf(this.reviewCount), 2, RoundingMode.HALF_UP);
 	}
 
-	public void updateAverageRating(BigDecimal newRating) {
-		if (this.rating == null) {
-			this.rating = newRating;
-			return;
+	/**
+	 * 기존 평점을 제거하고, 리뷰 수와 평균 평점을 갱신합니다.
+	 *
+	 * @param oldRating 제거하려는 평점
+	 */
+	public void removeRating(BigDecimal oldRating) {
+		if (this.reviewCount <= 1) {
+			// 리뷰가 하나뿐이거나 0이 될 경우 초기화
+			this.reviewCount = 0;
+			this.rating = null;
+		} else {
+			// 1) 총합에서 oldRating 제거
+			BigDecimal total = this.rating
+					.multiply(BigDecimal.valueOf(this.reviewCount))
+					.subtract(oldRating);
+
+			// 2) 리뷰 수 감소
+			this.reviewCount--;
+
+			// 3) 평균 평점 재계산
+			this.rating = total
+					.divide(BigDecimal.valueOf(this.reviewCount), 2, RoundingMode.HALF_UP);
 		}
-
-		int count = this.reviewCount;
-
-		BigDecimal previousTotal = this.rating
-			.multiply(BigDecimal.valueOf(count - 1));
-
-		BigDecimal newTotal = previousTotal.add(newRating);
-
-		this.rating = newTotal
-			.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
 	}
 
+	/**
+	 * 기존 평점을 새로운 평점으로 교체하고, 평균 평점을 재계산합니다.
+	 *
+	 * @param oldRating 교체 전 평점
+	 * @param newRating 교체 후 평점
+	 */
+	public void updateRating(BigDecimal oldRating, BigDecimal newRating) {
+		// 1) 총합에서 oldRating 제거 후 newRating 추가
+		BigDecimal total = this.rating
+				.multiply(BigDecimal.valueOf(this.reviewCount))
+				.subtract(oldRating)
+				.add(newRating);
+
+		// 2) 평균 평점 재계산 (리뷰 수 변동 없음)
+		this.rating = total
+				.divide(BigDecimal.valueOf(this.reviewCount), 2, RoundingMode.HALF_UP);
+	}
+
+	/**
+	 * 이미지 수를 1 증가시킵니다.
+	 */
 	public void incrementImagesCount() {
 		this.imagesCount++;
+	}
+
+	/**
+	 * 이미지 수를 1 감소시킵니다.
+	 * 0 미만으로 내려가지 않도록 방어 코드 포함
+	 */
+	public void decrementImagesCount() {
+		if (this.imagesCount > 0) {
+			this.imagesCount--;
+		}
 	}
 }
