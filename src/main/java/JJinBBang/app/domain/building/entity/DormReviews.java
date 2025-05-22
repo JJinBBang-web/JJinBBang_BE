@@ -44,8 +44,8 @@ public class DormReviews extends Reviews {
 	@Builder
 	private DormReviews(
 		Long id,
-		Integer likesCount,
 		ReviewType dtype,
+		Integer likesCount,
 		String thumbnailImage,
 		String content,
 		List<KeywordType> tags,
@@ -68,6 +68,6 @@ public class DormReviews extends Reviews {
 		this.dormFee = dormFee;
 		this.currentRegion = currentRegion;
 		this.currentGrade = currentGrade;
-		this.dormitoryFacilities = dormitoryFacilities;
+		this.dormitoryFacilities = (dormitoryFacilities == null) ? new ArrayList<>() : dormitoryFacilities;
 	}
 }

@@ -7,12 +7,12 @@ import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @Entity
-@AllArgsConstructor
 @Table(name = "agency_reviews")
+@NoArgsConstructor
 @PrimaryKeyJoinColumn(name = "review_id")
 @DiscriminatorValue("AGENCY")
 public class AgencyReviews extends Reviews {
