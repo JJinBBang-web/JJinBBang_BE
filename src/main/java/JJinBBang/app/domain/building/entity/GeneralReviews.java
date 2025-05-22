@@ -9,7 +9,6 @@ import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +16,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "general_reviews")
 @PrimaryKeyJoinColumn(name = "review_id")
 @DiscriminatorValue("GENERAL")
@@ -43,7 +41,8 @@ public class GeneralReviews extends Reviews {
 	private Integer maintenanceCost;
 
 	@Builder
-	private GeneralReviews(Long id,
+	public GeneralReviews(
+		Long id,
 		ReviewType dtype,
 		Integer likesCount,
 		String thumbnailImage,
