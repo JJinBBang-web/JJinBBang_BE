@@ -68,6 +68,7 @@ public class SecurityConfig {
 					authorize
 							.requestMatchers(securityPathProperties.getPermitAll().toArray(new String[0])).permitAll()
 							.requestMatchers(securityPathProperties.getAuthenticated().toArray(new String[0])).authenticated()
+							.requestMatchers(securityPathProperties.getRefresh().toArray(new String[0])).authenticated()
 							.requestMatchers(securityPathProperties.getAnonymous().toArray(new String[0])).anonymous()
 					;
 
