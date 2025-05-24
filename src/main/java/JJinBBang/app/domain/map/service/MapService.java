@@ -4,7 +4,7 @@ import java.util.List;
 
 import JJinBBang.app.domain.map.dto.request.MapMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
-import JJinBBang.app.domain.map.dto.request.nearByMapItemRequest;
+import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
 import JJinBBang.app.domain.map.dto.response.MapItemDetailResponse;
 import JJinBBang.app.global.common.dto.MarkerInfo;
 
@@ -31,5 +31,5 @@ public interface MapService {
 	 * @param request 페이지네이션, 보기유형, 정렬, idList
 	 * @return 마커 목록
 	 */
-	MapItemDetailResponse nearByMapItems(nearByMapItemRequest request);
+	MapItemDetailResponse nearByMapItems(NearByMapItemRequest request);
 }

@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
-public record nearByMapItemRequest(
+public record NearByMapItemRequest(
 	@NotNull(message = "{pagination.num.notNull}")
 	@Min(value = 1, message = "{pagination.num.min}")
 	@Max(value = 30, message = "{pagination.num.max}")

@@ -10,7 +10,7 @@ import JJinBBang.app.domain.common.dto.item.Filters;
 import JJinBBang.app.domain.map.dto.item.Bounds;
 import JJinBBang.app.domain.map.dto.request.MapMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
-import JJinBBang.app.domain.map.dto.request.nearByMapItemRequest;
+import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
 import JJinBBang.app.domain.map.dto.response.MapItemDetailResponse;
 import JJinBBang.app.domain.map.exception.MapInvalidException;
 import JJinBBang.app.domain.map.exception.MapNoContentException;
@@ -80,7 +80,7 @@ public class MapServiceImpl implements MapService{
 	}
 
 	@Override
-	public MapItemDetailResponse nearByMapItems(nearByMapItemRequest request) {
+	public MapItemDetailResponse nearByMapItems(NearByMapItemRequest request) {
 		// TODO Auto-generated method stub
 		return null;
 	}

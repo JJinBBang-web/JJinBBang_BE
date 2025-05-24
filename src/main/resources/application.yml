@@ -60,7 +60,7 @@ spring:
 
   messages:
     encoding: UTF-8
-    basename: VaildationMessages
+    basename: ValidationMessages
 
 jwt:
   secret: ${jwt.secret}
