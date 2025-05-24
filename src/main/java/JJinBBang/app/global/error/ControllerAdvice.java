@@ -16,6 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class ControllerAdvice {
+
+	// 204, NoContentGroupException
+	@ExceptionHandler({NoContentGroupException.class})
+	public ResponseEntity<ErrorResponse> handleNoContent(RuntimeException e) {
+		return createErrorResponse(e, HttpStatus.NO_CONTENT);
+	}
+
 	// 400, InvalidGroupException
 	@ExceptionHandler({InvalidGroupException.class})
 	public ResponseEntity<ErrorResponse> handleInvalidData(RuntimeException e) {

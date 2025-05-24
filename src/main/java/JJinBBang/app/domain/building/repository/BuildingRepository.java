@@ -6,5 +6,5 @@ import JJinBBang.app.domain.building.entity.Buildings;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BuildingRepository extends JpaRepository<Buildings, Long> {
+public interface BuildingRepository extends JpaRepository<Buildings, Long>, BuildingRepositoryCustom {
 }

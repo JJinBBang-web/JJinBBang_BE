@@ -58,6 +58,10 @@ spring:
             protocols:
               TLSv1.2
 
+  messages:
+    encoding: UTF-8
+    basename: ValidationMessages
+
 jwt:
   secret: ${jwt.secret}
   expiration-time:
