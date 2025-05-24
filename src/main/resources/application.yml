@@ -93,8 +93,6 @@ security:
 #      - "/api/v1/user/**"
 #      - "/api/v1/map/**"
     authenticated:
-      - "/api/v1/auth/emailCode"
-      - "/api/v1/auth/emailCode/verify"
       - "/api/v1/auth/tokenRefresh"
       - "/api/v1/auth/logout"
 #      - "/api/v1/user"
@@ -106,13 +104,21 @@ security:
     anonymous:
       - "/api/v1/auth"
     verification-status-based:
-      VERIFIED:
+      EMAIL_VERIFIED:
         - "/api/v1/verifiedTest"
+      ENROLL_STUDENT_VERIFIED:
+        - "/api/v1/enrollStudentVerifiedTest"
+      NEW_STUDENT_VERIFIED:
+        - "/api/v1/newStudentVerifiedTest"
       UNVERIFIED:
         - "/api/v1/unverifiedTest"
+        - "/api/v1/auth/emailCode"
+        - "/api/v1/auth/emailCode/verify"
       PENDING:
         - "/api/v1/pendingTest"
     pending-user:
       - "/api/v1/auth/signup"
+    refresh:
+      - "/api/v1/auth/tokenRefresh"
     any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
 
