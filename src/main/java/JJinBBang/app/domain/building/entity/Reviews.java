@@ -2,12 +2,14 @@ package JJinBBang.app.domain.building.entity;
 
 import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.common.enums.KeywordType;
 import JJinBBang.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -61,4 +63,9 @@ public class Reviews extends BaseEntity {
     // 리뷰 -> 리뷰 좋아요
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private List<ReviewLikes> reviewLikes = new ArrayList<>();
+
+    public List<KeywordType> getTags() {
+        return Arrays.stream(tags.split(","))
+            .map(x->KeywordType.valueOf(x.trim())).toList();
+    }
 }

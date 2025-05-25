@@ -2,23 +2,21 @@ package JJinBBang.app.global.jwt;
 
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import JJinBBang.app.global.error.exception.AuthGroupException;
 import JJinBBang.app.global.jwt.exception.InvalidTokenException;
+import JJinBBang.app.global.jwt.service.RefreshTokenService;
+import JJinBBang.app.global.jwt.service.TokenGenerateService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
@@ -28,35 +26,57 @@ import javax.crypto.SecretKey;
 public class JwtUtils {
 
 	private final SecretKey key;
-	private final long accessTokenExpiration;
-	private final long refreshTokenExpiration;
+
+	private final TokenGenerateService accessTokenGenerator;
+	private final TokenGenerateService refreshTokenGenerator;
+	private final TokenGenerateService signupTokenGenerator;
+	private final RefreshTokenService refreshTokenService;
+
 
 	public JwtUtils(
-		@Value("${jwt.secret}") String secretKey,
-		@Value("${jwt.expiration-time.access-token}") long accessTokenExpiration,
-		@Value("${jwt.expiration-time.refresh-token}") long refreshTokenExpiration
-	) {
+            @Value("${jwt.secret}") String secretKey,
+			@Qualifier("accessTokenService") TokenGenerateService accessTokenGenerator,
+			@Qualifier("refreshTokenService") TokenGenerateService refreshTokenGenerator,
+			@Qualifier("signupTokenService") TokenGenerateService signupTokenGenerator,
+			@Qualifier("refreshTokenService") RefreshTokenService refreshTokenService
+    ) {
 		this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
-		this.accessTokenExpiration = accessTokenExpiration;
-		this.refreshTokenExpiration = refreshTokenExpiration;
-	}
+		this.accessTokenGenerator = accessTokenGenerator;
+		this.refreshTokenGenerator = refreshTokenGenerator;
+		this.signupTokenGenerator = signupTokenGenerator;
+		this.refreshTokenService = refreshTokenService;
+    }
 
 	public String generateAccessToken(Users user) {
-		return generateToken(user, accessTokenExpiration);
+		return accessTokenGenerator.generateToken(user);
 	}
 
 	public String generateRefreshToken(Users user) {
-		return generateToken(user, refreshTokenExpiration);
+		return refreshTokenGenerator.generateToken(user);
 	}
 
-	private String generateToken(Users user, long expirationTime) {
-		return Jwts.builder()
-			.subject(user.getProviderId())
-			.claim("verificationStatus", user.getVerificationStatus().name())
-			.issuedAt(new Date())
-			.expiration(new Date(System.currentTimeMillis() + expirationTime))
-			.signWith(key)
-			.compact();
+	public String generateSignupToken(Users user) {
+		return signupTokenGenerator.generateToken(user);
+	}
+
+	public String reissueAccessToken(Users user, String refreshToken) {
+		// refreshToken이 refresh 타입인지는 JwtAuthenticationFilter에서 확인
+		// 리프레시 토큰 검증
+		if (!validateToken(refreshToken)) {
+			log.error("Invalid refresh token.");
+			throw InvalidTokenException.invalidToken();
+		}
+
+		if(!refreshTokenService.validateRefreshToken(user.getUserId(), refreshToken)){
+			throw InvalidTokenException.invalidToken();
+		}
+
+		// 새로운 액세스 토큰 생성
+		return generateAccessToken(user);
+	}
+
+	public void deleteRefreshToken(Long userId) {
+		refreshTokenService.deleteRefreshToken(userId);
 	}
 
 

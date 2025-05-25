@@ -1,7 +1,5 @@
 package JJinBBang.app.global.common.dto;
 
-import JJinBBang.app.domain.building.dto.GeneralReviewInfo;
-import JJinBBang.app.domain.building.dto.ReviewInfo;
 import JJinBBang.app.domain.building.entity.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
@@ -40,7 +38,7 @@ public record InfoDto(
     public static InfoDto ofGeneralBuildingInfo(Reviews review, Buildings building, Boolean liked) {
         return InfoDto.builder()
                 .generalBuildingInfo(GeneralBuildingInfo.of(building,liked))
-                .reviewInfo(ReviewInfo.of(review))
+                .reviewInfo(ReviewInfo.ofBuilding(review,building))
                 .image("http://localhost:8080/image/1.jpg")
                 .build();
     }
@@ -56,7 +54,7 @@ public record InfoDto(
     public static InfoDto ofDormitoryBuildingInfo(Reviews review, Buildings building, String universityName, Boolean liked) {
         return InfoDto.builder()
                 .dormitoryBuildingInfo(DormitoryBuildingInfo.of(building,universityName,liked))
-                .reviewInfo(ReviewInfo.of(review))
+                .reviewInfo(ReviewInfo.ofBuilding(review,building))
                 .image("http://localhost:8080/image/1.jpg")
                 .build();
     }
@@ -72,7 +70,7 @@ public record InfoDto(
     public static InfoDto ofAgencyBuildingInfo(Reviews review, Agencies agency, Boolean liked) {
         return InfoDto.builder()
                 .agencyBuildingInfo(AgencyBuildingInfo.of(agency,liked))
-                .reviewInfo(ReviewInfo.of(review))
+                .reviewInfo(ReviewInfo.ofAgency(review,agency))
                 .image("http://localhost:8080/image/1.jpg")
                 .build();
     }

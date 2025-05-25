@@ -1,6 +1,7 @@
 package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
+import JJinBBang.app.domain.building.enums.BuildingType;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 public record GeneralBuildingInfo(
         Long id,
         String name,
-        List<String> type,
+        List<BuildingType> type,
         String address,
         BigDecimal rating,
         Boolean liked,
@@ -22,10 +23,8 @@ public record GeneralBuildingInfo(
         return GeneralBuildingInfo.builder()
                 .id(building.getId())
                 .name(building.getBuildingName())
-                .type(
-                        Arrays.stream(building.getBuildingType().split(",\\s*"))
-                                .collect(Collectors.toList())
-                )                .address(building.getBuildingAddress())
+                .type(building.getBuildingType())
+                .address(building.getBuildingAddress())
                 .rating(building.getBuildingRating())
                 .liked(liked)
                 .reviewCount(building.getReviewCount())

@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ContractType {
+    ALL("전체"), // 전체
     MONTHLY_RENT("월세"), // 월세
     DEPOSIT_RENT("전세"); // 전세
 

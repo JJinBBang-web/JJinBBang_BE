@@ -1,24 +1,20 @@
-package JJinBBang.app.domain.building.dto;
+package JJinBBang.app.global.common.dto;
 
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
-import JJinBBang.app.domain.building.entity.ReviewLikes;
-import JJinBBang.app.domain.building.entity.Reviews;
+import JJinBBang.app.domain.building.entity.ReviewDetails;
+import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
-import JJinBBang.app.domain.building.enums.Floor;
-import JJinBBang.app.domain.building.enums.ReviewType;
-import lombok.Builder;
-
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+
+import JJinBBang.app.domain.building.enums.Floor;
+import lombok.Builder;
 
 @Builder
 public record GeneralReviewInfo(
         Long id,
         String name,
-        List<String> type,
+        BuildingType type,
         ContractType contractType,
         Integer deposit,
         Integer monthlyRent,
@@ -28,22 +24,20 @@ public record GeneralReviewInfo(
         BigDecimal rating,
         Boolean liked
 ) {
-    public static GeneralReviewInfo of(GeneralReviews generalReview, Buildings building, Boolean liked) {
+
+    public static GeneralReviewInfo of(GeneralReviews generalReview, ReviewDetails reviewDetail, Boolean liked) {
         return GeneralReviewInfo.builder()
-                .id(generalReview.getId())
-                .name(building.getBuildingName())
-                .type(
-                        Arrays.stream(building.getBuildingType().split(",\\s*"))
-                                .collect(Collectors.toList())
-                )
-                .contractType(generalReview.getContractType())
-                .deposit(generalReview.getDeposit())
-                .monthlyRent(generalReview.getPrice())
-                .floor(generalReview.getFloor())
-                .space(generalReview.getArea())
-                .maintenanceCost(generalReview.getMaintenanceCost())
-                .rating(generalReview.getRating())
-                .liked(liked)
-                .build();
+            .id(generalReview.getId())
+            .name(generalReview.getBuilding().getBuildingName())
+            .type(reviewDetail.getBuildingType())
+            .contractType(generalReview.getContractType())
+            .deposit(generalReview.getDeposit())
+            .monthlyRent(generalReview.getPrice())
+            .floor(generalReview.getFloor())
+            .space(generalReview.getArea())
+            .maintenanceCost(generalReview.getMaintenanceCost())
+            .rating(generalReview.getRating())
+            .liked(liked)
+            .build();
     }
 }
