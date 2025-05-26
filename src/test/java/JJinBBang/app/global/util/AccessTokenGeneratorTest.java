@@ -5,6 +5,7 @@ import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.jwt.JwtUtils;
+import JJinBBang.app.global.jwt.enums.TokenType;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ public class AccessTokenGeneratorTest {
                 claims.get("verificationStatus", String.class)
         );
         assertEquals(
-                "auth",
+                TokenType.ACCESS.getType(),
                 claims.get("tokenType", String.class)
         );
         System.out.println("access token = " + token);
@@ -77,7 +78,7 @@ public class AccessTokenGeneratorTest {
                 VerificationStatus.UNVERIFIED.name(),
                 claims.get("verificationStatus", String.class)
         );
-        assertEquals("auth", claims.get("tokenType", String.class));
+        assertEquals(TokenType.ACCESS.getType(), claims.get("tokenType", String.class));
         System.out.println("access token = " + token);
     }
 }
