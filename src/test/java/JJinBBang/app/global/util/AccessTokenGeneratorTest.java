@@ -50,7 +50,7 @@ public class AccessTokenGeneratorTest {
                 claims.get("verificationStatus", String.class)
         );
         assertEquals(
-                "auth",
+                "access",
                 claims.get("tokenType", String.class)
         );
         System.out.println("access token = " + token);
@@ -77,7 +77,7 @@ public class AccessTokenGeneratorTest {
                 VerificationStatus.UNVERIFIED.name(),
                 claims.get("verificationStatus", String.class)
         );
-        assertEquals("auth", claims.get("tokenType", String.class));
+        assertEquals("access", claims.get("tokenType", String.class));
         System.out.println("access token = " + token);
     }
 }

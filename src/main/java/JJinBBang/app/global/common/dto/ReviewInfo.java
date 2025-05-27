@@ -28,7 +28,7 @@ public record ReviewInfo(
 	}
     public static ReviewInfo ofBuilding(Reviews review, Buildings building) {
         return ReviewInfo.builder()
-                .content(review.getContent())
+                .content((review != null) ? review.getContent() : null)
                 .keyword(Arrays.asList(KeywordType.PO_LO_01, KeywordType.PO_MT_01, KeywordType.PO_MT_04))
                 .likeCount(building.getLikeCount())
                 .updateAt(review.getUpdatedAt())
@@ -37,7 +37,7 @@ public record ReviewInfo(
 
     public static ReviewInfo ofAgency(Reviews review, Agencies agency) {
         return ReviewInfo.builder()
-            .content(review.getContent())
+            .content((review != null) ? review.getContent() : null)
             .keyword(Arrays.asList(KeywordType.PO_LO_01, KeywordType.PO_MT_01, KeywordType.PO_MT_04))
             .likeCount(agency.getLikeCount())
             .updateAt(review.getUpdatedAt())

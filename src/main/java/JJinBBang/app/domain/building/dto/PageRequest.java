@@ -31,6 +31,7 @@ public class PageRequest extends AbstractPageRequest {
 			case LATEST -> Sort.by("createdAt").descending();
 			case LIKES -> Sort.by("likesCount").descending();
 			case STARS -> Sort.by("rating").descending();
+			default -> Sort.by("createdAt").descending();
 		};
 	}
 

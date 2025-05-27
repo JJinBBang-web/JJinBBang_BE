@@ -19,16 +19,24 @@ public class SearchInfo {
     private final AgenciesRepository agenciesRepository;
     private final GeneralReviewsRepository generalReviewsRepository;
     private final DormReviewsRepository dormReviewsRepository;
+    private final ReviewDetailRepository reviewDetailRepository;
 
     public InfoDto reviewSearch(Long reviewId, Boolean liked){
         Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));
         switch (item.getDtype()){
             case ReviewType.GENERAL:
                 GeneralReviews generalReviews = generalReviewsRepository.findById(reviewId).orElseThrow(()-> new BookmarkNotFoundException("GeneralReview"));
-                Buildings buildings = item.getBuilding();
-                return InfoDto.ofGeneralReviewInfo(generalReviews, buildings,liked);
+                if(generalReviews.getContractType()==null || generalReviews.getFloor()==null||generalReviews.getArea()==null){
+                    throw new BookmarkNotFoundException("GeneralReview");
+                }
+                ReviewDetails reviewDetails = reviewDetailRepository.findByReviewId(reviewId).orElseThrow(()-> new BookmarkNotFoundException("ReviewDetail"));
+                return InfoDto.ofGeneralReviewInfo(generalReviews, reviewDetails,liked);
             case ReviewType.DORM:
                 DormReviews dormReviews =dormReviewsRepository.findById(reviewId).orElseThrow(()-> new BookmarkNotFoundException("DormReview"));
+                if(dormReviews.getDormFee()==null||dormReviews.getDormFee()==null||dormReviews.getCapacity()==null){
+                    throw new BookmarkNotFoundException("DormReview");
+                }
+
                 Buildings buildings1 = item.getBuilding();
                 Campuses campuses = buildings1.getCampus();
                 Universities universities = campuses.getUniversity();

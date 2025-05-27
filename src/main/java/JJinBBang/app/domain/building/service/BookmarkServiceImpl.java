@@ -81,10 +81,12 @@ public class BookmarkServiceImpl implements BookmarkService{
     public List<InfoDto> searchBookmark(Long userId, Pageable pageable , GetUserBookmarkRequest request) {
         Page<Object[]> resultPage = bookmarkRepository.findLikedItemsByUserIdNative(userId, pageable,request);
         List<InfoDto> resultList = new ArrayList<>();
+        List<Long> errorList = new ArrayList<>();
         List<Object[]> contentList = resultPage.getContent();
         for (Object[] row : contentList) {
             Long itemId = ((Number) row[0]).longValue();
             String itemType = (String) row[1];
+            try{
             switch (itemType){
                 case "review":
                     resultList.add(searchInfo.reviewSearch(itemId,true));
@@ -96,8 +98,11 @@ public class BookmarkServiceImpl implements BookmarkService{
                     resultList.add(searchInfo.agencySearch(itemId,true));
                     break;
             }
+            } catch (Exception e) {
+                errorList.add(itemId);
+            }
         }
-
+        System.out.println(errorList);
         return resultList;
     }
 
