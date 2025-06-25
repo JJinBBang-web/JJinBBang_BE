@@ -32,16 +32,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # 숨길 .yml 파일을 생성
+      # 숨길 yml 파일을 생성
       - name: make application.yml
         run: |
           mkdir -p ./src/main/resources
           cd ./src/main/resources
-#          touch ./application.yml # application.yml은 숨길지 말지 고민중
-#          touch ./application-common.yml
           touch ./application-prod.yml
-#          echo "${{ secrets.APPLICATION }}" > ./application.yml
-#          echo "${{ secrets.COMMON }}" > ./application-common.yml
           echo "${{ secrets.APPLICATION_PROD }}" > ./application-prod.yml
 
       # 실행 권한 부여
