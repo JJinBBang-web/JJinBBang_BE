@@ -7,6 +7,7 @@ import lombok.*;
 @Entity
 @Table(name = "dormitory_facilities")
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DormitoryFacilities {
 
@@ -31,4 +32,16 @@ public class DormitoryFacilities {
     @Enumerated(EnumType.STRING)
     @Column(name = "usage_type", length = 7)
     private UsageType usageType;    // ENUM('private','public')
+
+    public static DormitoryFacilities create(DormReviews review, Facilities facility, Boolean isAvailable, UsageType usageType) {
+        DormFacilityId dormFacilityId = DormFacilityId.of(review.getId(),facility.getFacilityId());
+        DormitoryFacilities dormitoryFacility = new DormitoryFacilities();
+        dormitoryFacility.id = dormFacilityId;
+        dormitoryFacility.dormitoryReview = review;
+        dormitoryFacility.facility = facility;
+        dormitoryFacility.available = isAvailable;
+        dormitoryFacility.usageType = usageType;
+
+        return dormitoryFacility;
+    }
 }

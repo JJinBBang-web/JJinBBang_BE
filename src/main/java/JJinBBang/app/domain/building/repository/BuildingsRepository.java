@@ -1,7 +1,13 @@
 package JJinBBang.app.domain.building.repository;
 
 import JJinBBang.app.domain.building.entity.Buildings;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
-public interface BuildingsRepository extends CrudRepository<Buildings, Long> {
+
+@Repository
+public interface BuildingsRepository extends JpaRepository<Buildings, Long>, BuildingRepositoryCustom {
+    Optional<Buildings> findByBuildingCode(String buildingCode);
+
 }

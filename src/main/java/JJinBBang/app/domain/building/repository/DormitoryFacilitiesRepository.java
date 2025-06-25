@@ -1,10 +1,9 @@
 package JJinBBang.app.domain.building.repository;
 
+import JJinBBang.app.domain.building.entity.DormitoryFacilities;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import JJinBBang.app.domain.building.entity.Buildings;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BuildingRepository extends JpaRepository<Buildings, Long>, BuildingRepositoryCustom {
+public interface DormitoryFacilitiesRepository extends JpaRepository<DormitoryFacilities, Long> {
 }

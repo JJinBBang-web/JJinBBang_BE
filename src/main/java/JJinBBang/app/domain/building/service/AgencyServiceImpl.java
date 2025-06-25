@@ -5,8 +5,8 @@ import JJinBBang.app.domain.building.dto.BuildingDetailResponse;
 import JJinBBang.app.domain.building.dto.KeywordCount;
 import JJinBBang.app.domain.building.entity.Agencies;
 import JJinBBang.app.domain.building.exception.BuildingNullException;
-import JJinBBang.app.domain.building.repository.AgencyRepository;
-import JJinBBang.app.domain.building.repository.BuildingKeywordCountRepository;
+import JJinBBang.app.domain.building.repository.AgenciesRepository;
+import JJinBBang.app.domain.building.repository.BuildingKeywordCountsRepository;
 import JJinBBang.app.domain.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,15 +19,15 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AgencyServiceImpl implements AgencyService{
-    private final AgencyRepository agencyRepository;
-    private final BuildingKeywordCountRepository buildingKeywordCountRepository;
+    private final AgenciesRepository agenciesRepository;
+    private final BuildingKeywordCountsRepository buildingKeywordCountRepository;
 
     @Override
     @Transactional(readOnly = true)
     public BuildingDetailResponse getAgencyDetail(Long buildingId, Users user) {
 
         // 1) 건물이 없다면 오류
-        Agencies agency = agencyRepository.findById(buildingId).orElseThrow(BuildingNullException::new);
+        Agencies agency = agenciesRepository.findById(buildingId).orElseThrow(BuildingNullException::new);
 
         // 2) 좋아요 여부 계산
         Boolean liked = agency.getAgencyLikes().stream()
@@ -36,7 +36,7 @@ public class AgencyServiceImpl implements AgencyService{
         // 3) 키워드 조회 - 없으면 새 엔티티
         BuildingKeywordCounts buildingKeywordCounts = buildingKeywordCountRepository
                 .findByBuildingIdAndIsAgency(buildingId, true)
-                .orElseGet(() -> BuildingKeywordCounts.of(buildingId));
+                .orElseGet(() -> BuildingKeywordCounts.of(buildingId, true));
 
         // 4) keywordCounts 조회 - 없으면 새 리스트
         List<KeywordCount> keywordCounts = buildingKeywordCounts.getKeywordCounts();

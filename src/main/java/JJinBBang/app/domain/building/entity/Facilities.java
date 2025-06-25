@@ -17,7 +17,7 @@ public class Facilities {
     @Column(name = "facility_id")
     private Long facilityId;                    // 편의시설 종류 고유 식별자
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100, unique = true)
     private String name;                        // 편의시설 이름
 
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, orphanRemoval = true)
