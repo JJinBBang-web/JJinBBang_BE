@@ -18,10 +18,9 @@ import JJinBBang.app.domain.building.entity.QBuildings;
 import JJinBBang.app.domain.building.entity.QReviews;
 import JJinBBang.app.domain.building.entity.QGeneralReviews;
 import JJinBBang.app.domain.common.entity.QCampuses;
-import JJinBBang.app.domain.building.enums.ReviewType;
 
 @RequiredArgsConstructor
-public class BuildingRepositoryImpl implements BuildingRepositoryCustom {
+public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
 
@@ -74,7 +73,10 @@ public class BuildingRepositoryImpl implements BuildingRepositoryCustom {
 			.where(builder);
 
 		// 5. 계약 조건 필터
-		if (contractType != null && contractType != ContractType.ALL) {
+		// contractType에 대해 선택 안한경우도 존재하기에 모든 조회가 가능하도록 예외 필요함.
+		// 단, 지금은 배포 테스트 예정이기에 추후 issue에 대해 작성할듯
+		// #수정필요
+		if (contractType != null) {
 			query.where(treated.contractType.eq(contractType));
 		}
 		if (depositMin != null) {
