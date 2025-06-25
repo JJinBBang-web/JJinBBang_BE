@@ -3,9 +3,11 @@ name: Build and Deploy to EC2
 # 워크플로우가 언제 실행될 것인지 조건 명시
 on:
   push:
-    branches: [ "cicd/test"]
+    branches:
+      - cicd/test
   pull_request:
-    branches: [ "cicd/test" ]
+    branches:
+      - cicd/test
 
 # AWS 관련 값 변수로 설정
 env:
