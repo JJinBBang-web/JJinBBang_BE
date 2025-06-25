@@ -1,0 +1,72 @@
+name: Build and Deploy to EC2
+
+# 워크플로우가 언제 실행될 것인지 조건 명시
+on:
+  push:
+    branches: [ "cicd/test"]
+  pull_request:
+    branches: [ "cicd/test" ]
+
+# AWS 관련 값 변수로 설정
+env:
+  AWS_REGION: ap-northeast-2
+  AWS_S3_BUCKET: jjinbbang-bucket
+  AWS_CODE_DEPLOY_APPLICATION: jjinbbang-application-CD
+  AWS_CODE_DEPLOY_GROUP: jjinbbang-deployment-group
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 21 설치
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 숨길 .yml 파일을 생성
+      - name: make application.yml
+        run: |
+          mkdir -p ./src/main/resources
+          cd ./src/main/resources
+#          touch ./application.yml // application.yml은 숨길지 말지 고민중
+#          touch ./application-common.yml
+          touch ./application-prod.yml
+#          echo "${{ secrets.APPLICATION }}" > ./application.yml
+#          echo "${{ secrets.COMMON }}" > ./application-common.yml
+          echo "${{ secrets.APPLICATION_PROD }}" > ./application-prod.yml
+
+      # 실행 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+        shell: bash
+
+      - name: Build and Test
+        run: ./gradlew build test
+
+      # 빌드 파일을 zip 형식으로 압축 - S3에서는 jar 저장이 안되기 때문에 zip으로 생성
+      - name: Make zip file
+        run: zip -r ./$GITHUB_SHA.zip .
+        shell: bash
+
+      # AWS 권한
+      - name: AWS credential 설정
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_IAM_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_IAM_PRIVATE_KEY }}
+
+      # S3 버킷에 빌드파일(zip 파일)을 업로드 시작
+      - name: Upload to S3
+        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.zip s3://$AWS_S3_BUCKET/$GITHUB_SHA.zip
+
+      # EC2 인스턴스에 S3에 저장되어 있던 zip 파일을 받아와 배포 진행
+      - name: EC2에 배포
+        run: aws deploy create-deployment --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name ${{ env.AWS_CODE_DEPLOY_GROUP }} --s3-location bucket=$AWS_S3_BUCKET,key=$GITHUB_SHA.zip,bundleType=zip
