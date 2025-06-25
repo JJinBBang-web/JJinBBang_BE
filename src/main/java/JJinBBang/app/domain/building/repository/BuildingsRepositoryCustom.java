@@ -7,7 +7,7 @@ import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.global.common.enums.KeywordType;
 
-public interface BuildingRepositoryCustom {
+public interface BuildingsRepositoryCustom {
 	List<Buildings> findMarkersWithinBounds(
 		Double neLat, Double neLng,
 		Double swLat, Double swLng,
