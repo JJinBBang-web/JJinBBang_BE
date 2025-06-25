@@ -37,7 +37,7 @@ jobs:
         run: |
           mkdir -p ./src/main/resources
           cd ./src/main/resources
-#          touch ./application.yml // application.yml은 숨길지 말지 고민중
+#          touch ./application.yml # application.yml은 숨길지 말지 고민중
 #          touch ./application-common.yml
           touch ./application-prod.yml
 #          echo "${{ secrets.APPLICATION }}" > ./application.yml
