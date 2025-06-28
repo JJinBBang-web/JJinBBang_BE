@@ -75,17 +75,22 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
      */
     private AuthenticationException getCustomSecurityAuthException(String userStatus, String requiredStatus) {
         if (!userStatus.equals(requiredStatus)) {
+            boolean univVerified = "EMAIL_VERIFIED".equals(userStatus) ||
+                    "ENROLL_STUDENT_VERIFIED".equals(userStatus) ||
+                    "NEW_STUDENT_VERIFIED".equals(userStatus);
             switch (requiredStatus) {
-                case "VERIFIED":
+                case "EMAIL_VERIFIED":
+                case "ENROLL_STUDENT_VERIFIED":
+                case "NEW_STUDENT_VERIFIED":
                     return SecurityAccessDeniedException.universityVerificationRequired();
                 case "UNVERIFIED":
-                    if ("VERIFIED".equals(userStatus)) {
+                    if (univVerified) {
                         return SecurityAccessDeniedException.alreadyUniversityVerified();
                     } else if ("PENDING".equals(userStatus)) {
                         return SecurityAccessDeniedException.existPendingUnivVerifyRequest();
                     }
                 case "PENDING":
-                    if ("VERIFIED".equals(userStatus)) {
+                    if (univVerified) {
                         return SecurityAccessDeniedException.alreadyUniversityVerified();
                     } else if ("UNVERIFIED".equals(userStatus)) {
                         return SecurityAccessDeniedException.pendingUnivVerifyRequestNotFound();

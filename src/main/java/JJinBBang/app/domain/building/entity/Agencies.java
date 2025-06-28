@@ -64,6 +64,27 @@ public class Agencies extends BaseEntity {
 	@Builder.Default
 	private List<Reviews> reviews = new ArrayList<>();
 
+	public void incrementReviewCount() {
+		this.reviewCount++;
+	}
+
+	public void updateAverageRating(BigDecimal newRating) {
+		if (this.rating == null) {
+			this.rating = newRating;
+			return;
+		}
+
+		int count = this.reviewCount;
+
+		BigDecimal previousTotal = this.rating
+			.multiply(BigDecimal.valueOf(count - 1));
+
+		BigDecimal newTotal = previousTotal.add(newRating);
+
+		this.rating = newTotal
+			.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
+	}
+
 	/**
 	 * 새로운 평점을 추가하고, 리뷰 수와 평균 평점을 갱신합니다.
 	 *

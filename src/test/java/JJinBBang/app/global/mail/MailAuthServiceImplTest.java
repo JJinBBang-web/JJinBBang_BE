@@ -1,5 +1,6 @@
 package JJinBBang.app.global.mail;
 
+import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.exception.MailInvalidException;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import JJinBBang.app.global.mail.repository.EmailAuthCodeRepository;
@@ -48,12 +49,13 @@ class MailAuthServiceImplTest {
 
     @Test
     void sendAuthCode_성공() {
+        Long userId = 1L;
         String email = "user@gnu.ac.kr";
 
         // isExistByEmail 기본 false → save, sendMail 호출 검증
-        service.sendAuthCode(email);
+        service.sendAuthCode(userId, email);
 
-        verify(repo).save(eq(email), anyString());
+        verify(repo).save(eq(userId), eq(email), anyString());
         verify(mailSender).sendMail(
                 eq(email),
                 eq("[찐빵] 인증코드"),
@@ -64,41 +66,55 @@ class MailAuthServiceImplTest {
     @Test
     void sendAuthCode_도메인불일치_예외() {
         // 허용된 도메인이 아니면
+        Long userId = 1L;
         String badEmail = "user@naver.com";
 
         // MailInvalidException 발생해야 함
         assertThrows(MailInvalidException.class,
-                () -> service.sendAuthCode(badEmail));
+                () -> service.sendAuthCode(userId, badEmail));
     }
 
     @Test
     void verifyAuthCode_일치() {
         // u@gnu.ac.kr 로 발급된 인증코드가 1234일 때
-        when(repo.findAuthCodeByEmail("u@gnu.ac.kr"))
-                .thenReturn(Optional.of("1234"));
+        Long userId = 1L;
+        EmailAuthInfo info = new EmailAuthInfo(
+                "u@gnu.ac.kr",
+                "1234",
+                System.currentTimeMillis()
+        );
+        when(repo.findEmailAndAuthCodeByUserId(userId))
+                .thenReturn(Optional.of(info));
 
         // 검증할 인증코드가 1234이면 true 리턴
-        assertTrue(service.verifyAuthCode("u@gnu.ac.kr", "1234"));
+        assertTrue(service.verifyAuthCode(userId, "u@gnu.ac.kr", "1234"));
     }
 
     @Test
     void verifyAuthCode_불일치() {
         // u@gnu.ac.kr 로 발급된 인증코드가 9999일 때
-        when(repo.findAuthCodeByEmail("u@gnu.ac.kr"))
-                .thenReturn(Optional.of("9999"));
+        Long userId = 1L;
+        EmailAuthInfo info = new EmailAuthInfo(
+                "u@gnu.ac.kr",
+                "9999",
+                System.currentTimeMillis()
+        );
+        when(repo.findEmailAndAuthCodeByUserId(userId))
+                .thenReturn(Optional.of(info));
 
         // 검증할 인증코드가 1234이면 false 리턴
-        assertFalse(service.verifyAuthCode("u@gnu.ac.kr", "1234"));
+        assertFalse(service.verifyAuthCode(userId, "u@gnu.ac.kr", "1234"));
     }
 
     @Test
     void verifyAuthCode_미발급_예외() {
         // x@gnu.ac.kr 으로 조회 시 Optional.empty 가 리턴되면
-        when(repo.findAuthCodeByEmail("x@gnu.ac.kr"))
+        Long userId = 1L;
+        when(repo.findEmailAndAuthCodeByUserId(userId))
                 .thenReturn(Optional.empty());
 
         // x@gnu.ac.kr 으로 인증코드 검사 수행 시 MailInvalidException 발생해야 함
         assertThrows(MailInvalidException.class,
-                () -> service.verifyAuthCode("x@gnu.ac.kr", "0000"));
+                () -> service.verifyAuthCode(userId, "x@gnu.ac.kr", "0000"));
     }
 }
