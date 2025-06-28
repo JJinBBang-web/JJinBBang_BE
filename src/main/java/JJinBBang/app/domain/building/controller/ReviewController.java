@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,5 +42,15 @@ public class ReviewController {
 
 		CreateReviewResponse data = reviewService.createReview(reviewRequest, user, reviewType);
 		return new ResTemplate<>(HttpStatus.OK, "리뷰 작성 성공", data);
+	}
+
+	@PutMapping("/{reviewId}")
+	public ResTemplate<CreateReviewResponse> updateReview(
+			@AuthenticationPrincipal Users user,
+			@Validated @RequestBody ReviewRequest reviewRequest,
+			@PathVariable Long reviewId) {
+
+		reviewService.updateReview(reviewRequest, user, reviewId);
+		return new ResTemplate<>(HttpStatus.OK, "리뷰 수정 성공", null);
 	}
 }

@@ -9,4 +9,5 @@ public interface ReviewService {
 	ReviewDetailResponse getReviewDetail(Long reviewId, Users user);
 	PaginatedResponse<ReviewSummaryResponse> getReviewList(Long buildingId, Boolean isAgency, Users user, PageRequest pageRequest);
 	CreateReviewResponse createReview(ReviewRequest reviewRequest, Users user, ReviewType reviewType);
+	void updateReview(ReviewRequest reviewRequest, Users user, Long reviewId);
 }
