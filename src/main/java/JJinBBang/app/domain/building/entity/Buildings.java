@@ -95,6 +95,28 @@ public class Buildings extends BaseEntity {
 				.toList();
 	}
 
+	public void incrementReviewCount() {
+		this.reviewCount++;
+	}
+
+	public void updateAverageRating(BigDecimal newRating) {
+		if (this.buildingRating == null) {
+			this.buildingRating = newRating;
+			return;
+		}
+
+		int count = this.reviewCount;
+
+		BigDecimal previousTotal = this.buildingRating
+			.multiply(BigDecimal.valueOf(count - 1));
+
+		BigDecimal newTotal = previousTotal.add(newRating);
+
+		this.buildingRating = newTotal
+			.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
+	}
+
+
 	/**
 	 * enum 리스트를 쉼표 구분 문자열로 변환하여 buildingType 필드를 설정합니다.
 	 *

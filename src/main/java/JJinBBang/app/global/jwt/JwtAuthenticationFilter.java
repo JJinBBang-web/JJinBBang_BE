@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import JJinBBang.app.global.common.enums.Provider;
+import JJinBBang.app.global.jwt.enums.TokenType;
 import JJinBBang.app.global.security.SecurityPathProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,9 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 				String requestURI = request.getRequestURI();
 				boolean isPendingUserPath = securityPathProperties.getPendingUser().stream()
-						.anyMatch(pattern -> pathMatcher.match(pattern, requestURI)); // AntPathMatcher 사용
+						.anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
+				boolean isRefreshPath = securityPathProperties.getRefresh().stream()
+						.anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
 
-				if(tokenType.equals("signup")){
+				if(tokenType.equals(TokenType.SIGNUP.getType())){
 					// 회원가입용 토큰인 경우
 					if (!isPendingUserPath) {
 						throw InvalidTokenException.signupTokenNotAllowed();
@@ -70,10 +73,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 						.providerId(providerId)
 						.provider(Provider.valueOf(provider))
 						.build();
-				} else if (tokenType.equals("auth")) {
+				} else if (tokenType.equals(TokenType.ACCESS.getType()) ||
+						tokenType.equals(TokenType.REFRESH.getType())
+				) {
 					// 인증용 토큰인 경우
 					if (isPendingUserPath) {
 						throw InvalidTokenException.authTokenNotAllowed();
+					}
+					if(tokenType.equals(TokenType.ACCESS.getType()) && isRefreshPath) {
+						// Access Token인 경우
+						throw InvalidTokenException.accessTokenNotAllowed();
+					}
+					if(tokenType.equals(TokenType.REFRESH.getType()) && !isRefreshPath) {
+						// Refresh Token인 경우
+						throw InvalidTokenException.refreshTokenNotAllowed();
 					}
 
 					VerificationStatus status = VerificationStatus.valueOf(claims.get("verificationStatus", String.class));

@@ -22,4 +22,11 @@ public class InvalidTokenException extends AuthGroupException {
 	public static InvalidTokenException authTokenNotAllowed(){
 		return new InvalidTokenException("인증 토큰은 회원가입 시에 사용할 수 없습니다.");
 	}
+
+	public static InvalidTokenException accessTokenNotAllowed(){
+		return new InvalidTokenException("엑세스 토큰을 사용할 수 없는 요청입니다.");
+	}
+	public static InvalidTokenException refreshTokenNotAllowed(){
+		return new InvalidTokenException("리프레시 토큰을 사용할 수 없는 요청입니다.");
+	}
 }

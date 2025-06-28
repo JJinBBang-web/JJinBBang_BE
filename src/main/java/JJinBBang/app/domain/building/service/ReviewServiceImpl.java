@@ -4,29 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import JJinBBang.app.domain.building.dto.*;
-import JJinBBang.app.domain.building.exception.*;
-import JJinBBang.app.domain.building.repository.*;
-import JJinBBang.app.domain.common.entity.Campuses;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import JJinBBang.app.domain.building.document.BuildingKeywordCounts;
-import JJinBBang.app.domain.building.entity.Agencies;
-import JJinBBang.app.domain.building.entity.AgencyReviews;
-import JJinBBang.app.domain.building.entity.Buildings;
-import JJinBBang.app.domain.building.dto.ReviewDetailResponse;
-import JJinBBang.app.domain.building.entity.DormReviews;
-import JJinBBang.app.domain.building.entity.DormitoryFacilities;
-import JJinBBang.app.domain.building.entity.Facilities;
-import JJinBBang.app.domain.building.entity.GeneralReviews;
-import JJinBBang.app.domain.building.entity.ReviewDetails;
-import JJinBBang.app.domain.building.entity.Reviews;
-import JJinBBang.app.domain.building.enums.BuildingType;
-import JJinBBang.app.domain.building.enums.ReviewType;
-import JJinBBang.app.domain.building.enums.UsageType;
+import JJinBBang.app.domain.building.dto.*;
+import JJinBBang.app.domain.building.entity.*;
+import JJinBBang.app.domain.building.enums.*;
+import JJinBBang.app.domain.building.exception.*;
+import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.dto.PaginatedResponse;
+import JJinBBang.app.domain.common.entity.Campuses;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
 import lombok.RequiredArgsConstructor;
@@ -41,14 +30,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 
-    private final ReviewsRepository reviewsRepository;
-    private final ReviewDetailsRepository reviewDetailsRepository;
-    private final BuildingsRepository buildingsRepository;
-    private final AgenciesRepository agenciesRepository;
-    private final FacilitiesRepository facilitiesRepository;
-    private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
-    private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
-    private final CampusesRepository campusesRepository;
+	private final ReviewsRepository reviewsRepository;
+	private final ReviewDetailsRepository reviewDetailsRepository;
+	private final BuildingsRepository buildingsRepository;
+	private final AgenciesRepository agenciesRepository;
+	private final FacilitiesRepository facilitiesRepository;
+	private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
+	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
+	private final CampusesRepository campusesRepository;
 
     /**
      * 특정 건물 또는 공인중개사에 대한 리뷰 목록을 페이징 조회
@@ -264,300 +253,317 @@ public class ReviewServiceImpl implements ReviewService {
         AgencyReviews review = dto.toAgencyReviews(user, agency);
         AgencyReviews saved = reviewsRepository.save(review);
 
-        // 3) ReviewDetails 엔티티 저장
-        ReviewDetails details = dto.toReviewDetails(saved.getId(), agency.getAgencyId());
-        reviewDetailsRepository.save(details);
+		// 3) ReviewDetails 엔티티 저장
+		ReviewDetails details = dto.toReviewDetails(saved.getId(), agency.getAgencyId());
+		reviewDetailsRepository.save(details);
 
-        // 4.1) 키워드 통계 증가
-        updateKeywordCounts(agency.getAgencyId(), true, Collections.emptyList(), dto.keywords().positive());
+		// 4.1) 키워드 통계 증가
+		updateKeywordCounts(agency.getAgencyId(), true, Collections.emptyList(), dto.keywords().positive());
 
-        // 4.2) 평점 반영
-        agency.addRating(saved.getRating());
+		// 4.2) 평점 반영
+		agency.addRating(saved.getRating());
 
-        // 4.3) 이미지 카운트 반영
-        if (!dto.imageUrls().isEmpty()) {
-            agency.incrementImagesCount();
-        }
+		// 4.3) 이미지 카운트 반영
+		if (!dto.imageUrls().isEmpty()) {
+			agency.incrementImagesCount();
+		}
 
-        // 4.4) 공인중개사 엔티티 저장
-        agenciesRepository.save(agency);
+		// 4.4) 공인중개사 엔티티 저장
+		agenciesRepository.save(agency);
 
-        return saved.getId();
-    }
+		return saved.getId();
+	}
 
-    /**
-     * 건물 조회 또는 신규 생성 헬퍼
-     * @param dto BuildingRequest DTO
-     * @param campus 소속 캠퍼스(기숙사 리뷰용)
-     * @return Buildings 엔티티
-     */
-    private Buildings findOrCreateBuilding(BuildingRequest dto, Campuses campus) {
-        return buildingsRepository.findByBuildingCode(dto.buildingCode())
-                .map(existing -> {
-                    // 기존 타입 목록에 새로운 BuildingType 추가
-                    List<BuildingType> types = new ArrayList<>(existing.getBuildingType());
-                    if (!types.contains(dto.type())) {
-                        types.add(dto.type());
-                        existing.setBuildingType(types);
-                        buildingsRepository.save(existing);
-                    }
-                    return existing;
-                })
-                .orElseGet(() -> {
-                    // 신규 건물 생성 및 초기 키워드 통계 생성
-                    Buildings created = buildingsRepository.save(dto.toBuildingEntity(campus));
-                    BuildingKeywordCounts counts = BuildingKeywordCounts.of(created.getId(), false);
-                    buildingKeywordCountsRepository.save(counts);
-                    return created;
-                });
-    }
+	/**
+	 * 건물 조회 또는 신규 생성 헬퍼
+	 * @param dto BuildingRequest DTO
+	 * @param campus 소속 캠퍼스(기숙사 리뷰용)
+	 * @return Buildings 엔티티
+	 */
+	private Buildings findOrCreateBuilding(BuildingRequest dto, Campuses campus) {
+		return buildingsRepository.findByBuildingCode(dto.buildingCode())
+			// 기존에 있는 건물인 경우,
+			.map(existing -> {
+				// 1) 건물의 건물 유형 가져와서
+				List<BuildingType> buildingtypeList = new ArrayList<>(existing.getBuildingType());
 
-    /**
-     * 공인중개사 조회 또는 신규 생성 헬퍼
-     * @param dto BuildingRequest DTO
-     * @return Agencies 엔티티
-     */
-    private Agencies findOrCreateAgency(BuildingRequest dto) {
-        return agenciesRepository.findByBuildingCode(dto.buildingCode())
-                .orElseGet(() -> {
-                    // 신규 공인중개사 생성 및 초기 키워드 통계 생성
-                    Agencies created = agenciesRepository.save(dto.toAgencyEntity());
-                    BuildingKeywordCounts counts = BuildingKeywordCounts.of(created.getAgencyId(), true);
-                    buildingKeywordCountsRepository.save(counts);
-                    return created;
-                });
-    }
+				// 2) 기존에 없는 건물 타입이면 추가
+				if (!buildingtypeList.contains(dto.type())) {
+					buildingtypeList.add(dto.type());
+					existing.setBuildingType(buildingtypeList);
+					buildingsRepository.save(existing);
+				}
+				return existing;
+			})
 
-    /**
-     * 키워드 통계 업데이트 헬퍼
-     * @param buildingId 건물 또는 공인중개사 ID
-     * @param isAgency true=공인중개사, false=건물
-     * @param oldPos 이전 긍정 키워드 목록
-     * @param newPos 신규 긍정 키워드 목록
-     */
-    private void updateKeywordCounts(
-            Long buildingId,
-            Boolean isAgency,
-            List<KeywordType> oldPos,
-            List<KeywordType> newPos
-    ) {
-        // 1) BuildingKeywordCounts 조회 또는 신규 생성
-        BuildingKeywordCounts counts = buildingKeywordCountsRepository
-                .findByBuildingIdAndIsAgency(buildingId, isAgency)
-                .orElseGet(() -> BuildingKeywordCounts.of(buildingId, isAgency));
+			// 기존에 없는 건물은 새로 생성
+			.orElseGet(() -> {
+				Buildings saved = buildingsRepository.save(dto.toBuildingEntity(campus));
+				BuildingKeywordCounts counts = BuildingKeywordCounts.of(saved.getId(), false);
+				buildingKeywordCountsRepository.save(counts);
+				return saved;
+			});
+	}
 
-        // 2) 이전 키워드 감소
-        counts.decrementPositiveKeywords(oldPos == null ? Collections.emptyList() : oldPos);
+	/**
+	 * 공인중개사 조회 또는 신규 생성 헬퍼
+	 * @param dto BuildingRequest DTO
+	 * @return Agencies 엔티티
+	 */
+	private Agencies findOrCreateAgency(BuildingRequest dto) {
+		return agenciesRepository.findByBuildingCode(dto.buildingCode())
+			.orElseGet(() -> {
+				// 신규 공인중개사 생성 및 초기 키워드 통계 생성
+				Agencies savedAgency = agenciesRepository.save(dto.toAgencyEntity());
+				BuildingKeywordCounts counts = BuildingKeywordCounts.of(
+					savedAgency.getAgencyId(), true);
+				buildingKeywordCountsRepository.save(counts);
+				return savedAgency;
+			});
+	}
 
-        // 3) 신규 키워드 증가
-        counts.incrementPositiveKeywords(newPos);
+	/**
+	 * 키워드 통계 업데이트 헬퍼
+	 * @param buildingId 건물 또는 공인중개사 ID
+	 * @param isAgency true=공인중개사, false=건물
+	 * @param oldPos 이전 긍정 키워드 목록
+	 * @param newPos 신규 긍정 키워드 목록
+	 */
+	private void updateKeywordCounts(
+		Long buildingId,
+		Boolean isAgency,
+		List<KeywordType> oldPos,
+		List<KeywordType> newPos
+	) {
+		// 1) BuildingKeywordCounts 조회 또는 신규 생성
+		BuildingKeywordCounts counts = buildingKeywordCountsRepository
+			.findByBuildingIdAndIsAgency(buildingId, isAgency)
+			.orElseGet(() -> BuildingKeywordCounts.of(buildingId, isAgency));
 
-        // 4) 저장
-        buildingKeywordCountsRepository.save(counts);
-    }
+		// 2) 이전 키워드 감소
+		counts.decrementPositiveKeywords(oldPos == null ? Collections.emptyList() : oldPos);
 
-    /**
-     * 기숙사 시설 변환 헬퍼
-     * @param dto FacilitiesDto
-     * @param review DormReviews 엔티티
-     * @return DormitoryFacilities 리스트
-     */
-    private List<DormitoryFacilities> convertToDormitoryFacilityList(FacilitiesDto dto, DormReviews review) {
-        List<DormitoryFacilities> list = new ArrayList<>();
-        // 공용 시설 항목 생성
-        for (String name : dto.publicFacilities()) {
-            Facilities f = facilitiesRepository.findByName(name)
-                    .orElseThrow(BuildingNotFoundException::unsupportedDormitoryFacility);
-            list.add(DormitoryFacilities.create(review, f, true, UsageType.PUBLIC));
-        }
+		// 3) 신규 키워드 증가
+		counts.incrementPositiveKeywords(newPos);
 
-        // 전용 시설 항목 생성
-        for (String name : dto.privateFacilities()) {
-            Facilities f = facilitiesRepository.findByName(name)
-                    .orElseThrow(BuildingNotFoundException::unsupportedDormitoryFacility);
-            list.add(DormitoryFacilities.create(review, f, true, UsageType.PRIVATE));
-        }
+		// 4) 저장
+		buildingKeywordCountsRepository.save(counts);
+	}
 
-        // 라운지 옵션 생성
-        Facilities lounge = facilitiesRepository.findByName("lounge")
-                .orElseThrow(BuildingNotFoundException::unsupportedDormitoryFacility);
-        list.add(DormitoryFacilities.create(review, lounge, dto.lounge(), null));
-        return list;
-    }
+	/**
+	 * 기숙사 시설 변환 헬퍼
+	 * @param dto FacilitiesDto
+	 * @param review DormReviews 엔티티
+	 * @return DormitoryFacilities 리스트
+	 */
+	private List<DormitoryFacilities> convertToDormitoryFacilityList(FacilitiesDto dto, DormReviews review) {
+		List<DormitoryFacilities> entities = new ArrayList<>();
 
-    /**
-     * 리뷰 수정 진입점
-     * @param dto 업데이트할 리뷰 정보
-     * @param user 수정 요청 사용자
-     * @param reviewId 수정 대상 리뷰 ID
-     */
-    @Override
-    @Transactional
-    public void updateReview(ReviewRequest dto, Users user, Long reviewId) {
-        // 1) 리뷰 로드 및 존재 확인
-        Reviews review = reviewsRepository.findById(reviewId)
-                .orElseThrow(ReviewNotFoundException::missingReview);
+		// public 시설들
+		for (String name : dto.publicFacilities()) {
+			Facilities facility = facilitiesRepository.findByName(name)
+				.orElseThrow(BuildingNotFoundException::unsupportedDormitoryFacility);
+			entities.add(DormitoryFacilities.create(review, facility, true, UsageType.PUBLIC));
+		}
 
-        // 2) 작성자 권한 확인
-        if (!review.getUser().getUserId().equals(user.getUserId())) {
-            throw ReviewAccessDeniedException.onlyAuthorCanEdit();
-        }
+		// private 시설들
+		for (String name : dto.privateFacilities()) {
+			Facilities facility = facilitiesRepository.findByName(name)
+				.orElseThrow(BuildingNotFoundException::unsupportedDormitoryFacility);
+			entities.add(DormitoryFacilities.create(review, facility, true, UsageType.PRIVATE));
+		}
 
-        // 3) 리뷰 타입별 분기 처리
-        if (review instanceof GeneralReviews general) {
-            updateGeneralReview(general, dto);
-        } else if (review instanceof DormReviews dorm) {
-            updateDormitoryReview(dorm, dto);
-        } else if (review instanceof AgencyReviews agency) {
-            updateAgencyReview(agency, dto);
-        } else {
-            throw new UnsupportedOperationException("지원하지 않는 리뷰 타입입니다.");
-        }
-    }
+		// 휴게시설 추가
+		Facilities lounge = facilitiesRepository.findByName("lounge")
+			.orElseThrow(BuildingNotFoundException::unsupportedDormitoryFacility);
+		entities.add(DormitoryFacilities.create(review, lounge, dto.lounge(), null));
 
-    /**
-     * 일반 리뷰 업데이트 로직:
-     * 1) 기존/신규 건물 로드
-     * 2) 기존 상세 정보 로드
-     * 3) 건물 변경 시 평점·이미지·키워드 이동, 동일 건물 시 업데이트
-     * 4) 리뷰 엔티티 및 상세 정보 저장
-     */
-    private void updateGeneralReview(GeneralReviews oldReview, ReviewRequest dto) {
-        // 1) 기존/신규 건물 엔티티 준비
-        Buildings oldBuilding = oldReview.getBuilding();
-        Buildings newBuilding = findOrCreateBuilding(dto.buildingRequest(), null);
-        ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
-                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+		return entities;
+	}
 
-        // 2) 건물 변경 여부 판단
-        if (!oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode())) {
-            // a) 이전 건물: 평점 제거, 이미지 감소, 키워드 통계 감소
-            oldBuilding.removeRating(oldReview.getRating());
-            oldBuilding.decrementImagesCount();
-            updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(), Collections.emptyList());
+	/**
+	 * 리뷰 수정 진입점
+	 * @param dto 업데이트할 리뷰 정보
+	 * @param user 수정 요청 사용자
+	 * @param reviewId 수정 대상 리뷰 ID
+	 */
+	@Override
+	@Transactional
+	public void updateReview(ReviewRequest dto, Users user, Long reviewId) {
+		// 1) 리뷰 로드 및 존재 확인
+		Reviews review = reviewsRepository.findById(reviewId)
+			.orElseThrow(ReviewNotFoundException::missingReview);
 
-            // b) 신규 건물: 평점 추가, 이미지 증가, 키워드 통계 증가
-            newBuilding.addRating(dto.generalReview().getRating());
-            newBuilding.incrementImagesCount();
-            updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
+		// 2) 작성자 권한 확인
+		if (!review.getUser().getUserId().equals(user.getUserId())) {
+			throw ReviewAccessDeniedException.onlyAuthorCanEdit();
+		}
 
-            // c) 두 건물 저장
-            buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
-        } else {
+		// 3) 리뷰 타입별 분기 처리
+		if (review instanceof GeneralReviews general) {
+			updateGeneralReview(general, dto);
+		} else if (review instanceof DormReviews dorm) {
+			updateDormitoryReview(dorm, dto);
+		} else if (review instanceof AgencyReviews agency) {
+			updateAgencyReview(agency, dto);
+		} else {
+			throw new UnsupportedOperationException("지원하지 않는 리뷰 타입입니다.");
+		}
+	}
 
-            // 동일 건물: 평점 및 키워드 통계 업데이트
-            oldBuilding.updateRating(oldReview.getRating(), dto.generalReview().getRating());
-            updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(), dto.keywords().positive());
-            buildingsRepository.save(oldBuilding);
-        }
+	/**
+	 * 일반 리뷰 업데이트 로직:
+	 * 1) 기존/신규 건물 로드
+	 * 2) 기존 상세 정보 로드
+	 * 3) 건물 변경 시 평점·이미지·키워드 이동, 동일 건물 시 업데이트
+	 * 4) 리뷰 엔티티 및 상세 정보 저장
+	 */
+	private void updateGeneralReview(GeneralReviews oldReview, ReviewRequest dto) {
+		// 1) 기존/신규 건물 엔티티 준비
+		Buildings oldBuilding = oldReview.getBuilding();
+		Buildings newBuilding = findOrCreateBuilding(dto.buildingRequest(), null);
+		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
+			.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
-        // 3) 리뷰 엔티티 및 상세 정보 갱신 저장
-        GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, newBuilding);
-        reviewsRepository.save(updatedReview);
-        ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
-        reviewDetailsRepository.save(updatedDetails);
-    }
+		// 2) 건물 변경 여부 판단
+		if (!oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode())) {
+			// a) 이전 건물: 평점 제거, 이미지 감소, 키워드 통계 감소
+			oldBuilding.removeRating(oldReview.getRating());
+			oldBuilding.decrementImagesCount();
+			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
+				Collections.emptyList());
 
-    /**
-     * 기숙사 리뷰 업데이트 로직:
-     * 1) 캠퍼스 검증 및 조회
-     * 2) 기존/신규 건물 엔티티 로드
-     * 3) 기존 상세 정보 로드
-     * 4) 건물 변경 시 평점·이미지·키워드 이동, 동일 건물 시 업데이트
-     * 5) 리뷰 엔티티 갱신 저장
-     * 6) 기존 시설 삭제 후 재생성과 저장
-     * 7) 상세 정보 갱신 저장
-     */
-    private void updateDormitoryReview(DormReviews oldReview, ReviewRequest dto) {
-        // 1) 캠퍼스 검증
-        Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus())
-                .orElseThrow(CampusNotFoundException::missingCampus);
+			// b) 신규 건물: 평점 추가, 이미지 증가, 키워드 통계 증가
+			newBuilding.addRating(dto.generalReview().getRating());
+			newBuilding.incrementImagesCount();
+			updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
 
-        // 2) 건물 엔티티 로드
-        Buildings oldBuilding = oldReview.getBuilding();
-        Buildings newBuilding = findOrCreateBuilding(dto.buildingRequest(), campus);
+			// c) 두 건물 저장
+			buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
+		} else {
 
-        // 3) 기존 상세 정보 로드
-        ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
-                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+			// 동일 건물: 평점 및 키워드 통계 업데이트
+			oldBuilding.updateRating(oldReview.getRating(), dto.generalReview().getRating());
+			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
+				dto.keywords().positive());
+			buildingsRepository.save(oldBuilding);
+		}
 
-        // 4) 건물 변경 처리
-        if (!oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode())) {
-            // a) 이전 건물 통계 감소
-            oldBuilding.removeRating(oldReview.getRating());
-            oldBuilding.decrementImagesCount();
-            updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(), Collections.emptyList());
+		// 3) 리뷰 엔티티 및 상세 정보 갱신 저장
+		GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, newBuilding);
+		reviewsRepository.save(updatedReview);
+		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
+		reviewDetailsRepository.save(updatedDetails);
+	}
 
-            // b) 신규 건물 통계 증가
-            newBuilding.addRating(dto.dormitoryReview().getRating());
-            newBuilding.incrementImagesCount();
-            updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
-            buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
-        } else {
-            // 동일 건물: 평점·키워드 업데이트
-            oldBuilding.updateRating(oldReview.getRating(), dto.dormitoryReview().getRating());
-            updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(), dto.keywords().positive());
-            buildingsRepository.save(oldBuilding);
-        }
+	/**
+	 * 기숙사 리뷰 업데이트 로직:
+	 * 1) 캠퍼스 검증 및 조회
+	 * 2) 기존/신규 건물 엔티티 로드
+	 * 3) 기존 상세 정보 로드
+	 * 4) 건물 변경 시 평점·이미지·키워드 이동, 동일 건물 시 업데이트
+	 * 5) 리뷰 엔티티 갱신 저장
+	 * 6) 기존 시설 삭제 후 재생성과 저장
+	 * 7) 상세 정보 갱신 저장
+	 */
+	private void updateDormitoryReview(DormReviews oldReview, ReviewRequest dto) {
+		// 1) 캠퍼스 검증
+		Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus())
+			.orElseThrow(CampusNotFoundException::missingCampus);
 
-        // 5) 리뷰 엔티티 갱신 저장
-        DormReviews updatedReview = dto.toUpdatedDormitoryReviews(oldReview, newBuilding);
-        reviewsRepository.save(updatedReview);
+		// 2) 건물 엔티티 로드
+		Buildings oldBuilding = oldReview.getBuilding();
+		Buildings newBuilding = findOrCreateBuilding(dto.buildingRequest(), campus);
 
-        // 6) 시설 정보 재설정
-        dormitoryFacilitiesRepository.deleteAllByDormitoryReview(oldReview);
-        List<DormitoryFacilities> newFacilities = convertToDormitoryFacilityList(dto.facilities(), updatedReview);
-        dormitoryFacilitiesRepository.saveAll(newFacilities);
+		// 3) 기존 상세 정보 로드
+		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
+			.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
-        // 7) 상세 정보 갱신 저장
-        ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
-        reviewDetailsRepository.save(updatedDetails);
-    }
+		// 4) 건물 변경 처리
+		if (!oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode())) {
+			// a) 이전 건물 통계 감소
+			oldBuilding.removeRating(oldReview.getRating());
+			oldBuilding.decrementImagesCount();
+			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
+				Collections.emptyList());
 
-    /**
-     * 공인중개사 리뷰 업데이트 로직:
-     * 1) 기존/신규 공인중개사 로드
-     * 2) 기존 상세 정보 로드
-     * 3) 이미지 변경 여부에 따른 카운트 조정
-     * 4) 공인중개사 변경 시 평점·키워드 이동, 동일 시 업데이트
-     * 5) 리뷰 엔티티 및 상세 정보 저장
-     */
-    private void updateAgencyReview(AgencyReviews oldReview, ReviewRequest dto) {
-        // 1) 공인중개사 로드
-        Agencies oldAgency = oldReview.getAgency();
-        Agencies newAgency = findOrCreateAgency(dto.buildingRequest());
-        // 2) 기존 상세 정보 로드
-        ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
-                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
-        // 3) 이미지 유무 확인
-        boolean oldHasImage = oldReview.getThumbnailImage() != null;
-        boolean newHasImage = dto.imageUrls() != null && !dto.imageUrls().isEmpty();
+			// b) 신규 건물 통계 증가
+			newBuilding.addRating(dto.dormitoryReview().getRating());
+			newBuilding.incrementImagesCount();
+			updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
+			buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
+		} else {
+			// 동일 건물: 평점·키워드 업데이트
+			oldBuilding.updateRating(oldReview.getRating(), dto.dormitoryReview().getRating());
+			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
+				dto.keywords().positive());
+			buildingsRepository.save(oldBuilding);
+		}
 
-        // 4) 이미지 변경 및 공인중개사 변경 처리
-        if (!oldAgency.getBuildingCode().equals(newAgency.getBuildingCode())) {
-            if (!oldHasImage && newHasImage) newAgency.incrementImagesCount();
-            else if (oldHasImage && !newHasImage) oldAgency.decrementImagesCount();
-            else if (oldHasImage && newHasImage) {
-                oldAgency.decrementImagesCount();
-                newAgency.incrementImagesCount();
-            }
-            updateKeywordCounts(oldAgency.getAgencyId(), true, oldDetails.getKeywords().positive(), Collections.emptyList());
-            updateKeywordCounts(newAgency.getAgencyId(), true, Collections.emptyList(), dto.keywords().positive());
-            oldAgency.removeRating(oldReview.getRating());
-            newAgency.addRating(dto.agencyReview().getRating());
-            agenciesRepository.saveAll(List.of(oldAgency, newAgency));
-        } else {
-            if (!oldHasImage && newHasImage) oldAgency.incrementImagesCount();
-            else if (oldHasImage && !newHasImage) oldAgency.decrementImagesCount();
-            updateKeywordCounts(oldAgency.getAgencyId(), true, oldDetails.getKeywords().positive(), dto.keywords().positive());
-            oldAgency.updateRating(oldReview.getRating(), dto.agencyReview().getRating());
-            agenciesRepository.save(oldAgency);
-        }
+		// 5) 리뷰 엔티티 갱신 저장
+		DormReviews updatedReview = dto.toUpdatedDormitoryReviews(oldReview, newBuilding);
+		reviewsRepository.save(updatedReview);
 
-        // 5) 리뷰 및 상세 정보 저장
-        AgencyReviews updatedReview = dto.toUpdatedAgencyReviews(oldReview, newAgency);
-        reviewsRepository.save(updatedReview);
-        ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newAgency.getAgencyId());
-        reviewDetailsRepository.save(updatedDetails);
-    }
+		// 6) 시설 정보 재설정
+		dormitoryFacilitiesRepository.deleteAllByDormitoryReview(oldReview);
+		List<DormitoryFacilities> newFacilities = convertToDormitoryFacilityList(dto.facilities(), updatedReview);
+		dormitoryFacilitiesRepository.saveAll(newFacilities);
+
+		// 7) 상세 정보 갱신 저장
+		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
+		reviewDetailsRepository.save(updatedDetails);
+	}
+
+	/**
+	 * 공인중개사 리뷰 업데이트 로직:
+	 * 1) 기존/신규 공인중개사 로드
+	 * 2) 기존 상세 정보 로드
+	 * 3) 이미지 변경 여부에 따른 카운트 조정
+	 * 4) 공인중개사 변경 시 평점·키워드 이동, 동일 시 업데이트
+	 * 5) 리뷰 엔티티 및 상세 정보 저장
+	 */
+	private void updateAgencyReview(AgencyReviews oldReview, ReviewRequest dto) {
+		// 1) 공인중개사 로드
+		Agencies oldAgency = oldReview.getAgency();
+		Agencies newAgency = findOrCreateAgency(dto.buildingRequest());
+		// 2) 기존 상세 정보 로드
+		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
+			.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+		// 3) 이미지 유무 확인
+		boolean oldHasImage = oldReview.getThumbnailImage() != null;
+		boolean newHasImage = dto.imageUrls() != null && !dto.imageUrls().isEmpty();
+
+		// 4) 이미지 변경 및 공인중개사 변경 처리
+		if (!oldAgency.getBuildingCode().equals(newAgency.getBuildingCode())) {
+			if (!oldHasImage && newHasImage)
+				newAgency.incrementImagesCount();
+			else if (oldHasImage && !newHasImage)
+				oldAgency.decrementImagesCount();
+			else if (oldHasImage && newHasImage) {
+				oldAgency.decrementImagesCount();
+				newAgency.incrementImagesCount();
+			}
+			updateKeywordCounts(oldAgency.getAgencyId(), true, oldDetails.getKeywords().positive(),
+				Collections.emptyList());
+			updateKeywordCounts(newAgency.getAgencyId(), true, Collections.emptyList(), dto.keywords().positive());
+			oldAgency.removeRating(oldReview.getRating());
+			newAgency.addRating(dto.agencyReview().getRating());
+			agenciesRepository.saveAll(List.of(oldAgency, newAgency));
+		} else {
+			if (!oldHasImage && newHasImage)
+				oldAgency.incrementImagesCount();
+			else if (oldHasImage && !newHasImage)
+				oldAgency.decrementImagesCount();
+			updateKeywordCounts(oldAgency.getAgencyId(), true, oldDetails.getKeywords().positive(),
+				dto.keywords().positive());
+			oldAgency.updateRating(oldReview.getRating(), dto.agencyReview().getRating());
+			agenciesRepository.save(oldAgency);
+		}
+
+		// 5) 리뷰 및 상세 정보 저장
+		AgencyReviews updatedReview = dto.toUpdatedAgencyReviews(oldReview, newAgency);
+		reviewsRepository.save(updatedReview);
+		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newAgency.getAgencyId());
+		reviewDetailsRepository.save(updatedDetails);
+	}
 }

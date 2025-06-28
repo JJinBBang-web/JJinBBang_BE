@@ -1,6 +1,8 @@
 package JJinBBang.app.global.mail.service.impl;
 
+import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.exception.MailInvalidException;
+import JJinBBang.app.global.mail.exception.MailNotFoundException;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import JJinBBang.app.global.mail.repository.EmailAuthCodeRepository;
 import JJinBBang.app.global.mail.service.MailAuthService;
@@ -21,25 +23,25 @@ public class MailAuthServiceImpl implements MailAuthService {
     private final EmailAuthCodeRepository emailAuthCodeRepository;
 
     @Override
-    public void sendAuthCode(String toEmail) {
+    public void sendAuthCode(Long userId, String toEmail) {
         validateEmail(toEmail);
 
         String authCode = generateAuthCode();
-        saveAuthCode(toEmail, authCode);
+        saveAuthCode(userId, toEmail, authCode);
 
         mailSendService.sendMail(toEmail, properties.getSubjectText(), buildEmailBody(authCode));
     }
 
     @Override
-    public boolean verifyAuthCode(String email, String authCode) {
-        String savedAuthCode = emailAuthCodeRepository.findAuthCodeByEmail(email)
-                .orElseThrow(MailInvalidException::notFoundAuthCode);
-        return savedAuthCode.equals(authCode);
+    public boolean verifyAuthCode(Long userId, String email, String authCode) {
+        EmailAuthInfo savedAuthCode = emailAuthCodeRepository.findEmailAndAuthCodeByUserId(userId)
+                .orElseThrow(MailNotFoundException::notFoundAuthCode);
+        return savedAuthCode.email().equals(email) && savedAuthCode.code().equals(authCode);
     }
 
 
     // utility --------------------------------------------------------------------------------------------------------
-    public String generateAuthCode() {
+    private String generateAuthCode() {
         // emailAuthCodeLength 자리 숫자로 구성된 인증 코드 생성
         // 앞자리 0이 있어도 텍스트로 생성
         StringBuilder code = new StringBuilder();
@@ -49,13 +51,13 @@ public class MailAuthServiceImpl implements MailAuthService {
         return code.toString();
     }
 
-    public void saveAuthCode(String email, String authCode) {
-        if(emailAuthCodeRepository.isExistByEmail(email)) {
+    private void saveAuthCode(Long userId, String email, String authCode) {
+        if(emailAuthCodeRepository.isExistByUserId(userId)) {
             // 이미 인증 코드가 발급된 이메일인 경우
-            log.info("이미 인증 코드가 발급된 이메일입니다. [email: {}]. 기존 인증 코드를 삭제합니다.", email);
-            emailAuthCodeRepository.deleteByEmail(email);
+            log.info("이미 인증 코드가 발급된 이메일입니다. [userId: {}]. 기존 인증 코드를 삭제합니다.", userId);
+            emailAuthCodeRepository.deleteByUserId(userId);
         }
-        emailAuthCodeRepository.save(email, authCode);
+        emailAuthCodeRepository.save(userId, email, authCode);
     }
 
     private String buildEmailBody(String code) {
