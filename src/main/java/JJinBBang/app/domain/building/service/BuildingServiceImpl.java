@@ -11,23 +11,23 @@ import JJinBBang.app.domain.building.dto.BuildingDetailResponse;
 import JJinBBang.app.domain.building.dto.KeywordCount;
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.exception.BuildingNullException;
-import JJinBBang.app.domain.building.repository.BuildingKeywordCountRepository;
-import JJinBBang.app.domain.building.repository.BuildingRepository;
+import JJinBBang.app.domain.building.repository.BuildingKeywordCountsRepository;
+import JJinBBang.app.domain.building.repository.BuildingsRepository;
 import JJinBBang.app.domain.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class BuildingServiceImpl implements BuildingService {
-	private final BuildingRepository buildingRepository;
-	private final BuildingKeywordCountRepository buildingKeywordCountRepository;
+	private final BuildingsRepository buildingsRepository;
+	private final BuildingKeywordCountsRepository buildingKeywordCountRepository;
 
 	@Override
 	@Transactional(readOnly = true)
 	public BuildingDetailResponse getBuildingDetail(Long buildingId, Users user) {
 
 		// 1) 건물이 없다면 오류
-		Buildings building = buildingRepository.findById(buildingId).orElseThrow(BuildingNullException::new);
+		Buildings building = buildingsRepository.findById(buildingId).orElseThrow(BuildingNullException::new);
 
 		// 2) 좋아요 여부
 		Boolean liked = building.getBuildingLikes().stream()
@@ -36,7 +36,7 @@ public class BuildingServiceImpl implements BuildingService {
 		// 3) 키워드 조회 - 없으면 새 엔티티
 		BuildingKeywordCounts buildingKeywordCounts = buildingKeywordCountRepository
 				.findByBuildingIdAndIsAgency(buildingId, false)
-				.orElseGet(() -> BuildingKeywordCounts.of(buildingId));
+				.orElseGet(() -> BuildingKeywordCounts.of(buildingId, false));
 
 		// 4) keywordCounts 조회 - 없으면 새 리스트
 		List<KeywordCount> keywordCounts = buildingKeywordCounts.getKeywordCounts();

@@ -16,4 +16,11 @@ public interface UsersService {
 
 	UserReviewListResponse getUserReviews(Users user, int offset, int limit, String orderby);
 
+	/**
+	 * 이메일 인증 완료 시 유저의 학교 이메일과 인증 상태를 업데이트함
+	 * @param user 유저
+	 * @param universityEmail 인증에 사용한 학교 이메일
+	 * @return 업데이트된 유저
+	 */
+	Users verifyUniversityEmail(Users user, String universityEmail);
 }

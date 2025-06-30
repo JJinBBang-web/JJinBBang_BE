@@ -1,5 +1,6 @@
 package JJinBBang.app.global.mail.repository;
 
+import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -15,43 +16,43 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InMemoryEmailAuthCodeRepository implements EmailAuthCodeRepository {
 
     private final long expirationTime;
-    private final Map<String, EmailAuthInfo> emailAuthCodeMap = new ConcurrentHashMap<>();
+    private final Map<Long, EmailAuthInfo> emailAuthCodeMap = new ConcurrentHashMap<>();
 
     public InMemoryEmailAuthCodeRepository(MailAuthProperties props) {
         this.expirationTime = props.getExpirationTime() * 60_000;
     }
 
     @Override
-    public void save(String email, String authCode) {
-        EmailAuthInfo info = new EmailAuthInfo(authCode, System.currentTimeMillis());
-        EmailAuthInfo prev = emailAuthCodeMap.putIfAbsent(email, info);
+    public void save(Long userId, String email, String authCode) {
+        EmailAuthInfo info = new EmailAuthInfo(email, authCode, System.currentTimeMillis());
+        EmailAuthInfo prev = emailAuthCodeMap.putIfAbsent(userId, info);
         if (prev != null) {
-            throw new DuplicateKeyException("Duplicate key: " + email);
+            throw new DuplicateKeyException("Duplicate key: " + userId);
         }
     }
 
     @Override
-    public boolean isExistByEmail(String email) {
-        EmailAuthInfo info = emailAuthCodeMap.get(email);
-        return info != null && !isExpired(info.timestamp);
+    public boolean isExistByUserId(Long userId) {
+        EmailAuthInfo info = emailAuthCodeMap.get(userId);
+        return info != null && !isExpired(info.timestamp());
     }
 
     @Override
-    public Optional<String> findAuthCodeByEmail(String email) {
-        EmailAuthInfo info = emailAuthCodeMap.get(email);
+    public Optional<EmailAuthInfo> findEmailAndAuthCodeByUserId(Long userId) {
+        EmailAuthInfo info = emailAuthCodeMap.get(userId);
         if (info == null) {
             return Optional.empty();
         }
-        if (isExpired(info.timestamp)) {
-            emailAuthCodeMap.remove(email);
+        if (isExpired(info.timestamp())) {
+            emailAuthCodeMap.remove(userId);
             return Optional.empty();
         }
-        return Optional.of(info.code);
+        return Optional.of(info);
     }
 
     @Override
-    public void deleteByEmail(String email) {
-        emailAuthCodeMap.remove(email);
+    public void deleteByUserId(Long userId) {
+        emailAuthCodeMap.remove(userId);
     }
 
     private boolean isExpired(long timestamp) {
@@ -62,10 +63,7 @@ public class InMemoryEmailAuthCodeRepository implements EmailAuthCodeRepository 
     @Scheduled(fixedDelay = 60 * 1000) // 1분 간격
     public void cleanUpExpiredCodes() {
         emailAuthCodeMap.entrySet().removeIf(entry ->
-                isExpired(entry.getValue().timestamp)
+                isExpired(entry.getValue().timestamp())
         );
     }
-
-    // 내부 저장용 클래스
-    private record EmailAuthInfo(String code, long timestamp) { }
 }

@@ -6,6 +6,8 @@ import JJinBBang.app.domain.building.dto.UserReviewResponse;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import org.springframework.data.domain.Pageable;
+import JJinBBang.app.global.common.enums.VerificationStatus;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import JJinBBang.app.domain.user.entity.Users;
@@ -116,5 +118,10 @@ public class UsersServiceImpl implements UsersService {
 
 	private String buildImageUrl(Long id) {
 		return "http://localhost:8080/image/" + id + ".jpg";
+    
+	public Users verifyUniversityEmail(Users user, String universityEmail) {
+		user.updateUniversityEmail(universityEmail);
+		user.updateVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
+		return usersRepository.save(user);
 	}
 }

@@ -7,7 +7,7 @@ public class ReviewNotFoundException extends NotFoundGroupException {
 		super(message);
 	}
 
-	public ReviewNotFoundException() {
-		super("해당 리뷰 정보가 존재하지 않습니다.");
+	public static ReviewNotFoundException missingReview() {
+		return new ReviewNotFoundException("해당 리뷰 정보가 존재하지 않습니다.");
 	}
 }
