@@ -78,6 +78,7 @@ public class AccessTokenGeneratorTest {
                 VerificationStatus.UNVERIFIED.name(),
                 claims.get("verificationStatus", String.class)
         );
+
         assertEquals(TokenType.ACCESS.getType(), claims.get("tokenType", String.class));
         System.out.println("access token = " + token);
     }

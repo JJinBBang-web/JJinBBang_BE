@@ -27,7 +27,12 @@ public class PageRequest extends AbstractPageRequest {
 
 	@Override
 	public Sort getSort() {
-		return sortBy.toSort();
+		return switch (sortBy) {
+			case LATEST -> Sort.by("createdAt").descending();
+			case LIKES -> Sort.by("likesCount").descending();
+			case STARS -> Sort.by("rating").descending();
+			default -> Sort.by("createdAt").descending();
+		};
 	}
 
 	@Override
