@@ -2,10 +2,10 @@ package JJinBBang.app.domain.map.service;
 
 import java.util.List;
 
+import JJinBBang.app.domain.building.repository.BuildingsRepository;
 import org.springframework.stereotype.Service;
 
 import JJinBBang.app.domain.building.entity.Buildings;
-import JJinBBang.app.domain.building.repository.BuildingRepository;
 import JJinBBang.app.domain.common.dto.item.Filters;
 import JJinBBang.app.domain.map.dto.item.Bounds;
 import JJinBBang.app.domain.map.dto.request.MapMarkerRequest;
@@ -25,8 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class MapServiceImpl implements MapService{
-
-	private final BuildingRepository buildingRepository;
+	private final BuildingsRepository buildingsRepository;
 
 
 	@Override
@@ -40,7 +39,7 @@ public class MapServiceImpl implements MapService{
 		validateKeywordLimit(filters.reviewKeyword());
 
 		// 모든 조건 기반으로 건물 리스트를 먼저 조회
-		List<Buildings> buildings = buildingRepository.findMarkersWithinBounds(
+		List<Buildings> buildings = buildingsRepository.findMarkersWithinBounds(
 			bounds.neLat(), bounds.neLng(),
 			bounds.swLat(), bounds.swLng(),
 			filters.buildType(), filters.contractType(),

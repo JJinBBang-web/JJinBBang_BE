@@ -4,12 +4,16 @@ import java.util.List;
 
 import JJinBBang.app.domain.building.entity.DormitoryFacilities;
 import JJinBBang.app.domain.building.enums.UsageType;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 @Builder
 public record FacilitiesDto(
+	@NotNull
 	List<String> publicFacilities,
+	@NotNull
 	List<String> privateFacilities,
+	@NotNull
 	Boolean lounge
 ) {
 	public static FacilitiesDto of(List<DormitoryFacilities> facilities) {

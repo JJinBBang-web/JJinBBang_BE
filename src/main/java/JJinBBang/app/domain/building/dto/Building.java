@@ -8,6 +8,7 @@ import lombok.Builder;
 @Builder
 public record Building (
 	Long buildingId,
+	String buildingCode,
 	String name,
 	BuildingType type,
 	String address,
@@ -17,6 +18,7 @@ public record Building (
 	public static Building of(Buildings building, BuildingType buildingType) {
 		return Building.builder()
 			.buildingId(building.getId())
+			.buildingCode(building.getBuildingCode())
 			.name(building.getBuildingName())
 			.type(buildingType)
 			.address(building.getBuildingAddress())
@@ -28,6 +30,7 @@ public record Building (
 	public static Building of(Agencies agency, BuildingType buildingType) {
 		return Building.builder()
 			.buildingId(agency.getAgencyId())
+			.buildingCode(agency.getBuildingCode())
 			.name(agency.getName())
 			.type(buildingType)
 			.address(agency.getAddress())

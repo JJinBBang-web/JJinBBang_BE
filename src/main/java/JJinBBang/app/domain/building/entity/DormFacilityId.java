@@ -16,4 +16,11 @@ public class DormFacilityId implements Serializable {
 
     @Column(name = "facility_id")
     private Long facilityId;
+
+    public static DormFacilityId of(Long reviewId, Long facilityId) {
+        if (reviewId == null || facilityId == null) {
+            throw new IllegalArgumentException("ReviewId facilityId는 null이 될 수 없습니다.");
+        }
+        return new DormFacilityId(reviewId, facilityId);
+    }
 }

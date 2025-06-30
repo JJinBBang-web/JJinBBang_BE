@@ -13,7 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "review_details")
 public class ReviewDetails {
 	@Id
