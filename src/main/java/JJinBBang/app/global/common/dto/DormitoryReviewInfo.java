@@ -8,6 +8,9 @@ import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.Floor;
 import lombok.Builder;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Builder
 public record DormitoryReviewInfo(
         Long id,
