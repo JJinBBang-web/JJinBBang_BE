@@ -1,0 +1,124 @@
+spring:
+  profiles:
+    active: prod
+
+  datasource:
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    driver-class-name: ${spring.datasource.driver-class-name}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    open-in-view: false
+
+  data:
+    mongodb:
+      uri: ${spring.data.mongodb.uri}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${spring.security.oauth2.client.registration.kakao.client-id}
+            client-secret: ${spring.security.oauth2.client.registration.kakao.client-secret}
+            client-authentication-method: ${spring.security.oauth2.client.registration.kakao.client-authentication-method}
+            authorization-grant-type: ${spring.security.oauth2.client.registration.kakao.authorization-grant-type}
+            redirect-uri: ${spring.security.oauth2.client.registration.kakao.redirect-uri}
+            client-name: ${spring.security.oauth2.client.registration.kakao.client-name}
+#            scope: ${spring.security.oauth2.client.registration.kakao.scope} # 필요 시 활성화
+
+        provider:
+          kakao:
+            authorization-uri: ${spring.security.oauth2.client.provider.kakao.authorization-uri}
+            token-uri: ${spring.security.oauth2.client.provider.kakao.token-uri}
+            user-info-uri: ${spring.security.oauth2.client.provider.kakao.user-info-uri}
+            user-name-attribute: ${spring.security.oauth2.client.provider.kakao.user-name-attribute}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${spring.mail.username}
+    password: ${spring.mail.password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust:
+              smtp.gmail.com
+            protocols:
+              TLSv1.2
+
+  messages:
+    encoding: UTF-8
+    basename: ValidationMessages
+
+jwt:
+  secret: ${jwt.secret}
+  expiration-time:
+    access-token: ${jwt.expiration-time.access-token}
+    refresh-token: ${jwt.expiration-time.refresh-token}
+    signup-token: ${jwt.expiration-time.signup-token}
+
+mail-auth:
+  expiration-time: ${mail-auth.expiration-time}
+  auth-code-length: ${mail-auth.auth-code-length}
+  allowed-domain:
+    - gnu.ac.kr
+    - gmail.com
+  # docker-compose.yml에서 관리할 수 있도록 환경변수로 설정함
+  subject-text: "[찐빵] 이메일 인증코드"
+  body-text: "찐빵 이메일 인증 코드입니다.\n\n아래 인증 코드를 입력하여 이메일 인증을 완료해주세요.\n\n인증 코드: %s\n\n이 코드는 %s분간 유효합니다."
+
+logging:
+  level:
+    org.hibernate.sql: debug
+    org.hibernate.typ e: trace
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+
+security:
+  path:
+    permit-all:
+      - "/swagger-ui/**"
+      - "/v3/api-docs/**"
+#      - "/api/v1/user/**"
+#      - "/api/v1/map/**"
+    authenticated:
+      - "/api/v1/auth/tokenRefresh"
+      - "/api/v1/auth/logout"
+#      - "/api/v1/user"
+#      - "/api/v1/certificates/**"
+#      - "/api/v1/user/**"
+#      - "/api/v1/building/**"
+#      - "/api/v1/review/**"
+#      - "/api/v1/notification/**"
+    anonymous:
+      - "/api/v1/auth"
+    verification-status-based:
+      EMAIL_VERIFIED:
+        - "/api/v1/verifiedTest"
+      ENROLL_STUDENT_VERIFIED:
+        - "/api/v1/enrollStudentVerifiedTest"
+      NEW_STUDENT_VERIFIED:
+        - "/api/v1/newStudentVerifiedTest"
+      UNVERIFIED:
+        - "/api/v1/unverifiedTest"
+        - "/api/v1/auth/emailCode"
+        - "/api/v1/auth/emailCode/verify"
+      PENDING:
+        - "/api/v1/pendingTest"
+    pending-user:
+      - "/api/v1/auth/signup"
+    refresh:
+      - "/api/v1/auth/tokenRefresh"
+    any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
+

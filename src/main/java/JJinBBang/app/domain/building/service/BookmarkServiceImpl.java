@@ -1,0 +1,109 @@
+package JJinBBang.app.domain.building.service;
+
+import JJinBBang.app.domain.building.dto.GetUserBookmarkRequest;
+import JJinBBang.app.global.common.dto.InfoDto;
+import JJinBBang.app.domain.building.entity.*;
+import JJinBBang.app.domain.building.exception.*;
+import JJinBBang.app.domain.building.repository.*;
+import JJinBBang.app.domain.user.entity.Users;
+import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class BookmarkServiceImpl implements BookmarkService{
+
+    private final SearchInfo searchInfo;
+
+    private final BuildingsRepository buildingsRepository;
+    private final BuildingLikesRepository buildingLikesRepository;
+    private final ReviewsRepository reviewsRepository;
+    private final ReviewLikesRepository reviewLikesRepository;
+    private final AgenciesRepository agenciesRepository;
+    private final AgencyLikesRepository agencyLikesRepository;
+    private final BookmarkRepository bookmarkRepository;
+
+
+    @Override
+    @Transactional
+    public void buildingBookmark(Long buildingId, Users users, boolean liked){
+        Buildings buildings = buildingsRepository.findById(buildingId).orElseThrow(() -> new BookmarkNotFoundException("Building"));
+        if(liked){
+            BuildingLikes newLike = BuildingLikes.create(buildings, users);
+            buildingLikesRepository.save(newLike);
+        }
+        else{
+            BuildingLikes savedLike = buildingLikesRepository.findByBuildingAndUser(buildings,users).orElseThrow(() -> new BookmarkNotFoundException("BuildingLikes"));
+            buildingLikesRepository.delete(savedLike);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void reviewBookmark(Long reviewId, Users users, boolean liked) {
+        Reviews reviews = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));
+        if(liked){
+            ReviewLikes newLike = ReviewLikes.create(reviews, users);
+            reviewLikesRepository.save(newLike);
+        }
+        else{
+            ReviewLikes savedLike = reviewLikesRepository.findByReviewAndUser(reviews,users).orElseThrow(() -> new BookmarkNotFoundException("ReviewLikes"));
+            reviewLikesRepository.delete(savedLike);
+        }
+
+    }
+
+    @Override
+    @Transactional
+    public void agencyBookmark(Long agencyId, Users users, boolean liked) {
+        Agencies agencies = agenciesRepository.findById(agencyId).orElseThrow(()->new BookmarkNotFoundException("Agencies"));
+        if(liked){
+            AgencyLikes newLike = AgencyLikes.create(agencies, users);
+            agencyLikesRepository.save(newLike);
+        }
+        else{
+            AgencyLikes saveLike = agencyLikesRepository.findByAgencyAndUser(agencies,users).orElseThrow(() -> new BookmarkNotFoundException("AgencyLikes"));
+            agencyLikesRepository.delete(saveLike);
+        }
+    }
+
+    @Override
+    @Transactional
+    public List<InfoDto> searchBookmark(Long userId, Pageable pageable , GetUserBookmarkRequest request) {
+        Page<Object[]> resultPage = bookmarkRepository.findLikedItemsByUserIdNative(userId, pageable,request);
+        List<InfoDto> resultList = new ArrayList<>();
+        List<Long> errorList = new ArrayList<>();
+        List<Object[]> contentList = resultPage.getContent();
+        for (Object[] row : contentList) {
+            Long itemId = ((Number) row[0]).longValue();
+            String itemType = (String) row[1];
+            try{
+            switch (itemType){
+                case "review":
+                    resultList.add(searchInfo.reviewSearch(itemId,true));
+                    break;
+                case "building":
+                    resultList.add(searchInfo.buildingSearch(itemId,true));
+                    break;
+                case "agency":
+                    resultList.add(searchInfo.agencySearch(itemId,true));
+                    break;
+            }
+            } catch (Exception e) {
+                errorList.add(itemId);
+            }
+        }
+        System.out.println(errorList);
+        return resultList;
+    }
+
+}
