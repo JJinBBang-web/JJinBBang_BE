@@ -9,4 +9,5 @@ import java.util.Optional;
 
 public interface ReviewLikesRepository extends CrudRepository<ReviewLikes, Long> {
     Optional<ReviewLikes> findByReviewAndUser(Reviews reviews, Users user);
+    Optional<ReviewLikes> findByReviewIdAndUserUserId(Long reviewId, Long userId);
 }

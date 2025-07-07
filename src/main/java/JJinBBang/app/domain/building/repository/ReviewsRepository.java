@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.List;
+
 public interface ReviewsRepository extends CrudRepository<Reviews,Long> {
     Reviews findFirstByBuildingOrderByCreatedAtDesc(Buildings building);
     Reviews findFirstByAgencyAndDtypeOrderByCreatedAtDesc(Agencies agency, ReviewType dtype);
