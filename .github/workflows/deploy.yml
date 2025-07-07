@@ -4,10 +4,10 @@ name: Build and Deploy to EC2
 on:
   push:
     branches:
-      - cicd/test
+      - release
   pull_request:
     branches:
-      - cicd/test
+      - release
 
 # AWS 관련 값 변수로 설정
 env:
