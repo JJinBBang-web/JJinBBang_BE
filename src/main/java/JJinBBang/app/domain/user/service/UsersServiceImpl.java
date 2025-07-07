@@ -118,7 +118,8 @@ public class UsersServiceImpl implements UsersService {
 
 	private String buildImageUrl(Long id) {
 		return "http://localhost:8080/image/" + id + ".jpg";
-    
+	}
+
 	public Users verifyUniversityEmail(Users user, String universityEmail) {
 		user.updateUniversityEmail(universityEmail);
 		user.updateVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
