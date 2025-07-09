@@ -30,6 +30,7 @@ public class UsersServiceImpl implements UsersService {
 	private final DormReviewsRepository dormReviewsRepository;
 	private final AgencyReviewsRepository agencyReviewsRepository;
 	private final ReviewLikesRepository reviewLikesRepository;
+	private final ReviewDetailsRepository reviewDetailsRepository;
 
 	@Override
 	public boolean existsByProviderId(String providerId) {
@@ -78,7 +79,8 @@ public class UsersServiceImpl implements UsersService {
 						generalReviews,
 						user,
 						buildImageUrl(generalReviews.getId()),
-						reviewLikesRepository
+						reviewLikesRepository,
+						reviewDetailsRepository
 				)
 		);
 
