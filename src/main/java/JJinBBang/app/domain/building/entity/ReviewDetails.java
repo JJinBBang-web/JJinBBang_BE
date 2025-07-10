@@ -2,6 +2,8 @@ package JJinBBang.app.domain.building.entity;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,6 +16,8 @@ import lombok.Getter;
 
 @Getter
 @Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "review_details")
 public class ReviewDetails {
 	@Id
