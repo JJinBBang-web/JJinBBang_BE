@@ -19,7 +19,7 @@ public class SearchInfo {
     private final AgenciesRepository agenciesRepository;
     private final GeneralReviewsRepository generalReviewsRepository;
     private final DormReviewsRepository dormReviewsRepository;
-    private final ReviewDetailRepository reviewDetailRepository;
+    private final ReviewDetailsRepository reviewDetailRepository;
 
     public InfoDto reviewSearch(Long reviewId, Boolean liked){
         Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));

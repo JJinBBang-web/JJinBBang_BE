@@ -3,6 +3,8 @@ package JJinBBang.app.domain.building.dto;
 import JJinBBang.app.domain.building.entity.AgencyReviews;
 import JJinBBang.app.domain.building.entity.DormReviews;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
+import JJinBBang.app.domain.building.entity.ReviewDetails;
+import JJinBBang.app.domain.building.repository.ReviewDetailsRepository;
 import JJinBBang.app.domain.building.repository.ReviewLikesRepository;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.AgencyReviewInfo;
@@ -23,12 +25,17 @@ public record UserReviewResponse(
             GeneralReviews generalReviews,
             Users user,
             String image,
-            ReviewLikesRepository likesRepository
+            ReviewLikesRepository likesRepository,
+            ReviewDetailsRepository reviewDetailsRepository
     ){
         boolean liked = likesRepository.findByReviewAndUser(generalReviews, user).isPresent();
 
+        ReviewDetails reviewDetails = reviewDetailsRepository.findByReviewId(generalReviews.getId()).orElseThrow(() ->
+                new IllegalArgumentException("후기를 찾을 수 없습니다.")
+        );
+
         return UserReviewResponse.builder()
-                .generalReviewInfo(GeneralReviewInfo.of(generalReviews, generalReviews.getBuilding(), liked))
+                .generalReviewInfo(GeneralReviewInfo.of(generalReviews, reviewDetails, liked))
                 .reviewInfo(ReviewInfo.of(generalReviews))
                 .image(image)
                 .build();
