@@ -94,7 +94,7 @@ public class MapServiceImpl implements MapService{
 	// 위도/경도 범위 검사
 	private void validateBounds(Bounds bounds) {
 		if (bounds.neLat() < bounds.swLat() || bounds.neLng() < bounds.swLng()) {
-			throw MapUnprocessableException.invalidDepositRange(); // 위도/경도 범위 역전
+			throw MapUnprocessableException.invalidGeographicBounds(); // 위도/경도 범위 역전
 		}
 	}
 
