@@ -23,7 +23,7 @@ public record Filters(
 	List<BuildingType> buildType, // 건물 유형
 
 	@NotNull(message = "{filter.contractType.notNull}")
-	ContractType contractType, // 계약 유형
+	String contractType, // 계약 유형 (ALL, MONTHLY_RENT, DEPOSIT_RENT)
 
 	List<String> campus, // 캠퍼스
 

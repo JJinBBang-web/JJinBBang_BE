@@ -2,6 +2,7 @@ package JJinBBang.app.domain.map.service;
 
 import java.util.List;
 
+import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.repository.BuildingsRepository;
 import org.springframework.stereotype.Service;
 
@@ -38,11 +39,13 @@ public class MapServiceImpl implements MapService{
 		validateFilterRanges(filters);
 		validateKeywordLimit(filters.reviewKeyword());
 
+		ContractType contractType = parseContractType(filters.contractType());
+
 		// 모든 조건 기반으로 건물 리스트를 먼저 조회
 		List<Buildings> buildings = buildingsRepository.findMarkersWithinBounds(
 			bounds.neLat(), bounds.neLng(),
 			bounds.swLat(), bounds.swLng(),
-			filters.buildType(), filters.contractType(),
+			filters.buildType(), contractType,
 			filters.depositMin(), filters.depositMax(),
 			filters.monthlyRentMin(), filters.monthlyRentMax(),
 			filters.inMaintenanceCost(),
@@ -91,7 +94,7 @@ public class MapServiceImpl implements MapService{
 	// 위도/경도 범위 검사
 	private void validateBounds(Bounds bounds) {
 		if (bounds.neLat() < bounds.swLat() || bounds.neLng() < bounds.swLng()) {
-			throw MapUnprocessableException.invalidDepositRange(); // 위도/경도 범위 역전
+			throw MapUnprocessableException.invalidGeographicBounds(); // 위도/경도 범위 역전
 		}
 	}
 
@@ -110,5 +113,17 @@ public class MapServiceImpl implements MapService{
 		if (keywords != null && keywords.size() > 5) {
 			throw MapInvalidException.invalidKeyword();
 		}
+	}
+
+	private ContractType parseContractType(String type) {
+		if (type == null) {
+			return null;
+		}
+		return switch (type) {
+			case "MONTHLY_RENT" -> ContractType.MONTHLY_RENT;
+			case "DEPOSIT_RENT" -> ContractType.DEPOSIT_RENT;
+			case "ALL" -> null;
+			default -> null;
+		};
 	}
 }
