@@ -2,10 +2,13 @@ package JJinBBang.app.domain.map.service;
 
 import java.util.List;
 
+import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.map.dto.request.MapMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
 import JJinBBang.app.domain.map.dto.response.MapItemDetailResponse;
+import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.global.common.dto.MarkerInfo;
 
 public interface MapService {
@@ -29,7 +32,8 @@ public interface MapService {
 	 * 주변 건물, 리뷰들을 상세 조회하는 서비스
 	 *
 	 * @param request 페이지네이션, 보기유형, 정렬, idList
+	 * @param user 유저 id 및 정보
 	 * @return 마커 목록
 	 */
-	MapItemDetailResponse nearByMapItems(NearByMapItemRequest request);
+	PaginatedResponse<InfoDto> nearByMapItems(NearByMapItemRequest request, Users user);
 }

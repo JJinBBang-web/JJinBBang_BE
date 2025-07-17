@@ -18,4 +18,8 @@ public class MapNoContentException extends NoContentGroupException {
 	public static MapNoContentException searchFailed() {
 		return new MapNoContentException("검색 결과가 존재하지 않습니다.");
 	}
+
+	public static MapNoContentException emptyIdList() {
+		return new MapNoContentException("id 리스트가 비어 있습니다.");
+	}
 }
