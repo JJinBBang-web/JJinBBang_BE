@@ -15,7 +15,8 @@ public record DormitoryBuildingInfo(
         String universityName,
         String address,
         BigDecimal rating,
-        Boolean liked
+        Boolean liked,
+        Integer reviewCount
 ) {
     public static DormitoryBuildingInfo of(Buildings building, String universityName, Boolean liked) {
         return DormitoryBuildingInfo.builder()
@@ -26,6 +27,7 @@ public record DormitoryBuildingInfo(
                 .universityName(universityName)
                 .address(building.getBuildingAddress())
                 .rating(building.getBuildingRating())
+                .reviewCount(building.getReviewCount())
                 .liked(liked)
                 .build();
     }
