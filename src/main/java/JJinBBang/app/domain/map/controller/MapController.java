@@ -4,6 +4,7 @@ import java.util.List;
 
 import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
+import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.InfoDto;
 import jakarta.validation.Valid;
@@ -33,6 +34,15 @@ public class MapController {
 		log.info("지도 마커 조회 성공");
 		List<MarkerInfo> response = mapService.getMapMarkers(request);
 		return new ResTemplate<>(HttpStatus.OK, "지도 마커 조회 성공", response);
+	}
+
+	@PostMapping("/search")
+	public ResTemplate<PaginatedResponse<InfoDto>> searchMarkers(
+		@AuthenticationPrincipal Users user,
+		@Valid @RequestBody SearchMarkerRequest request
+	) {
+		PaginatedResponse<InfoDto> response = mapService.searchMarker(request, user);
+		return new ResTemplate<>(HttpStatus.OK, "지도 검색 성공", response);
 	}
 
 	@PostMapping("/markers/nearby")
