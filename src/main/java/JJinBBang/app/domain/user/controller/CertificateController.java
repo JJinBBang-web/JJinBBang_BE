@@ -42,7 +42,6 @@ public class CertificateController {
             // 스프레드 시트에 row로 업로드 (userId, universityId, 파일링크, 업로드 시간)
             certificateService.appendEnrollmentFileToSheets(
                     user.getUserId().intValue(),
-                    user.getUniversity().getId().intValue(),
                     file.getOriginalFilename(),
                     fileLink
             );
@@ -88,7 +87,6 @@ public class CertificateController {
             // 스프레드 시트에 row로 업로드 (userId, universityId, 파일링크, 업로드 시간)
             certificateService.appendAdmissionFileToSheets(
                     user.getUserId().intValue(),
-                    user.getUniversity().getId().intValue(),
                     file.getOriginalFilename(),
                     fileLink
             );

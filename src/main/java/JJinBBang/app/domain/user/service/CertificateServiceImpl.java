@@ -62,14 +62,14 @@ public class CertificateServiceImpl implements CertificateService {
 
     // 재학증명서 업로드 -> 스프레드시트 추가
     @Override
-    public void appendEnrollmentFileToSheets(int userId, int universityId, String fileName, String fileLink) {
-        appendSheets("enrollment", userId, universityId, fileName, fileLink);
+    public void appendEnrollmentFileToSheets(int userId, String fileName, String fileLink) {
+        appendSheets("enrollment", userId, fileName, fileLink);
     }
 
     // 합격증명서 업로드 -> 스프레드시트 추가
     @Override
-    public void appendAdmissionFileToSheets(int userId, int universityId, String fileName, String fileLink) {
-        appendSheets("admission", userId, universityId, fileName, fileLink);
+    public void appendAdmissionFileToSheets(int userId, String fileName, String fileLink) {
+        appendSheets("admission", userId, fileName, fileLink);
     }
 
 
@@ -179,7 +179,6 @@ public class CertificateServiceImpl implements CertificateService {
     private void appendSheets(
             String type,
             int userId,
-            int universityId,
             String fileName,
             String fileLink
     ) {
@@ -190,7 +189,6 @@ public class CertificateServiceImpl implements CertificateService {
 
         List<Object> row = List.of(
                 userId,
-                universityId,
                 hyperlinkFormula,
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
@@ -214,38 +212,6 @@ public class CertificateServiceImpl implements CertificateService {
             }
         } catch (IOException e) {
             throw CertificateProcessException.SheetsProcessException();
-        }
-    }
-
-    private String findOrCreateFolder(String parentId, String folderName) throws IOException {
-        try {
-            String query = String.format(
-                    "mimeType='application/vnd.google-apps.folder' and name='%s' and '%s' in parents",
-                    folderName, parentId
-            );
-
-            FileList result = drive.files().list()
-                    .setQ(query)
-                    .setSpaces("drive")
-                    .setFields("files(id)")
-                    .execute();
-
-            if (!result.getFiles().isEmpty()) {
-                return result.getFiles().get(0).getId();
-            }
-
-            File folderMeta = new File()
-                    .setName(folderName)
-                    .setMimeType("application/vnd.google-apps.folder")
-                    .setParents(Collections.singletonList(parentId));
-
-            return drive.files().create(folderMeta)
-                    .setFields("id")
-                    .execute()
-                    .getId();
-        } catch (IOException e) {
-            log.error("[Drive 폴더 생성/조회 중 IO 오류]", e);
-            throw e;
         }
     }
 
