@@ -75,23 +75,4 @@ public class CertificateController {
                 null
         );
     }
-
-    // 증명서 인증 상태 변경
-    @PatchMapping("/updateStatus")
-    public ResTemplate<?> updateVerificationStatus(
-            @RequestBody UpdateVerificationStatusDto updateVerificationStatus
-            ){
-
-        certificateService.updateVerificationStatusByCertificate(
-                updateVerificationStatus.userId(),
-                updateVerificationStatus.verificationStatus()
-        );
-
-        return new ResTemplate<>(
-                HttpStatus.OK,
-                "증명서 인증 상태 변경",
-                null
-        );
-    }
-
 }
