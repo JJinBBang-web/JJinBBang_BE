@@ -7,7 +7,6 @@ import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.user.entity.Users;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,10 +38,12 @@ public class BookmarkServiceImpl implements BookmarkService{
         Buildings buildings = buildingsRepository.findById(buildingId).orElseThrow(() -> new BookmarkNotFoundException("Building"));
         if(liked){
             BuildingLikes newLike = BuildingLikes.create(buildings, users);
+            buildings.incrementLikeCount();
             buildingLikesRepository.save(newLike);
         }
         else{
             BuildingLikes savedLike = buildingLikesRepository.findByBuildingAndUser(buildings,users).orElseThrow(() -> new BookmarkNotFoundException("BuildingLikes"));
+            buildings.decrementLikeCount();
             buildingLikesRepository.delete(savedLike);
         }
     }
@@ -53,10 +54,12 @@ public class BookmarkServiceImpl implements BookmarkService{
         Reviews reviews = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));
         if(liked){
             ReviewLikes newLike = ReviewLikes.create(reviews, users);
+            reviews.incrementLikeCount();
             reviewLikesRepository.save(newLike);
         }
         else{
             ReviewLikes savedLike = reviewLikesRepository.findByReviewAndUser(reviews,users).orElseThrow(() -> new BookmarkNotFoundException("ReviewLikes"));
+            reviews.decrementLikeCount();
             reviewLikesRepository.delete(savedLike);
         }
 
@@ -68,10 +71,12 @@ public class BookmarkServiceImpl implements BookmarkService{
         Agencies agencies = agenciesRepository.findById(agencyId).orElseThrow(()->new BookmarkNotFoundException("Agencies"));
         if(liked){
             AgencyLikes newLike = AgencyLikes.create(agencies, users);
+            agencies.incrementLikeCount();
             agencyLikesRepository.save(newLike);
         }
         else{
             AgencyLikes saveLike = agencyLikesRepository.findByAgencyAndUser(agencies,users).orElseThrow(() -> new BookmarkNotFoundException("AgencyLikes"));
+            agencies.decrementLikeCount();
             agencyLikesRepository.delete(saveLike);
         }
     }
