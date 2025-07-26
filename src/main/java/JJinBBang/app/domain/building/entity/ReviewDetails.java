@@ -9,7 +9,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.global.common.dto.Keywords;
 import lombok.Builder;
 import lombok.Getter;
