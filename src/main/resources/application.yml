@@ -128,6 +128,8 @@ security:
         - "/api/v1/unverifiedTest"
         - "/api/v1/auth/emailCode"
         - "/api/v1/auth/emailCode/verify"
+        - "/api/v1/certificates/admission/verify"
+        - "/api/v1/certificates/enrollment/verify"
       PENDING:
         - "/api/v1/pendingTest"
     pending-user:
