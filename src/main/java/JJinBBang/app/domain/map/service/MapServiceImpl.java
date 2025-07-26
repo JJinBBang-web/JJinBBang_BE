@@ -25,7 +25,6 @@ import JJinBBang.app.domain.map.dto.item.Bounds;
 import JJinBBang.app.domain.map.dto.request.MapMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
-import JJinBBang.app.domain.map.dto.response.MapItemDetailResponse;
 import JJinBBang.app.domain.map.exception.MapInvalidException;
 import JJinBBang.app.domain.map.exception.MapNoContentException;
 import JJinBBang.app.domain.map.exception.MapUnprocessableException;
@@ -92,9 +91,67 @@ public class MapServiceImpl implements MapService{
 	}
 
 	@Override
-	public MapItemDetailResponse searchMarker(SearchMarkerRequest request) {
-		// TODO Auto-generated method stub
-		return null;
+	public PaginatedResponse<InfoDto> searchMarker(SearchMarkerRequest request, Users user) {
+		Filters filters = request.filters();
+
+		// 기본 유효성 검사
+		if (request.keyword() == null || request.keyword().trim().length() <= 1) {
+			throw MapInvalidException.invalidKeyword();
+		}
+		validateFilterRanges(filters);
+		validateKeywordLimit(filters.reviewKeyword());
+
+		ContractType contractType = parseContractType(filters.contractType());
+
+		List<Buildings> buildings = buildingsRepository.searchBuildings(
+			request.keyword(),
+			filters.buildType(), contractType,
+			filters.depositMin(), filters.depositMax(),
+			filters.monthlyRentMin(), filters.monthlyRentMax(),
+			filters.inMaintenanceCost(),
+			filters.reviewKeyword(),
+			filters.campus()
+		);
+
+		if (buildings.isEmpty()) {
+			throw MapNoContentException.searchFailed();
+		}
+
+		List<InfoDto> items = new ArrayList<>();
+		for (Buildings b : buildings) {
+			if (filters.viewType() == ViewType.REVIEW) {
+				b.getReviews().forEach(r -> {
+					boolean liked = user != null && reviewLikesRepository
+						.findByReviewIdAndUserUserId(r.getId(), user.getUserId())
+						.isPresent();
+					try {
+						items.add(searchInfo.reviewSearch(r.getId(), liked));
+					} catch (Exception e) {
+						throw MapNotFoundException.notFoundReview();
+					}
+				});
+			} else {
+				boolean liked = user != null && buildingLikesRepository
+					.findByBuildingAndUser(b, user)
+					.isPresent();
+				items.add(searchInfo.buildingSearch(b.getId(), liked));
+			}
+		}
+
+		int from = Math.max(0, (request.page() - 1) * request.num());
+		int to = Math.min(items.size(), from + request.num());
+		if (from > to) {
+			from = to;
+		}
+
+		List<InfoDto> paged = items.subList(from, to);
+
+		return PaginatedResponse.<InfoDto>builder()
+			.num(paged.size())
+			.page(request.page())
+			.itemNum((long) items.size())
+			.items(paged)
+			.build();
 	}
 
 	@Override

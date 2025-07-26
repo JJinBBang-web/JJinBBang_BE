@@ -6,7 +6,6 @@ import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.map.dto.request.MapMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
 import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
-import JJinBBang.app.domain.map.dto.response.MapItemDetailResponse;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.global.common.dto.MarkerInfo;
@@ -26,7 +25,7 @@ public interface MapService {
 	 * @param request keyword, 페이지네이션, 필터
 	 * @return 마커 상세 정보
 	 */
-	MapItemDetailResponse searchMarker(SearchMarkerRequest request);
+	PaginatedResponse<InfoDto> searchMarker(SearchMarkerRequest request, Users user);
 
 	/**
 	 * 주변 건물, 리뷰들을 상세 조회하는 서비스
