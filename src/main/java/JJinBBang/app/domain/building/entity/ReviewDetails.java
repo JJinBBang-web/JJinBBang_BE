@@ -29,9 +29,6 @@ public class ReviewDetails {
 	@Field(name = "building_id")
 	private Long buildingId;
 
-	@Field(name = "building_type")
-	private BuildingType buildingType;
-
 	private List<String> images;
 
 	@Field(name = "image_count")
