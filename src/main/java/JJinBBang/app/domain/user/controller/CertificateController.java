@@ -34,7 +34,7 @@ public class CertificateController {
             Users user = usersService.findWithUniversity(principal.getProviderId());
 
             // 폴더 이름으로 타겟 폴더 지정
-            String folderName = googleProps.getDrive().getFolders().get("enrollment-integration");
+            String folderName = googleProps.getDrive().getFolders().get("enrollment-target");
 
             // 구글 드라이브에 업로드 및 링크 반환
             String fileLink = certificateService.uploadEnrollmentFileToDrive(file, folderName);
@@ -79,7 +79,7 @@ public class CertificateController {
             Users user = usersService.findWithUniversity(principal.getProviderId());
 
             // 구글 드라이브에 업로드 및 링크 반환
-            String folderName = googleProps.getDrive().getFolders().get("admission-integration");
+            String folderName = googleProps.getDrive().getFolders().get("admission-target");
 
             // 구글 드라이브에 업로드 및 링크 반환
             String fileLink = certificateService.uploadAdmissionFileToDrive(file, folderName);
