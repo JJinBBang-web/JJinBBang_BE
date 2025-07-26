@@ -1,8 +1,12 @@
 package JJinBBang.app.domain.user.service;
 
+import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.CertificateBadRequestException;
 import JJinBBang.app.domain.user.exception.CertificateProcessException;
 import JJinBBang.app.domain.user.exception.UserAuthException;
+import JJinBBang.app.domain.user.exception.UserNotFoundException;
+import JJinBBang.app.domain.user.repository.UsersRepository;
+import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.config.GoogleProperties;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.InputStreamContent;
@@ -15,6 +19,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -31,6 +36,8 @@ public class CertificateServiceImpl implements CertificateService {
     private final GoogleProperties googleProps;
     private final Drive drive;
     private final Sheets sheets;
+    private final UsersRepository usersRepository;
+    private final UsersService usersService;
 
     // 재학증명서 -> 구글 드라이브 업로드
     @Override
@@ -196,5 +203,15 @@ public class CertificateServiceImpl implements CertificateService {
             log.error("[Drive 폴더 생성/조회 중 IO 오류]", e);
             throw e;
         }
+    }
+
+    /**
+     * 사용자 ID와 인증 상태 입력 -> 사용자 인증 상태 변경
+     */
+    @Override
+    @Transactional
+    public void updateVerificationStatusByCertificate(Long userId, String status) {
+        Users user = usersService.findByUserId(userId);
+        user.updateVerificationStatus(VerificationStatus.valueOf(status));
     }
 }
