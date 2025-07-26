@@ -15,7 +15,7 @@ public record GeneralReviewInfo(
         BuildingType type,
         ContractType contractType,
         Integer deposit,
-        Integer monthlyRent,
+        Integer price,
         Floor floor,
         Double space,
         Integer maintenanceCost,
@@ -30,7 +30,7 @@ public record GeneralReviewInfo(
             .type(generalReview.getBuildingType())
             .contractType(generalReview.getContractType())
             .deposit(generalReview.getDeposit())
-            .monthlyRent(generalReview.getPrice())
+            .price(generalReview.getPrice())
             .floor(generalReview.getFloor())
             .space(generalReview.getArea())
             .maintenanceCost(generalReview.getMaintenanceCost())

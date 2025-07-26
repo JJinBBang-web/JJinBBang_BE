@@ -8,4 +8,6 @@ public interface CertificateService {
 
     void appendEnrollmentFileToSheets(int userId, int universityId, String fileName, String fileLink);
     void appendAdmissionFileToSheets(int userId, int universityId, String fileName, String fileLink);
+
+    void updateVerificationStatusByCertificate(Long userId, String status);
 }

@@ -1,5 +1,6 @@
 package JJinBBang.app.global.mail.service.impl;
 
+import JJinBBang.app.domain.user.repository.UniversityRepository;
 import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.exception.MailInvalidException;
 import JJinBBang.app.global.mail.exception.MailNotFoundException;
@@ -21,6 +22,7 @@ public class MailAuthServiceImpl implements MailAuthService {
     private final Random random = new Random();
     private final MailSendService mailSendService;
     private final EmailAuthCodeRepository emailAuthCodeRepository;
+    private final UniversityRepository universityRepository;
 
     @Override
     public void sendAuthCode(Long userId, String toEmail) {
@@ -70,7 +72,11 @@ public class MailAuthServiceImpl implements MailAuthService {
         if (!isValidFormat(email)) {
             throw MailInvalidException.invalidEmailFormat();
         }
-        if (!properties.getAllowedDomain().contains(extractDomain(email))) {
+
+        // 이메일 도메인 검증
+        // DB에 저장되어있는 이메일 도메인인지 or 환경변수에 설정된 도메인인지 검사
+        if (!universityRepository.existsByUniversityDomain(extractDomain(email)) &&
+                !properties.getAllowedDomain().contains(extractDomain(email))) {
             throw MailInvalidException.invalidEmailDomain();
         }
     }

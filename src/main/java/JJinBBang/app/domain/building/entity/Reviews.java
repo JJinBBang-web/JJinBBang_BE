@@ -40,7 +40,7 @@ public class Reviews extends BaseEntity {
     @Column(nullable = false)
     private String content; // 후기 내용
 
-    @Column(length = 30)
+    @Column(length = 70)
     private String tags; // 태그
 
     @Column(name = "rating", precision = 3, scale = 2, nullable = true)
