@@ -1,11 +1,13 @@
 package JJinBBang.app.domain.user.controller;
 
+import JJinBBang.app.domain.user.dto.request.UpdateVerificationStatusDto;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -73,4 +75,23 @@ public class CertificateController {
                 null
         );
     }
+
+    // 증명서 인증 상태 변경
+    @PatchMapping("/updateStatus")
+    public ResTemplate<?> updateVerificationStatus(
+            @RequestBody UpdateVerificationStatusDto updateVerificationStatus
+            ){
+
+        certificateService.updateVerificationStatusByCertificate(
+                updateVerificationStatus.userId(),
+                updateVerificationStatus.verificationStatus()
+        );
+
+        return new ResTemplate<>(
+                HttpStatus.OK,
+                "증명서 인증 상태 변경",
+                null
+        );
+    }
+
 }
