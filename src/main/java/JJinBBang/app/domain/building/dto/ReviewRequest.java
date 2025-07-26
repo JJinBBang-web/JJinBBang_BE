@@ -193,7 +193,6 @@ public record ReviewRequest (
 		return ReviewDetails.builder()
 				.reviewId(reviewId)
 				.buildingId(buildingId)
-				.buildingType(buildingRequest.type())
 				.images(imageUrls)
 				.imageCount(imageUrls.size())
 				.keywords(keywords)

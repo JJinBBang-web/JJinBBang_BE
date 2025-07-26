@@ -80,12 +80,8 @@ public class ReviewServiceImpl implements ReviewService {
                     boolean liked = review.getReviewLikes().stream()
                             .anyMatch(like -> like.getUser().equals(user));
 
-                    // 3.2) 리뷰 상세 정보 로드
-                    ReviewDetails detail = reviewDetailsRepository.findByReviewId(review.getId())
-                            .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
-
                     // 3.3) 요약 응답 생성
-                    return ReviewSummaryResponse.of(review, liked, detail);
+                    return ReviewSummaryResponse.of(review, liked);
                 }
         );
     }

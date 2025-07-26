@@ -43,10 +43,10 @@ public record ReviewDetailResponse(
 ) {
 	public static ReviewDetailResponse ofGeneral(GeneralReviews generalReviews, ReviewDetails reviewDetail, Boolean liked) {
 		return ReviewDetailResponse.builder()
-			.generalReviewInfo(GeneralReviewInfo.of(generalReviews, reviewDetail, liked))
+			.generalReviewInfo(GeneralReviewInfo.of(generalReviews, liked))
 			.reviewInfo(ReviewInfo.of(generalReviews))
 			.reviewImages(ReviewImages.from(generalReviews.getBuilding()))
-			.building(Building.of(generalReviews.getBuilding(), reviewDetail.getBuildingType()))
+			.building(Building.of(generalReviews.getBuilding(), generalReviews.getBuildingType()))
 			.keywords(reviewDetail.getKeywords())
 			.authorId(generalReviews.getUser().getUserId())
 			.build();
