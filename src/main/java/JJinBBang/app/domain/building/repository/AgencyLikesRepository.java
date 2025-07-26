@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface AgencyLikesRepository extends CrudRepository<AgencyLikes, Long> {
     Optional<AgencyLikes> findByAgencyAndUser(Agencies agency, Users user);
 
+    Boolean existsByAgencyAndUser(Agencies agencies, Users users);
 }
