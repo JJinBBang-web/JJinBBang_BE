@@ -37,6 +37,13 @@ spring:
             redirect-uri: ${spring.security.oauth2.client.registration.kakao.redirect-uri}
             client-name: ${spring.security.oauth2.client.registration.kakao.client-name}
 #            scope: ${spring.security.oauth2.client.registration.kakao.scope} # 필요 시 활성화
+          google:
+            client-id: ${spring.security.oauth2.client.registration.google.client-id}
+            client-secret: ${spring.security.oauth2.client.registration.google.client-secret}
+            client-authentication-method: ${spring.security.oauth2.client.registration.google.client-authentication-method}
+            authorization-grant-type: ${spring.security.oauth2.client.registration.google.authorization-grant-type}
+            redirect-uri: ${spring.security.oauth2.client.registration.google.redirect-uri}
+            client-name: ${spring.security.oauth2.client.registration.google.client-name}
 
         provider:
           kakao:
@@ -44,6 +51,11 @@ spring:
             token-uri: ${spring.security.oauth2.client.provider.kakao.token-uri}
             user-info-uri: ${spring.security.oauth2.client.provider.kakao.user-info-uri}
             user-name-attribute: ${spring.security.oauth2.client.provider.kakao.user-name-attribute}
+          google:
+            authorization-uri: ${spring.security.oauth2.client.provider.google.authorization-uri}
+            token-uri: ${spring.security.oauth2.client.provider.google.token-uri}
+            user-info-uri: ${spring.security.oauth2.client.provider.google.user-info-uri}
+            user-name-attribute: ${spring.security.oauth2.client.provider.google.user-name-attribute}
 
   mail:
     host: smtp.gmail.com
