@@ -4,7 +4,10 @@ import JJinBBang.app.domain.building.dto.PageRequest;
 import JJinBBang.app.domain.building.dto.UserReviewListResponse;
 import JJinBBang.app.domain.building.dto.UserReviewResponse;
 import JJinBBang.app.domain.building.repository.*;
+import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
+import JJinBBang.app.domain.user.exception.UniversityNotFoundException;
+import JJinBBang.app.domain.user.repository.UniversityRepository;
 import org.springframework.data.domain.Pageable;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class UsersServiceImpl implements UsersService {
 	private final AgencyReviewsRepository agencyReviewsRepository;
 	private final ReviewLikesRepository reviewLikesRepository;
 	private final ReviewDetailsRepository reviewDetailsRepository;
+	private final UniversityRepository universityRepository;
 
 	@Override
 	public boolean existsByProviderId(String providerId) {
@@ -121,9 +125,19 @@ public class UsersServiceImpl implements UsersService {
 		return "http://localhost:8080/image/" + id + ".jpg";
 	}
 
+	@Override
 	public Users verifyUniversityEmail(Users user, String universityEmail) {
+		// 유저의 학교 이메일 업데이트
 		user.updateUniversityEmail(universityEmail);
+		// 유저의 인증 상태 업데이트
 		user.updateVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
+
+		// 유저의 학교 정보 업데이트
+		String domain = extractDomain(universityEmail);
+		Universities authenticatedUniversity = universityRepository.findUniversitiesByUniversityDomain(domain)
+				.orElseThrow(() -> UniversityNotFoundException.universityNotFound(domain));
+		user.updateUniversity(authenticatedUniversity);
+
 		return usersRepository.save(user);
 	}
 
@@ -138,4 +152,11 @@ public class UsersServiceImpl implements UsersService {
 		return usersRepository.findByUserId(userId).orElseThrow(UserNotFoundException::notFound);
 	}
 
+
+	private String extractDomain(String email) {
+		int atIdx = email.lastIndexOf("@");
+		return (atIdx != -1 && atIdx < email.length() - 1)
+				? email.substring(atIdx + 1)
+				: "";
+	}
 }
