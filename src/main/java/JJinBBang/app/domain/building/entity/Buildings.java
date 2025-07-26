@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import JJinBBang.app.domain.building.enums.BuildingType;
@@ -208,5 +209,11 @@ public class Buildings extends BaseEntity {
 		if (this.imagesCount > 0) {
 			this.imagesCount--;
 		}
+	}
+
+	public void updateBuildingType(Set<BuildingType> newBuildingTypes) {
+		this.buildingType = newBuildingTypes.stream()
+				.map(BuildingType::toString)
+				.collect(Collectors.joining(","));
 	}
 }

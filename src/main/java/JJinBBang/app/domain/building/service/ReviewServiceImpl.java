@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -182,7 +183,11 @@ public class ReviewServiceImpl implements ReviewService {
             building.incrementImagesCount();
         }
 
-        // 4.4) 건물 엔티티 저장
+        // 4.4) 건물 유형 업데이트
+				Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
+				building.updateBuildingType(newBuildingType);
+
+        // 4.5) 건물 엔티티 저장
         buildingsRepository.save(building);
 
         return saved.getId();
@@ -438,22 +443,40 @@ public class ReviewServiceImpl implements ReviewService {
 			newBuilding.incrementImagesCount();
 			updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
 
+			// c) 리뷰 엔티티 및 상세 정보 갱신 저장
+			GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, newBuilding);
+			reviewsRepository.save(updatedReview);
+			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
+			reviewDetailsRepository.save(updatedDetails);
+
+			// d) 건물 유형 업데이트
+			Set<BuildingType> newOldBuildingType = getBuildingTypesFromBuilding(oldBuilding);
+			oldBuilding.updateBuildingType(newOldBuildingType);
+			Set<BuildingType> newNewBuildingType = getBuildingTypesFromBuilding(oldBuilding);
+			oldBuilding.updateBuildingType(newNewBuildingType);
+
 			// c) 두 건물 저장
 			buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
 		} else {
 
-			// 동일 건물: 평점 및 키워드 통계 업데이트
+			// a) 동일 건물: 평점 및 키워드 통계 업데이트
 			oldBuilding.updateRating(oldReview.getRating(), dto.generalReview().getRating());
 			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
 				dto.keywords().positive());
+
+			// b) 리뷰 엔티티 및 상세 정보 갱신 저장
+			GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, newBuilding);
+			reviewsRepository.save(updatedReview);
+			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
+			reviewDetailsRepository.save(updatedDetails);
+
+			// c) 건물 유형 업데이트
+			Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(oldBuilding);
+			oldBuilding.updateBuildingType(newBuildingType);
+
+			// d) 건물 저장
 			buildingsRepository.save(oldBuilding);
 		}
-
-		// 3) 리뷰 엔티티 및 상세 정보 갱신 저장
-		GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, newBuilding);
-		reviewsRepository.save(updatedReview);
-		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
-		reviewDetailsRepository.save(updatedDetails);
 	}
 
 	/**
@@ -610,20 +633,25 @@ public class ReviewServiceImpl implements ReviewService {
         ReviewDetails detail = reviewDetailsRepository.findByReviewId(review.getId())
                 .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
-        // 평점 제거
+        // b)평점 제거
         building.removeRating(review.getRating());
-        // 이미지 카운트 감소
+        // c)이미지 카운트 감소
         if (review.getThumbnailImage() != null) {
             building.decrementImagesCount();
         }
-        // 키워드 통계 감소
+        // d)키워드 통계 감소
         updateKeywordCounts(building.getId(), false,
                 detail.getKeywords().positive(), Collections.emptyList());
-        buildingsRepository.save(building);
 
-        // b) 연관 데이터 삭제
+        // e)연관 데이터 삭제
         reviewDetailsRepository.deleteByReviewId(review.getId());
         reviewsRepository.delete(review);
+
+		// f)건물 유형 업데이트
+		Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
+		building.updateBuildingType(newBuildingType);
+
+        buildingsRepository.save(building);
     }
 
     /**
@@ -669,20 +697,25 @@ public class ReviewServiceImpl implements ReviewService {
         ReviewDetails detail = reviewDetailsRepository.findByReviewId(review.getId())
                 .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
-        // 평점 제거
+        // b) 평점 제거
         agency.removeRating(review.getRating());
         // 이미지 카운트 감소
         if (review.getThumbnailImage() != null) {
             agency.decrementImagesCount();
         }
-        // 키워드 통계 감소
+        // c) 키워드 통계 감소
         updateKeywordCounts(agency.getAgencyId(), true,
                 detail.getKeywords().positive(), Collections.emptyList());
         agenciesRepository.save(agency);
 
-        // b) 상세정보 및 리뷰 삭제
+        // d) 상세정보 및 리뷰 삭제
         reviewDetailsRepository.deleteByReviewId(review.getId());
         reviewsRepository.delete(review);
     }
+
+	// 건물과 관련된 리뷰들의 건물 유형 집합 조회하는 메서드
+	private Set<BuildingType> getBuildingTypesFromBuilding(Buildings building) {
+		return reviewsRepository.findDistinctBuildingTypesByBuilding(building);
+	}
 }
 
