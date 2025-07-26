@@ -38,16 +38,26 @@ public class CertificateServiceImpl implements CertificateService {
 
     // 재학증명서 -> 구글 드라이브 업로드
     @Override
-    public String uploadEnrollmentFileToDrive(MultipartFile file, String universityName) {
-        String rootFolderId = googleProps.getDrive().getFolders().get("enrollment");
-        return uploadFile(file, rootFolderId, universityName);
+    public String uploadEnrollmentFileToDrive(MultipartFile file, String folderName) {
+        try {
+            String rootFolderId = googleProps.getDrive().getFolders().get("enrollment");
+            String targetFolderId = findTargetFolderId(rootFolderId, folderName);
+            return uploadFile(file, targetFolderId);
+        } catch (IOException e) {
+            throw new RuntimeException("구글 드라이브 타겟 폴더 탐색 실패");
+        }
     }
 
     // 합격증명서 -> 구글 드라이브 업로드
     @Override
-    public String uploadAdmissionFileToDrive(MultipartFile file, String universityName) {
-        String rootFolderId = googleProps.getDrive().getFolders().get("admission");
-        return uploadFile(file, rootFolderId, universityName);
+    public String uploadAdmissionFileToDrive(MultipartFile file, String folderName) {
+        try {
+            String rootFolderId = googleProps.getDrive().getFolders().get("admission");
+            String targetFolderId = findTargetFolderId(rootFolderId, folderName);
+            return uploadFile(file, targetFolderId);
+        } catch (IOException e) {
+            throw new RuntimeException("구글 드라이브 타겟 폴더 탐색 실패");
+        }
     }
 
     // 재학증명서 업로드 -> 스프레드시트 추가
@@ -62,53 +72,90 @@ public class CertificateServiceImpl implements CertificateService {
         appendSheets("admission", userId, universityId, fileName, fileLink);
     }
 
-    private String uploadFile(
-            MultipartFile file,
-            String rootFolderId,
-            String folderName
-    ) {
+
+
+    /**
+     * 업로드 파일 검증
+     */
+    private void verifyFileType(MultipartFile file, String type) {
         // 업로드 대상 파일 존재 확인
         if (file == null || file.isEmpty()) {
             throw CertificateBadRequestException.FileUploadException();
         }
 
         // 파일 타입 검사
-        String contentType = file.getContentType();
-        if (contentType == null || !(contentType.toLowerCase().startsWith("image/") || contentType.equalsIgnoreCase("application/pdf"))) {
+        if (type == null || !(type.toLowerCase().startsWith("image/") || type.equalsIgnoreCase("application/pdf"))) {
             throw CertificateBadRequestException.FileUploadException();
         }
+    }
 
-        // root 폴더에 대학명으로 폴더가 존재하는지 확인 후 없으면 생성
-        String targetFolderId;
-        try {
-            targetFolderId = findOrCreateFolder(rootFolderId, folderName);
-        } catch (IOException e) {
-            throw CertificateProcessException.DriveProcessException();
+    /**
+     * 폴더 이름으로 root에 포함된 폴더 찾기
+     */
+    private String findTargetFolderId(String rootFolderId, String folderName) throws IOException {
+        FileList result = drive.files().list()
+                .setQ(String.format(
+                        "'%s' in parents and mimeType = 'application/vnd.google-apps.folder' and name = '%s' and trashed = false",
+                        rootFolderId, folderName
+                ))
+                .setFields("files(id, name)")
+                .execute();
+
+        List<File> files = result.getFiles();
+        if (files == null || files.isEmpty()) {
+            throw new RuntimeException("하위 폴더 '" + folderName + "'를 찾을 수 없습니다.");
         }
 
+        return files.get(0).getId(); // 첫 번째 매칭된 폴더 ID
+    }
+
+    /**
+     * google drive 호출 후 파일 업로드 -> 파일
+     */
+    private File setGoogleDrive(
+            MultipartFile file,
+            String targetFolderId,
+            String type
+    ) throws IOException {
+
+        File metadata = new File()
+                .setName(file.getOriginalFilename())
+                .setParents(Collections.singletonList(targetFolderId));
+
+        InputStreamContent content = new InputStreamContent(
+                type,
+                file.getInputStream()
+        );
+
+        // google drive api 호출 -> 파일 업로드, 파일 ID 반환
+        File uploaded = drive.files()
+                .create(metadata, content)
+                .setFields("id")
+                .execute();
+
+        // 링크 공유 권한 설정
+        drive.permissions()
+                .create(uploaded.getId(), new Permission().setType("anyone").setRole("reader"))
+                .execute();
+
+        return uploaded;
+    }
+
+
+    /**
+     * Google Drive 파일 업로드
+     */
+    private String uploadFile(
+            MultipartFile file,
+            String targetFolderId
+    ) {
+        String contentType = file.getContentType();
+
+        // 증명서 파일 검증
+        verifyFileType(file, contentType);
+
         try {
-            // 업로드할 파일 메타데이터 준비
-            File metadata = new File()
-                    .setName(file.getOriginalFilename())
-                    .setParents(Collections.singletonList(targetFolderId));
-
-            // 실제 파일 내용을 스트림으로 래핑
-            InputStreamContent content = new InputStreamContent(
-                    contentType,
-                    file.getInputStream()
-            );
-
-            // google drive api 호출
-            File uploaded = drive.files()
-                    .create(metadata, content)
-                    .setFields("id")
-                    .execute();
-
-            // 링크 공유 권한 설정
-            drive.permissions()
-                    .create(uploaded.getId(), new Permission().setType("anyone").setRole("reader"))
-                    .execute();
-
+            File uploaded = setGoogleDrive(file, targetFolderId, contentType);
             return String.format(
                     googleProps.getDrive().getUrlTemplate(),
                     uploaded.getId()
