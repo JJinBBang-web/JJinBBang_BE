@@ -7,7 +7,6 @@ import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.user.entity.Users;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,43 +36,84 @@ public class BookmarkServiceImpl implements BookmarkService{
     @Transactional
     public void buildingBookmark(Long buildingId, Users users, boolean liked){
         Buildings buildings = buildingsRepository.findById(buildingId).orElseThrow(() -> new BookmarkNotFoundException("Building"));
-        if(liked){
+
+        Boolean isLiked = buildingLikesRepository.existsByBuildingAndUser(buildings, users);
+
+        // 원래 좋아요가 없고, 현재 좋아요를 누른 경우
+        if(!isLiked && liked){
             BuildingLikes newLike = BuildingLikes.create(buildings, users);
+            buildings.incrementLikeCount();
             buildingLikesRepository.save(newLike);
         }
-        else{
+
+        // 원래 좋아요가 있고, 현재 좋아요를 취소한 경우
+        if (isLiked && !liked){
             BuildingLikes savedLike = buildingLikesRepository.findByBuildingAndUser(buildings,users).orElseThrow(() -> new BookmarkNotFoundException("BuildingLikes"));
+            buildings.decrementLikeCount();
             buildingLikesRepository.delete(savedLike);
         }
+
+        // 원래 좋아요가 있고, 현재 좋아요를 누른 경우
+        // (변경 없음)
+
+        // 원래 좋아요가 없고, 현재 좋아요를 취소한 경우
+        // (변경 없음)
     }
 
     @Override
     @Transactional
     public void reviewBookmark(Long reviewId, Users users, boolean liked) {
         Reviews reviews = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));
-        if(liked){
+
+        Boolean isLiked = reviewLikesRepository.existsByReviewAndUser(reviews, users);
+
+        // 원래 좋아요가 없고, 현재 좋아요 누른 경우
+        if(!isLiked && liked) {
             ReviewLikes newLike = ReviewLikes.create(reviews, users);
+            reviews.incrementLikeCount();
             reviewLikesRepository.save(newLike);
         }
-        else{
+
+        // 원래 좋아요가 있고, 현재 좋아요 취소를 누른 경우
+        if(isLiked && !liked) {
             ReviewLikes savedLike = reviewLikesRepository.findByReviewAndUser(reviews,users).orElseThrow(() -> new BookmarkNotFoundException("ReviewLikes"));
+            reviews.decrementLikeCount();
             reviewLikesRepository.delete(savedLike);
         }
 
+        // 원래 좋아요가 있고, 현재 좋아요를 누른 경우
+        // (변경 없음)
+
+        // 원래 좋아요가 없고, 현재 좋아요 취소를 누른 경우
+        // (변경 없음)
     }
 
     @Override
     @Transactional
     public void agencyBookmark(Long agencyId, Users users, boolean liked) {
         Agencies agencies = agenciesRepository.findById(agencyId).orElseThrow(()->new BookmarkNotFoundException("Agencies"));
-        if(liked){
+
+        Boolean isLiked = agencyLikesRepository.existsByAgencyAndUser(agencies, users);
+
+        // 원래 좋아요가 없고, 현재 좋아요를 누른 경우
+        if(!isLiked && liked){
             AgencyLikes newLike = AgencyLikes.create(agencies, users);
+            agencies.incrementLikeCount();
             agencyLikesRepository.save(newLike);
         }
-        else{
+
+        // 원래 좋아요가 있고, 현재 좋아요 취소를 누른 경우
+        if(isLiked && !liked){
             AgencyLikes saveLike = agencyLikesRepository.findByAgencyAndUser(agencies,users).orElseThrow(() -> new BookmarkNotFoundException("AgencyLikes"));
+            agencies.decrementLikeCount();
             agencyLikesRepository.delete(saveLike);
         }
+
+        // 원래 좋아요가 있고, 현재 좋아요를 누른 경우
+        // (변경 없음)
+
+        // 원래 좋아요가 없고, 현재 좋아요 취소를 누른 경우
+        // (변경 없음)
     }
 
     @Override
