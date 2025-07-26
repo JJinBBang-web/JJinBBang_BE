@@ -260,5 +260,6 @@ public class CertificateServiceImpl implements CertificateService {
         }
         Users user = usersService.findByUserId(userId);
         user.updateVerificationStatus(VerificationStatus.valueOf(status));
+        usersRepository.save(user);
     }
 }
