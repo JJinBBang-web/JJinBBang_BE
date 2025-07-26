@@ -1,10 +1,7 @@
 package JJinBBang.app.domain.user.service;
 
 import JJinBBang.app.domain.user.entity.Users;
-import JJinBBang.app.domain.user.exception.CertificateBadRequestException;
-import JJinBBang.app.domain.user.exception.CertificateProcessException;
-import JJinBBang.app.domain.user.exception.UserAuthException;
-import JJinBBang.app.domain.user.exception.UserNotFoundException;
+import JJinBBang.app.domain.user.exception.*;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.config.GoogleProperties;
@@ -211,6 +208,9 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     @Transactional
     public void updateVerificationStatusByCertificate(Long userId, String status) {
+        if (!VerificationStatus.isValid(status)) {
+            throw VerificatoinStatusException.InvalidVerificationStatusException();
+        }
         Users user = usersService.findByUserId(userId);
         user.updateVerificationStatus(VerificationStatus.valueOf(status));
     }
