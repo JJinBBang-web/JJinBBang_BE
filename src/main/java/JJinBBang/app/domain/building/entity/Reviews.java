@@ -102,4 +102,17 @@ public class Reviews extends BaseEntity {
         this.agency         = agency;
         this.reviewLikes    = (reviewLikes == null) ? new ArrayList<>() : reviewLikes;
     }
+
+    public void incrementLikeCount() {
+        if (this.likesCount == null) {
+            this.likesCount = 0;
+        }
+        this.likesCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likesCount > 0) {
+            this.likesCount--;
+        }
+    }
 }

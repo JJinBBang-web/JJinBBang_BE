@@ -216,4 +216,17 @@ public class Buildings extends BaseEntity {
 				.map(BuildingType::toString)
 				.collect(Collectors.joining(","));
 	}
+
+    public void decrementLikeCount() {
+		if (this.likeCount > 0) {
+			this.likeCount--;
+		}
+	}
+
+	public void incrementLikeCount() {
+		if (this.likeCount == null) {
+			this.likeCount = 0;
+		}
+		this.likeCount++;
+	}
 }

@@ -10,4 +10,6 @@ import java.util.Optional;
 
 public interface BuildingLikesRepository extends CrudRepository<BuildingLikes, BuildingLikeId> {
     Optional<BuildingLikes> findByBuildingAndUser(Buildings building, Users user);
+
+    Boolean existsByBuildingAndUser(Buildings buildings, Users users);
 }
