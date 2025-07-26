@@ -30,6 +30,9 @@ public class Universities {
 	@Column(nullable = false)
 	private String universityLogo; // 대학교 로고
 
+	@Column(length = 50)
+	private String universityDomain;
+
 	// 연관관계 매핑
 	// 대학교 -> 캠퍼스
 	@OneToMany(mappedBy = "university", cascade = CascadeType.ALL)
