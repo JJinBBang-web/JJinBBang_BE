@@ -73,9 +73,73 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			.where(builder);
 
 		// 5. 계약 조건 필터
-		// contractType에 대해 선택 안한경우도 존재하기에 모든 조회가 가능하도록 예외 필요함.
-		// 단, 지금은 배포 테스트 예정이기에 추후 issue에 대해 작성할듯
-		// #수정필요
+		if (contractType != null) {
+			query.where(treated.contractType.eq(contractType));
+		}
+		if (depositMin != null) {
+			query.where(treated.deposit.goe(depositMin));
+		}
+		if (depositMax != null) {
+			query.where(treated.deposit.loe(depositMax));
+		}
+		if (monthlyRentMin != null) {
+			query.where(treated.price.goe(monthlyRentMin));
+		}
+		if (monthlyRentMax != null) {
+			query.where(treated.price.loe(monthlyRentMax));
+		}
+		if (inMaintenanceCost != null && inMaintenanceCost) {
+			query.where(treated.maintenanceCost.isNotNull());
+		}
+
+		return query.fetch();
+	}
+
+	@Override
+	public List<Buildings> searchBuildings(
+		String keyword,
+		List<BuildingType> buildTypes,
+		ContractType contractType,
+		Integer depositMin, Integer depositMax,
+		Integer monthlyRentMin, Integer monthlyRentMax,
+		Boolean inMaintenanceCost,
+		List<KeywordType> reviewKeywords,
+		List<String> campusNames
+	) {
+		QBuildings b = QBuildings.buildings;
+		QCampuses c = QCampuses.campuses;
+		QReviews r = QReviews.reviews;
+		QGeneralReviews gr = QGeneralReviews.generalReviews;
+
+		BooleanBuilder builder = new BooleanBuilder();
+
+		if (keyword != null && !keyword.isEmpty()) {
+			builder.and(b.buildingName.containsIgnoreCase(keyword)
+				.or(b.buildingAddress.containsIgnoreCase(keyword)));
+		}
+
+		if (buildTypes != null && !buildTypes.contains(BuildingType.ALL)) {
+			BooleanBuilder typeBuilder = new BooleanBuilder();
+			for (BuildingType type : buildTypes) {
+				typeBuilder.or(b.buildingType.containsIgnoreCase(type.name()));
+			}
+			builder.and(typeBuilder);
+		}
+
+		if (campusNames != null && !campusNames.isEmpty()) {
+			builder.and(b.campus.campusName.in(campusNames));
+		}
+
+		PathBuilder<GeneralReviews> grPath = new PathBuilder<>(GeneralReviews.class, "generalReview");
+		QGeneralReviews treated = new QGeneralReviews(grPath);
+
+		JPAQuery<Buildings> query = queryFactory.selectDistinct(b)
+			.from(b)
+			.leftJoin(b.reviews, r).fetchJoin()
+			.leftJoin(treated).on(r.id.eq(treated.id))
+			.leftJoin(b.campus, c).fetchJoin()
+			.where(builder);
+
 		if (contractType != null) {
 			query.where(treated.contractType.eq(contractType));
 		}

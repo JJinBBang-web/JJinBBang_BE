@@ -16,4 +16,13 @@ public enum VerificationStatus {
 	public String getStatus() {
 		return status;
 	}
+
+	public static boolean isValid(String status) {
+		for (VerificationStatus s : values()) {
+			if (s.name().equalsIgnoreCase(status)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

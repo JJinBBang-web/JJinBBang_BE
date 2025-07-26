@@ -27,4 +27,6 @@ public interface UsersService {
 	 * @return 업데이트된 유저
 	 */
 	Users verifyUniversityEmail(Users user, String universityEmail);
+
+	Users findByUserId(Long userId);
 }

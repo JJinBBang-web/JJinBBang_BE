@@ -2,7 +2,14 @@ package JJinBBang.app.domain.map.controller;
 
 import java.util.List;
 
+import JJinBBang.app.domain.common.dto.PaginatedResponse;
+import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
+import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
+import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.common.dto.InfoDto;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,5 +34,23 @@ public class MapController {
 		log.info("지도 마커 조회 성공");
 		List<MarkerInfo> response = mapService.getMapMarkers(request);
 		return new ResTemplate<>(HttpStatus.OK, "지도 마커 조회 성공", response);
+	}
+
+	@PostMapping("/search")
+	public ResTemplate<PaginatedResponse<InfoDto>> searchMarkers(
+		@AuthenticationPrincipal Users user,
+		@Valid @RequestBody SearchMarkerRequest request
+	) {
+		PaginatedResponse<InfoDto> response = mapService.searchMarker(request, user);
+		return new ResTemplate<>(HttpStatus.OK, "지도 검색 성공", response);
+	}
+
+	@PostMapping("/markers/nearby")
+	public ResTemplate<PaginatedResponse<InfoDto>> getNearByMarkers(
+			@AuthenticationPrincipal Users user,
+			@Valid @RequestBody NearByMapItemRequest request
+	) {
+		PaginatedResponse<InfoDto> response = mapService.nearByMapItems(request, user);
+		return new ResTemplate<>(HttpStatus.OK, "내 주변 찐빵 조회 성공", response);
 	}
 }

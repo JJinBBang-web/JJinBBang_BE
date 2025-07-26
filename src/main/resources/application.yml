@@ -93,6 +93,7 @@ security:
 #      - "/api/v1/user/**"
 #      - "/api/v1/map/**"
     authenticated:
+      - "/api/v1/user/recentReview"
       - "/api/v1/auth/tokenRefresh"
       - "/api/v1/auth/logout"
 #      - "/api/v1/user"

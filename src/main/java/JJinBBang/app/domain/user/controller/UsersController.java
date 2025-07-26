@@ -27,8 +27,9 @@ public class UsersController {
 			throw InvalidTokenException.unauthorized();
 		}
 		log.info("유저 조회 성공 : {}", user.getUserId());
+		Users withUniversity =  usersService.findWithUniversity(user.getProviderId());
 
-		UserInfoResponseDto response = usersService.getUserInfo(user);
+		UserInfoResponseDto response = usersService.getUserInfo(withUniversity);
 		return new ResTemplate<>(HttpStatus.OK, "유저 정보조회 성공", response);
 	}
 

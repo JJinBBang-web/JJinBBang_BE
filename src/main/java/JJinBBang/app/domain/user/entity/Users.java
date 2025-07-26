@@ -102,4 +102,8 @@ public class Users extends BaseEntity {
 	public void updateVerificationStatus(VerificationStatus verificationStatus) {
 		this.verificationStatus = verificationStatus;
 	}
+
+	public void updateUniversity(Universities university) {
+		this.university = university;
+	}
 }
