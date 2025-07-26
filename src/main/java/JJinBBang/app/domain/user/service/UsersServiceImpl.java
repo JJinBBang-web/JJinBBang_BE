@@ -7,7 +7,6 @@ import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import org.springframework.data.domain.Pageable;
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import JJinBBang.app.domain.user.entity.Users;
@@ -133,4 +132,10 @@ public class UsersServiceImpl implements UsersService {
 		return usersRepository.findWithUniversityByProviderId(providerId)
 				.orElseThrow(UserNotFoundException::notFound);
 	}
+
+	@Override
+	public Users findByUserId(Long userId) {
+		return usersRepository.findByUserId(userId).orElseThrow(UserNotFoundException::notFound);
+	}
+
 }
