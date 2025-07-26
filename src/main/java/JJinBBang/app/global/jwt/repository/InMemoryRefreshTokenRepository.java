@@ -1,12 +1,20 @@
 package JJinBBang.app.global.jwt.repository;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Repository("inMemoryRefreshTokenRepository")
+@Slf4j
+@Repository
+@ConditionalOnProperty(
+        prefix = "app.repository",
+        name   = "mode",
+        havingValue = "inmemory"
+)
 public class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
 
     private final ConcurrentHashMap<Long, RefreshToken> refreshTokenStore = new ConcurrentHashMap<>();

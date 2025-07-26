@@ -3,6 +3,7 @@ package JJinBBang.app.global.mail.repository;
 import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Repository("inMemoryEmailAuthCodeRepository")
+@Repository
+@ConditionalOnProperty(
+        prefix = "app.repository",
+        name   = "mode",
+        havingValue = "inmemory"
+)
 public class InMemoryEmailAuthCodeRepository implements EmailAuthCodeRepository {
 
     private final long expirationTime;
