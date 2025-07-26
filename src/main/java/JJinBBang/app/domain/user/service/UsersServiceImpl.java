@@ -147,6 +147,11 @@ public class UsersServiceImpl implements UsersService {
 				.orElseThrow(UserNotFoundException::notFound);
 	}
 
+	@Override
+	public Users findByUserId(Long userId) {
+		return usersRepository.findByUserId(userId).orElseThrow(UserNotFoundException::notFound);
+	}
+
 
 	private String extractDomain(String email) {
 		int atIdx = email.lastIndexOf("@");
