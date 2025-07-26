@@ -19,4 +19,15 @@ public interface BuildingsRepositoryCustom {
 		List<KeywordType> reviewKeywords,
 		List<String> campusNames
 	);
+
+	List<Buildings> searchBuildings(
+		String keyword,
+		List<BuildingType> buildTypes,
+		ContractType contractType,
+		Integer depositMin, Integer depositMax,
+		Integer monthlyRentMin, Integer monthlyRentMax,
+		Boolean inMaintenanceCost,
+		List<KeywordType> reviewKeywords,
+		List<String> campusNames
+	);
 }
