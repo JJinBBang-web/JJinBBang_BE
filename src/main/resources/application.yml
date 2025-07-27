@@ -44,7 +44,13 @@ spring:
             authorization-grant-type: ${spring.security.oauth2.client.registration.google.authorization-grant-type}
             redirect-uri: ${spring.security.oauth2.client.registration.google.redirect-uri}
             client-name: ${spring.security.oauth2.client.registration.google.client-name}
-
+          naver:
+            client-id: ${spring.security.oauth2.client.registration.naver.client-id}
+            client-secret: ${spring.security.oauth2.client.registration.naver.client-secret}
+            redirect-uri: ${spring.security.oauth2.client.registration.naver.redirect-uri}
+            authorization-grant-type: ${spring.security.oauth2.client.registration.naver.authorization-grant-type}
+            client-authentication-method: ${spring.security.oauth2.client.registration.naver.client-authentication-method}
+            
         provider:
           kakao:
             authorization-uri: ${spring.security.oauth2.client.provider.kakao.authorization-uri}
@@ -56,6 +62,11 @@ spring:
             token-uri: ${spring.security.oauth2.client.provider.google.token-uri}
             user-info-uri: ${spring.security.oauth2.client.provider.google.user-info-uri}
             user-name-attribute: ${spring.security.oauth2.client.provider.google.user-name-attribute}
+          naver:
+            authorization-uri: ${spring.security.oauth2.client.provider.naver.authorization-uri}
+            token-uri: ${spring.security.oauth2.client.provider.naver.token-uri}
+            user-info-uri: ${spring.security.oauth2.client.provider.naver.user-info-uri}
+            user-name-attribute: ${spring.security.oauth2.client.provider.naver.user-name-attribute}
 
   mail:
     host: smtp.gmail.com

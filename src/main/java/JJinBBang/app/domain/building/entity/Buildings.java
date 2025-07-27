@@ -209,4 +209,17 @@ public class Buildings extends BaseEntity {
 			this.imagesCount--;
 		}
 	}
+
+    public void decrementLikeCount() {
+		if (this.likeCount > 0) {
+			this.likeCount--;
+		}
+	}
+
+	public void incrementLikeCount() {
+		if (this.likeCount == null) {
+			this.likeCount = 0;
+		}
+		this.likeCount++;
+	}
 }

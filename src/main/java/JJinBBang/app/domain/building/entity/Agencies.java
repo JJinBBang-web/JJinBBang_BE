@@ -163,4 +163,17 @@ public class Agencies extends BaseEntity {
 			this.imagesCount--;
 		}
 	}
+
+	public void incrementLikeCount() {
+		if (this.likeCount == null) {
+			this.likeCount = 0;
+		}
+		this.likeCount++;
+	}
+
+	public void decrementLikeCount() {
+		if (this.likeCount > 0) {
+			this.likeCount--;
+		}
+	}
 }
