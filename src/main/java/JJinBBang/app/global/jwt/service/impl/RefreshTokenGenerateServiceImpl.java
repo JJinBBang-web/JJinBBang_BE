@@ -36,7 +36,6 @@ public class RefreshTokenGenerateServiceImpl extends AbstractTokenGenerateServic
             return refreshTokenRepository.save(user.getUserId(), refreshToken, super.expirationTime);
         }
         // 기존 리프레시 토큰이 존재하는 경우, 새로운 리프레시 토큰을 저장하고 반환
-        // TODO : 블랙리스트 추가 로직 구현
         refreshTokenRepository.deleteByUserId(user.getUserId());
         return refreshTokenRepository.save(user.getUserId(), refreshToken, super.expirationTime);
     }
