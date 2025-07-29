@@ -33,6 +33,7 @@ import JJinBBang.app.global.common.enums.KeywordType;
 import JJinBBang.app.global.common.enums.ViewType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -45,6 +46,7 @@ public class MapServiceImpl implements MapService{
 	private final SearchInfo searchInfo;
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<MarkerInfo> getMapMarkers(MapMarkerRequest request) {
 		Bounds bounds = request.bounds();
 		Filters filters = request.filters();
@@ -91,6 +93,7 @@ public class MapServiceImpl implements MapService{
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public PaginatedResponse<InfoDto> searchMarker(SearchMarkerRequest request, Users user) {
 		Filters filters = request.filters();
 
@@ -155,6 +158,7 @@ public class MapServiceImpl implements MapService{
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public PaginatedResponse<InfoDto> nearByMapItems(NearByMapItemRequest request, Users user) {
 		List<Long> ids = request.idList();
 
