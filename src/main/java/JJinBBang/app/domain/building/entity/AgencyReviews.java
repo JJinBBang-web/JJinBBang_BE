@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.entity;
 
+import JJinBBang.app.domain.building.enums.BuildingType;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -25,11 +26,12 @@ public class AgencyReviews extends Reviews {
 		String content,
 		List<KeywordType> tags,
 		BigDecimal rating,
+		BuildingType buildingType,
 		Users user,
 		Buildings building,
 		Agencies agency,
 		List<ReviewLikes> reviewLikes
 	) {
-		super(id, dtype, likesCount, thumbnailImage, content, tags, rating, user, building, agency, reviewLikes);
+		super(id, dtype, likesCount, thumbnailImage, content, tags, rating, buildingType, user, building, agency, reviewLikes);
 	}
 }

@@ -29,8 +29,7 @@ public class SearchInfo {
                 if(generalReviews.getContractType()==null || generalReviews.getFloor()==null||generalReviews.getArea()==null){
                     throw new BookmarkNotFoundException("GeneralReview");
                 }
-                ReviewDetails reviewDetails = reviewDetailRepository.findByReviewId(reviewId).orElseThrow(()-> new BookmarkNotFoundException("ReviewDetail"));
-                return InfoDto.ofGeneralReviewInfo(generalReviews, reviewDetails,liked);
+                return InfoDto.ofGeneralReviewInfo(generalReviews,liked);
             case ReviewType.DORM:
                 DormReviews dormReviews =dormReviewsRepository.findById(reviewId).orElseThrow(()-> new BookmarkNotFoundException("DormReview"));
                 if(dormReviews.getDormFee()==null||dormReviews.getDormFee()==null||dormReviews.getCapacity()==null){

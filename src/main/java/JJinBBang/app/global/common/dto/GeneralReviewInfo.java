@@ -1,8 +1,6 @@
 package JJinBBang.app.global.common.dto;
 
-import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
-import JJinBBang.app.domain.building.entity.ReviewDetails;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
 import java.math.BigDecimal;
@@ -25,11 +23,11 @@ public record GeneralReviewInfo(
         Boolean liked
 ) {
 
-    public static GeneralReviewInfo of(GeneralReviews generalReview, ReviewDetails reviewDetail, Boolean liked) {
+    public static GeneralReviewInfo of(GeneralReviews generalReview, Boolean liked) {
         return GeneralReviewInfo.builder()
             .id(generalReview.getId())
             .name(generalReview.getBuilding().getBuildingName())
-            .type(reviewDetail.getBuildingType())
+            .type(generalReview.getBuildingType())
             .contractType(generalReview.getContractType())
             .deposit(generalReview.getDeposit())
             .price(generalReview.getPrice())
