@@ -33,6 +33,7 @@ public record ReviewRequest (
 	BuildingRequest buildingRequest,
 
 	@Valid
+	@NotNull
 	Keywords keywords,
 
 	// 기숙사 전용
@@ -41,16 +42,6 @@ public record ReviewRequest (
 	@Valid
 	FacilitiesDto facilities
 ){
-	// 정확히 하나의 리뷰 섹션만 전송됐는지 검증
-	@AssertTrue(message = "generalReview, dormitoryReview, agencyReview 중 하나만 전송해야 합니다.")
-	private boolean isExactlyOneReview() {
-		int cnt = 0;
-		if (generalReview    != null) cnt++;
-		if (dormitoryReview  != null) cnt++;
-		if (agencyReview     != null) cnt++;
-		return cnt == 1;
-	}
-
 	@AssertTrue(message = "기숙사 리뷰인 경우 condition 및 facilities 필드는 필수입니다.")
 	private boolean isDormitoryDetailsProvided() {
 		if (dormitoryReview != null) {
@@ -76,14 +67,46 @@ public record ReviewRequest (
 
 	@AssertTrue(message = "리뷰 유형에 따라 이미지 개수를 올바르게 설정해주세요. 일반/기숙사 리뷰는 2~20장, 중개사 리뷰는 최대 20장입니다.")
 	private boolean isImageCountValid() {
-		if (imageUrls != null) {
-			int size = imageUrls.size();
-			if (agencyReview != null) {
-				return size <= 20;
-			}
-			return size >= 2 && size <= 20;
+		int size = imageUrls.size();
+		if (agencyReview != null) {
+			return size <= 20;
 		}
-		return true;
+
+		return size >= 2 && size <= 20;
+	}
+
+
+	// 정확히 하나의 리뷰 섹션만 전송됐는지 검증
+	@AssertTrue(message = "generalReview, dormitoryReview, agencyReview 중 하나만 전송해야 합니다.")
+	private boolean isExactlyOneReview() {
+		int cnt = 0;
+		if (generalReview    != null) cnt++;
+		if (dormitoryReview  != null) cnt++;
+		if (agencyReview     != null) cnt++;
+		return cnt == 1;
+	}
+
+
+	// 긍정, 부정 및 건물 유형에 따른 키워드 유효성 검증
+	@AssertTrue(message = "사용할 수 없는 키워드가 포함되어 있습니다.")
+	private boolean isValidKeywords() {
+		List<String> positiveKeywords = keywords.positive().stream()
+				.map(Enum::toString)
+				.toList();
+		List<String> negativeKeywords = keywords.negative().stream()
+				.map(Enum::toString)
+				.toList();
+
+		String typeCode;
+		if (generalReview != null)   typeCode = "BD";
+		else if (dormitoryReview != null) typeCode = "DO";
+		else if (agencyReview != null)   typeCode = "AG";
+		else return true;
+
+		String posPrefix = "PO_" + typeCode + "_";
+		String negPrefix = "NE_" + typeCode + "_";
+		return positiveKeywords.stream().allMatch(k -> k.startsWith(posPrefix))
+				&& negativeKeywords.stream().allMatch(k -> k.startsWith(negPrefix));
 	}
 
 	public GeneralReviews toGeneralReviews(Users user, Buildings building) {
@@ -92,8 +115,9 @@ public record ReviewRequest (
 			.likesCount(0)
 			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 			.content(generalReview.getContent())
-			.tags(keywords.positive().stream().limit(3).toList())
+			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(generalReview.getRating())
+			.buildingType(buildingRequest.type())
 			.user(user)
 			.building(building)
 			.floor(generalReview.getFloor())
@@ -112,8 +136,9 @@ public record ReviewRequest (
 				.likesCount(oldReview.getLikesCount())
 				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 				.content(generalReview.getContent())
-				.tags(keywords.positive().stream().limit(3).toList())
+				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(generalReview.getRating())
+				.buildingType(buildingRequest.type())
 				.user(oldReview.getUser())
 				.building(building)
 				.floor(generalReview.getFloor())
@@ -131,7 +156,7 @@ public record ReviewRequest (
 			.likesCount(0)
 			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 			.content(dormitoryReview.getContent())
-			.tags(keywords.positive().stream().limit(3).toList())
+			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(dormitoryReview.getRating())
 			.user(user)
 			.building(building)
@@ -150,7 +175,7 @@ public record ReviewRequest (
 				.likesCount(oldReview.getLikesCount())
 				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 				.content(dormitoryReview.getContent())
-				.tags(keywords.positive().stream().limit(3).toList())
+				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(dormitoryReview.getRating())
 				.user(oldReview.getUser())
 				.building(building)
@@ -168,7 +193,7 @@ public record ReviewRequest (
 			.likesCount(0)
 			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 			.content(agencyReview.getContent())
-			.tags(keywords.positive().stream().limit(3).toList())
+			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(agencyReview.getRating())
 			.user(user)
 			.agency(agency)
@@ -182,7 +207,7 @@ public record ReviewRequest (
 				.likesCount(oldReview.getLikesCount())
 				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
 				.content(agencyReview.getContent())
-				.tags(keywords.positive().stream().limit(3).toList())
+				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(agencyReview.getRating())
 				.user(oldReview.getUser())
 				.agency(agency)
@@ -193,7 +218,6 @@ public record ReviewRequest (
 		return ReviewDetails.builder()
 				.reviewId(reviewId)
 				.buildingId(buildingId)
-				.buildingType(buildingRequest.type())
 				.images(imageUrls)
 				.imageCount(imageUrls.size())
 				.keywords(keywords)

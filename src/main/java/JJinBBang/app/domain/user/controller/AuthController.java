@@ -2,10 +2,8 @@ package JJinBBang.app.domain.user.controller;
 
 import JJinBBang.app.domain.user.dto.request.IssueEmailCodeRequest;
 import JJinBBang.app.domain.user.dto.request.LoginRequest;
-import JJinBBang.app.domain.user.dto.request.SignupRequest;
 import JJinBBang.app.domain.user.dto.request.VerifyEmailCodeRequest;
-import JJinBBang.app.domain.user.dto.response.LoginResponse;
-import JJinBBang.app.domain.user.dto.response.ReissueAccessTokenResponse;
+import JJinBBang.app.domain.user.dto.response.TokenResponse;
 import JJinBBang.app.domain.user.dto.response.SignupRequiredResponse;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.OAuthService;
@@ -52,21 +50,21 @@ public class AuthController {
             String accessToken = jwtUtils.generateAccessToken(user);
             String refreshToken = jwtUtils.generateRefreshToken(user);
 
-            LoginResponse loginResponse = LoginResponse.of(accessToken, refreshToken);
-            return new ResTemplate<>(HttpStatus.OK, "로그인 성공", loginResponse);
+            TokenResponse response = TokenResponse.of(accessToken, refreshToken);
+            return new ResTemplate<>(HttpStatus.OK, "로그인 성공", response);
         }
     }
 
     @PostMapping("/signup")
-    public ResTemplate<LoginResponse> signUp(@AuthenticationPrincipal Users user) {
+    public ResTemplate<TokenResponse> signUp(@AuthenticationPrincipal Users user) {
         // 로그인 한 유저에 대해 약관 동의를 수행하는 API 입니다.
 
         user = oAuthService.signup(user);
         String accessToken = jwtUtils.generateAccessToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(user);
 
-        LoginResponse loginResponse = LoginResponse.of(accessToken, refreshToken);
-        return new ResTemplate<>(HttpStatus.OK, "회원가입 성공", loginResponse);
+        TokenResponse response = TokenResponse.of(accessToken, refreshToken);
+        return new ResTemplate<>(HttpStatus.OK, "회원가입 성공", response);
     }
 
     @PostMapping("/emailCode")
@@ -103,22 +101,22 @@ public class AuthController {
     }
 
     @PutMapping("/tokenRefresh")
-    public ResTemplate<ReissueAccessTokenResponse> reissueAccessToken(
+    public ResTemplate<TokenResponse> reissueAccessToken(
             HttpServletRequest request,
             @AuthenticationPrincipal Users user
     ){
         String refreshToken = jwtUtils.extractToken(request);
         String accessToken = jwtUtils.reissueAccessToken(user, refreshToken);
+        String newRefreshToken = jwtUtils.generateRefreshToken(user);
 
-        ReissueAccessTokenResponse response = ReissueAccessTokenResponse.of(accessToken);
-        return new ResTemplate<>(HttpStatus.OK, "엑세스 토큰 재발급 성공", response);
+        TokenResponse response = TokenResponse.of(accessToken, newRefreshToken);
+        return new ResTemplate<>(HttpStatus.OK, "엑세스 토큰, 리프레시 토큰 재발급 성공", response);
     }
 
     @DeleteMapping("/logout")
     public ResTemplate<?> logout(
             @AuthenticationPrincipal Users user
     ){
-        // TODO : 엑세스, 리프레시 토큰 블랙리스트 처리
         jwtUtils.deleteRefreshToken(user.getUserId());
         return new ResTemplate<>(HttpStatus.OK, "로그아웃 성공", null);
     }

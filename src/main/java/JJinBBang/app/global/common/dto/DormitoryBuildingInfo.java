@@ -11,7 +11,7 @@ import java.util.List;
 public record DormitoryBuildingInfo(
         Long id,
         String name,
-        List<BuildingType> type,
+        BuildingType type,
         String universityName,
         String address,
         BigDecimal rating,
@@ -22,7 +22,7 @@ public record DormitoryBuildingInfo(
         return DormitoryBuildingInfo.builder()
                 .id(building.getId())
                 .liked(liked)
-                .type(List.of(BuildingType.DORMITORY))
+                .type(BuildingType.DORMITORY)
                 .name(building.getBuildingName())
                 .universityName(universityName)
                 .address(building.getBuildingAddress())

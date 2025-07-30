@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.entity;
 
+import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ReviewType;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
@@ -45,6 +46,10 @@ public class Reviews extends BaseEntity {
     @Column(name = "rating", precision = 3, scale = 2, nullable = true)
     private BigDecimal rating; // 후기 평점
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "building_type", nullable = false)
+    private BuildingType buildingType;
+
     // 연관관계 매핑
     // 유저 -> 리뷰
     @ManyToOne(fetch = FetchType.LAZY)
@@ -81,7 +86,7 @@ public class Reviews extends BaseEntity {
     protected Reviews(Long id, ReviewType dtype, Integer likesCount,
                       String thumbnailImage, String content,
                       List<KeywordType> tags,
-                      BigDecimal rating, Users user,
+                      BigDecimal rating, BuildingType buildingType, Users user,
                       Buildings building, Agencies agency,
                       List<ReviewLikes> reviewLikes) {
         this.id             = id;
@@ -91,9 +96,23 @@ public class Reviews extends BaseEntity {
         this.content        = content;
         setTags(tags == null ? List.of() : tags);
         this.rating         = rating;
+        this.buildingType   = buildingType;
         this.user           = user;
         this.building       = building;
         this.agency         = agency;
         this.reviewLikes    = (reviewLikes == null) ? new ArrayList<>() : reviewLikes;
+    }
+
+    public void incrementLikeCount() {
+        if (this.likesCount == null) {
+            this.likesCount = 0;
+        }
+        this.likesCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likesCount > 0) {
+            this.likesCount--;
+        }
     }
 }

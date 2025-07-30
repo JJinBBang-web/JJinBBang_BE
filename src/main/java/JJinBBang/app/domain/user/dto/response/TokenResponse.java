@@ -3,12 +3,12 @@ package JJinBBang.app.domain.user.dto.response;
 import lombok.Builder;
 
 @Builder
-public record LoginResponse(
+public record TokenResponse(
         String accessToken,
         String refreshToken
 ) {
-    public static LoginResponse of(String accessToken, String refreshToken) {
-        return LoginResponse.builder()
+    public static TokenResponse of(String accessToken, String refreshToken) {
+        return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();

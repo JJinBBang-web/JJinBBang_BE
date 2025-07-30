@@ -27,9 +27,9 @@ public record InfoDto(
         ReviewInfo reviewInfo,
         String image
 ) {
-    public static InfoDto ofGeneralReviewInfo(GeneralReviews generalReview, ReviewDetails reviewDetail, Boolean liked) {
+    public static InfoDto ofGeneralReviewInfo(GeneralReviews generalReview, Boolean liked) {
         return InfoDto.builder()
-                .generalReviewInfo(GeneralReviewInfo.of(generalReview, reviewDetail,liked))
+                .generalReviewInfo(GeneralReviewInfo.of(generalReview, liked))
                 .reviewInfo(ReviewInfo.of(generalReview))
                 .image(generalReview.getThumbnailImage())
                 .build();

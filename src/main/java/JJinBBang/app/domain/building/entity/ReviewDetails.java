@@ -9,7 +9,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.global.common.dto.Keywords;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,9 +27,6 @@ public class ReviewDetails {
 
 	@Field(name = "building_id")
 	private Long buildingId;
-
-	@Field(name = "building_type")
-	private BuildingType buildingType;
 
 	private List<String> images;
 
