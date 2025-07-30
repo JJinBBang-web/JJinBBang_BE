@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.service;
 
+import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.*;
 import JJinBBang.app.domain.building.enums.ReviewType;
@@ -10,6 +11,8 @@ import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.global.error.exception.UnprocessableGroupException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -52,7 +55,9 @@ public class SearchInfo {
     public InfoDto buildingSearch(Long itemId, Boolean liked){
         Buildings building = buildingsRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("Building"));
         Reviews reviews= reviewsRepository.findFirstByBuildingOrderByCreatedAtDesc(building);
-        if (building.getBuildingType().equals("DORMITORY")){
+        List<BuildingType> typeList = building.getBuildingType();
+
+        if (typeList.equals(List.of(BuildingType.DORMITORY))) {
             Campuses campuses = building.getCampus();
             Universities universities = campuses.getUniversity();
             String universityName = universities.getUniversityName();

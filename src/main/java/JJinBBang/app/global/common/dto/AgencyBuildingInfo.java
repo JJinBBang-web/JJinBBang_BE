@@ -11,7 +11,7 @@ import java.util.List;
 public record AgencyBuildingInfo(
         Long id,
         String name,
-        List<BuildingType> type,
+        BuildingType type,
         String address,
         BigDecimal rating,
         Boolean liked,
@@ -21,7 +21,7 @@ public record AgencyBuildingInfo(
         return AgencyBuildingInfo.builder()
                 .id(agencies.getAgencyId())
                 .name(agencies.getName())
-                .type(List.of(BuildingType.AGENCY))
+                .type(BuildingType.AGENCY)
                 .address(agencies.getAddress())
                 .rating(agencies.getRating())
                 .liked(liked)
