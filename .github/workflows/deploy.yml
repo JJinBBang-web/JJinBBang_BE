@@ -5,9 +5,9 @@ on:
   push:
     branches:
       - release
-  pull_request:
-    branches:
-      - release
+  # pull_request:
+  #   branches:
+  #     - release
 
 # AWS 관련 값 변수로 설정
 env:
