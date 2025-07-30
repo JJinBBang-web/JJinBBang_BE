@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.service;
 
+import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.domain.building.entity.*;
 import JJinBBang.app.domain.building.enums.ReviewType;
@@ -50,16 +51,32 @@ public class SearchInfo {
     }
 
     public InfoDto buildingSearch(Long itemId, Boolean liked){
-        Buildings building = buildingsRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("Building"));
-        Reviews reviews= reviewsRepository.findFirstByBuildingOrderByCreatedAtDesc(building);
-        if (building.getBuildingType().equals("DORMITORY")){
-            Campuses campuses = building.getCampus();
-            Universities universities = campuses.getUniversity();
-            String universityName = universities.getUniversityName();
-            return InfoDto.ofDormitoryBuildingInfo(reviews,building,universityName,liked);
+        Buildings building = buildingsRepository.findById(itemId)
+                .orElseThrow(() -> new BookmarkNotFoundException("Building"));
+
+        Reviews reviews = reviewsRepository.findFirstByBuildingOrderByCreatedAtDesc(building);
+
+        BuildingType mainType = BuildingType.ALL;
+        if (building.getBuildingType().contains(BuildingType.DORMITORY)) {
+            mainType = BuildingType.DORMITORY;
+        } else if (building.getBuildingType().contains(BuildingType.AGENCY)) {
+            mainType = BuildingType.AGENCY;
         }
-        else{
-            return InfoDto.ofGeneralBuildingInfo(reviews,building,liked);
+
+        switch (mainType) {
+            case DORMITORY:
+                Campuses campuses = building.getCampus();
+                Universities universities = campuses.getUniversity();
+                String universityName = universities.getUniversityName();
+                return InfoDto.ofDormitoryBuildingInfo(reviews, building, universityName, liked);
+            case AGENCY:
+                Agencies agency = agenciesRepository.findByBuildingCode(building.getBuildingCode())
+                        .orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
+                Reviews agencyReview = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(
+                        agency, ReviewType.AGENCY);
+                return InfoDto.ofAgencyBuildingInfo(agencyReview, agency, liked);
+            default:
+                return InfoDto.ofGeneralBuildingInfo(reviews, building, liked);
         }
     }
 
