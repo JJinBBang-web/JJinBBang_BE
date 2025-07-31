@@ -71,7 +71,7 @@ public record InfoDto(
         return InfoDto.builder()
                 .agencyBuildingInfo(AgencyBuildingInfo.of(agency,liked))
                 .reviewInfo(ReviewInfo.ofAgency(review,agency))
-                .image("http://localhost:8080/image/1.jpg")
+                .image(review.getThumbnailImage())
                 .build();
     }
 }
