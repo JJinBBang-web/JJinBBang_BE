@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 public record SetUserBookmarkRequest(
         @NotBlank(message = "type은 필수 입력값이며 비어 있을 수 없습니다.")
-        @Pattern(regexp = "^(review|building|agency)$", message = "타입은 'review' 또는 'building'만 가능합니다.")
+        @Pattern(regexp = "^(review|building|agency)$", message = "타입은 'review', 'agency' 또는 'building'만 가능합니다.")
         String type,
         @NotNull(message = "id은 필수 입력값이며 비어 있을 수 없습니다.")
         Long id,

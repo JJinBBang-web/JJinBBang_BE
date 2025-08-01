@@ -126,9 +126,11 @@ security:
     permit-all:
       - "/swagger-ui/**"
       - "/v3/api-docs/**"
+      - "/api/v1/user/univ/campus"
 #      - "/api/v1/user/**"
 #      - "/api/v1/map/**"
     authenticated:
+      - "/api/v1/user/bookmark"
       - "/api/v1/user/recentReview"
       - "/api/v1/auth/tokenRefresh"
       - "/api/v1/auth/logout"
