@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import JJinBBang.app.domain.building.entity.Agencies;
 import JJinBBang.app.domain.building.enums.ContractType;
+import JJinBBang.app.domain.building.repository.AgenciesRepository;
+import JJinBBang.app.domain.building.repository.AgencyLikesRepository;
 import JJinBBang.app.domain.building.repository.BuildingLikesRepository;
 import JJinBBang.app.domain.building.repository.BuildingsRepository;
 import JJinBBang.app.domain.building.repository.ReviewLikesRepository;
@@ -29,6 +32,7 @@ import JJinBBang.app.domain.map.exception.MapInvalidException;
 import JJinBBang.app.domain.map.exception.MapNoContentException;
 import JJinBBang.app.domain.map.exception.MapUnprocessableException;
 import JJinBBang.app.global.common.dto.MarkerInfo;
+import JJinBBang.app.global.common.dto.SearchInfoDto;
 import JJinBBang.app.global.common.enums.KeywordType;
 import JJinBBang.app.global.common.enums.ViewType;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +47,8 @@ public class MapServiceImpl implements MapService{
 	private final ReviewsRepository reviewsRepository;
 	private final BuildingLikesRepository buildingLikesRepository;
 	private final ReviewLikesRepository reviewLikesRepository;
+	private final AgenciesRepository agenciesRepository;
+	private final AgencyLikesRepository agencyLikesRepository;
 	private final SearchInfo searchInfo;
 
 	@Override
@@ -94,7 +100,7 @@ public class MapServiceImpl implements MapService{
 
 	@Override
 	@Transactional(readOnly = true)
-	public PaginatedResponse<InfoDto> searchMarker(SearchMarkerRequest request, Users user) {
+	public PaginatedResponse<SearchInfoDto> searchMarker(SearchMarkerRequest request, Users user) {
 		Filters filters = request.filters();
 
 		// 기본 유효성 검사
@@ -116,11 +122,13 @@ public class MapServiceImpl implements MapService{
 			filters.campus()
 		);
 
-		if (buildings.isEmpty()) {
+		List<Agencies> agencies = agenciesRepository.searchAgencies(request.keyword());
+
+		if (buildings.isEmpty() && agencies.isEmpty()) {
 			throw MapNoContentException.searchFailed();
 		}
 
-		List<InfoDto> items = new ArrayList<>();
+		List<SearchInfoDto> items = new ArrayList<>();
 		for (Buildings b : buildings) {
 			if (filters.viewType() == ViewType.REVIEW) {
 				b.getReviews().forEach(r -> {
@@ -128,7 +136,7 @@ public class MapServiceImpl implements MapService{
 						.findByReviewIdAndUserUserId(r.getId(), user.getUserId())
 						.isPresent();
 					try {
-						items.add(searchInfo.reviewSearch(r.getId(), liked));
+						items.add(searchInfo.reviewSearchWithBound(r.getId(), liked));
 					} catch (Exception e) {
 						throw MapNotFoundException.notFoundReview();
 					}
@@ -137,8 +145,13 @@ public class MapServiceImpl implements MapService{
 				boolean liked = user != null && buildingLikesRepository
 					.findByBuildingAndUser(b, user)
 					.isPresent();
-				items.add(searchInfo.buildingSearch(b.getId(), liked));
+				items.add(searchInfo.buildingSearchWithBound(b.getId(), liked));
 			}
+		}
+
+		for (Agencies agency : agencies) {
+			boolean liked = user != null && agencyLikesRepository.existsByAgencyAndUser(agency, user);
+			items.add(searchInfo.agencySearchWithBound(agency.getAgencyId(), liked));
 		}
 
 		int from = Math.max(0, (request.page() - 1) * request.num());
@@ -147,9 +160,9 @@ public class MapServiceImpl implements MapService{
 			from = to;
 		}
 
-		List<InfoDto> paged = items.subList(from, to);
+		List<SearchInfoDto> paged = items.subList(from, to);
 
-		return PaginatedResponse.<InfoDto>builder()
+		return PaginatedResponse.<SearchInfoDto>builder()
 			.num(paged.size())
 			.page(request.page())
 			.itemNum((long) items.size())
