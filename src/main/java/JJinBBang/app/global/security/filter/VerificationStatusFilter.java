@@ -1,5 +1,6 @@
 package JJinBBang.app.global.security.filter;
 
+import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.security.SecurityPathProperties;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 특정 경로에서 사용자의 verificationStatus(이메일 인증 상태)를 확인하는 필터
@@ -41,13 +43,12 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
 
-
         // verificationStatus 확인
         for (Map.Entry<String, List<String>> entry : verificationStatusPaths.entrySet()) {
-            String requiredStatus = entry.getKey();
-            List<String> paths = entry.getValue();
+            VerificationStatus requiredStatus = VerificationStatus.valueOf(entry.getKey());
 
-            boolean isMatch = paths.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, requestURI));
+            boolean isMatch = entry.getValue().stream()
+                .anyMatch(pattern -> PATH_MATCHER.match(pattern, requestURI));
 
             if (isMatch) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -58,9 +59,9 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                if(!user.getVerificationStatus().name().equals(requiredStatus)) {
+                if(!isValidVerificationStatus(user.getVerificationStatus(), requiredStatus)) {
                     makeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN,
-                            getCustomSecurityAuthException(user.getVerificationStatus().name(), requiredStatus));
+                            getCustomSecurityAuthException(requiredStatus));
                     return;
                 }
             }
@@ -70,34 +71,51 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    private boolean isValidVerificationStatus(VerificationStatus userStatus, VerificationStatus requiredStatus) {
+		if (requiredStatus.equals(VerificationStatus.VERIFIED)) {
+			return userStatus.equals(VerificationStatus.EMAIL_VERIFIED) ||
+				userStatus.equals(VerificationStatus.ENROLL_STUDENT_VERIFIED) ||
+				userStatus.equals(VerificationStatus.NEW_STUDENT_VERIFIED);
+		}
+		return userStatus.equals(requiredStatus);
+	}
+
+
     /**
      * 현재 verificationStatus와 필요한 verificationStatus를 비교하여 예외 메시지 생성
      */
-    private AuthenticationException getCustomSecurityAuthException(String userStatus, String requiredStatus) {
-        if (!userStatus.equals(requiredStatus)) {
-            boolean univVerified = "EMAIL_VERIFIED".equals(userStatus) ||
-                    "ENROLL_STUDENT_VERIFIED".equals(userStatus) ||
-                    "NEW_STUDENT_VERIFIED".equals(userStatus);
-            switch (requiredStatus) {
-                case "EMAIL_VERIFIED":
-                case "ENROLL_STUDENT_VERIFIED":
-                case "NEW_STUDENT_VERIFIED":
-                    return SecurityAccessDeniedException.universityVerificationRequired();
-                case "UNVERIFIED":
-                    if (univVerified) {
-                        return SecurityAccessDeniedException.alreadyUniversityVerified();
-                    } else if ("PENDING".equals(userStatus)) {
-                        return SecurityAccessDeniedException.existPendingUnivVerifyRequest();
-                    }
-                case "PENDING":
-                    if (univVerified) {
-                        return SecurityAccessDeniedException.alreadyUniversityVerified();
-                    } else if ("UNVERIFIED".equals(userStatus)) {
-                        return SecurityAccessDeniedException.pendingUnivVerifyRequestNotFound();
-                    }
+    private AuthenticationException getCustomSecurityAuthException(VerificationStatus requiredStatus) {
+        // userStatus와 requiredStatus 매칭이 유효하지 않은 경우에만 함수 실행
+
+        switch (requiredStatus){
+            case VERIFIED -> {
+                // 유저가 미인증 상태인 경우
+                return SecurityAccessDeniedException.universityVerificationRequired();
+            }
+            case EMAIL_VERIFIED -> {
+                // 유저가 이메일 인증을 하지 않은 경우
+                return SecurityAccessDeniedException.emailVerificationRequired();
+            }
+            case ENROLL_STUDENT_VERIFIED -> {
+                // 유저가 재학증명서 인증을 하지 않은 경우
+                return SecurityAccessDeniedException.enrollStudentVerificationRequired();
+            }
+            case NEW_STUDENT_VERIFIED -> {
+                // 유저가 합격증명서 인증을 하지 않은 경우
+                return SecurityAccessDeniedException.newStudentVerificationRequired();
+            }
+            case PENDING -> {
+                // 인증 대기 상태가 필요한 경우
+                return SecurityAccessDeniedException.pendingUnivVerifyRequestRequired();
+            }
+            case UNVERIFIED -> {
+                // 미인증 상태여야만 하는 경우
+                return SecurityAccessDeniedException.unverifiedStatusRequired();
+            }
+            default -> {
+                return SecurityAuthException.noPermission();
             }
         }
-        return SecurityAuthException.noPermission();
     }
 
 
