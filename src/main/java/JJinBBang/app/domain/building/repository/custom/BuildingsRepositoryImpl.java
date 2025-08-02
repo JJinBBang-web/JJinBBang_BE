@@ -1,4 +1,4 @@
-package JJinBBang.app.domain.building.repository;
+package JJinBBang.app.domain.building.repository.custom;
 
 import java.util.List;
 
@@ -11,6 +11,7 @@ import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
+import JJinBBang.app.domain.building.repository.custom.BuildingsRepositoryCustom;
 import JJinBBang.app.global.common.enums.KeywordType;
 import lombok.RequiredArgsConstructor;
 
