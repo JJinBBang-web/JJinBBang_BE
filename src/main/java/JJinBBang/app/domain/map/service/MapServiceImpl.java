@@ -151,7 +151,7 @@ public class MapServiceImpl implements MapService{
 
 		for (Agencies agency : agencies) {
 			boolean liked = user != null && agencyLikesRepository.existsByAgencyAndUser(agency, user);
-			items.add(searchInfo.agencySearchWithBound(agency.getAgencyId(), liked));
+			items.add(searchInfo.agencySearchWithBound(agency.getAgencyId(), liked, filters.viewType()));
 		}
 
 		int from = Math.max(0, (request.page() - 1) * request.num());

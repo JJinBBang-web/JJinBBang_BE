@@ -9,6 +9,7 @@ import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.entity.Campuses;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.global.common.dto.SearchInfoDto;
+import JJinBBang.app.global.common.enums.ViewType;
 import JJinBBang.app.global.error.exception.UnprocessableGroupException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -132,9 +133,13 @@ public class SearchInfo {
         }
     }
 
-    public SearchInfoDto agencySearchWithBound(Long itemId, Boolean liked){
-        Agencies agencies = agenciesRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
-        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies,ReviewType.AGENCY);
-        return SearchInfoDto.ofSearchAgencyBuildingInfo(reviews,agencies,liked);
+    public SearchInfoDto agencySearchWithBound(Long itemId, Boolean liked, ViewType viewType){
+        Agencies agencies = agenciesRepository.findById(itemId)
+            .orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
+        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies, ReviewType.AGENCY);
+        if (viewType == ViewType.REVIEW) {
+            return SearchInfoDto.ofSearchAgencyReviewInfo(reviews, agencies, liked);
+        }
+        return SearchInfoDto.ofSearchAgencyBuildingInfo(reviews, agencies, liked);
     }
 }
