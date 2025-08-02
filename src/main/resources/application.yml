@@ -141,8 +141,10 @@ security:
     anonymous:
       - "/api/v1/auth"
     verification-status-based:
-      EMAIL_VERIFIED:
+      VERIFIED:
         - "/api/v1/verifiedTest"
+      EMAIL_VERIFIED:
+        - "/api/v1/emailVerifiedTest"
       ENROLL_STUDENT_VERIFIED:
         - "/api/v1/enrollStudentVerifiedTest"
       NEW_STUDENT_VERIFIED:
