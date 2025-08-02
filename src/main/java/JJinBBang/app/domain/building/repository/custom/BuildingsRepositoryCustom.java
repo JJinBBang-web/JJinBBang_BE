@@ -1,4 +1,4 @@
-package JJinBBang.app.domain.building.repository;
+package JJinBBang.app.domain.building.repository.custom;
 
 import java.util.List;
 
