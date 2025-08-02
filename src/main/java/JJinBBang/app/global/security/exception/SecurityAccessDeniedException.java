@@ -17,6 +17,26 @@ public class SecurityAccessDeniedException extends AuthenticationException {
         return new SecurityAccessDeniedException("학교 인증이 필요합니다.");
     }
 
+    public static SecurityAccessDeniedException emailVerificationRequired() {
+        return new SecurityAccessDeniedException("이메일 인증이 필요합니다.");
+    }
+
+    public static AuthenticationException enrollStudentVerificationRequired() {
+        return new SecurityAccessDeniedException("재학생 인증이 필요합니다.");
+    }
+
+    public static AuthenticationException newStudentVerificationRequired() {
+        return new SecurityAccessDeniedException("신입생 인증이 필요합니다.");
+    }
+
+    public static AuthenticationException pendingUnivVerifyRequestRequired() {
+        return new SecurityAccessDeniedException("학교 인증 요청 대기가 필요합니다.");
+    }
+
+    public static AuthenticationException unverifiedStatusRequired() {
+        return new SecurityAccessDeniedException("미인증 상태여야 합니다.");
+    }
+
     public static SecurityAccessDeniedException existPendingUnivVerifyRequest() {
         return new SecurityAccessDeniedException("대기 중인 학교 인증 요청이 존재합니다.");
     }
