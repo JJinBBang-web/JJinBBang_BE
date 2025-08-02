@@ -137,8 +137,8 @@ security:
 #      - "/api/v1/user"
 #      - "/api/v1/certificates/**"
 #      - "/api/v1/user/**"
-#      - "/api/v1/building/**"
-#      - "/api/v1/review/**"
+      - "/api/v1/building/**"
+      - "/api/v1/review/**"
 #      - "/api/v1/notification/**"
     anonymous:
       - "/api/v1/auth"
