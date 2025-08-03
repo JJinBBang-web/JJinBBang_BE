@@ -210,38 +210,80 @@ public class MapServiceImpl implements MapService{
 	@Transactional(readOnly = true)
 	public PaginatedResponse<InfoDto> nearByMapItems(NearByMapItemRequest request, Users user) {
 		List<Long> ids = request.idList();
+		List<Long> agencyIds = request.agencyIdList();
+
+		boolean noBuildingIds = ids == null || ids.isEmpty();
+		boolean noAgencyIds = agencyIds == null || agencyIds.isEmpty();
 
 		// id가 존재하지 않는 경우 예외처리
-		if (ids == null || ids.isEmpty()) {
-			throw MapNoContentException.emptyIdList();
+		if (request.type() == ViewType.BUILDING) {
+			if (noBuildingIds && noAgencyIds) {
+				throw MapNoContentException.emptyIdList();
+			}
+		} else {
+			if (noBuildingIds) {
+				throw MapNoContentException.emptyIdList();
+			}
 		}
 
 		List<InfoDto> items = new ArrayList<>();
-		// View 타입에 따른 리뷰, 건물별 조회
-		for (Long id : ids) {
-			if (request.type() == ViewType.REVIEW) {
+
+		if (request.type() == ViewType.REVIEW) {
+			for (Long id : ids) {
 				boolean liked = user != null && reviewLikesRepository
-						.findByReviewIdAndUserUserId(id, user.getUserId())
-						.isPresent();
+					.findByReviewIdAndUserUserId(id, user.getUserId())
+					.isPresent();
 				try {
 					items.add(searchInfo.reviewSearch(id, liked));
 				} catch (Exception e) {
 					throw MapNotFoundException.notFoundReview();
 				}
-			} else {
-				Buildings building = buildingsRepository.findById(id)
+			}
+
+			Comparator<InfoDto> comparator = getComparator(request.sortBy(), request.type());
+			if (comparator != null) {
+				items.sort(comparator);
+			}
+		} else { // ViewType.BUILDING
+			List<InfoDto> buildingItems = new ArrayList<>();
+			if (!noBuildingIds) {
+				for (Long id : ids) {
+					Buildings building = buildingsRepository.findById(id)
 						.orElseThrow(MapNotFoundException::notFoundBuilding);
-				boolean liked = user != null && buildingLikesRepository
+					boolean liked = user != null && buildingLikesRepository
 						.findByBuildingAndUser(building, user)
 						.isPresent();
-				items.add(searchInfo.buildingSearch(id, liked));
+					buildingItems.add(searchInfo.buildingSearch(id, liked));
+				}
 			}
-		}
 
-		// 정렬
-		Comparator<InfoDto> comparator = getComparator(request.sortBy(), request.type());
-		if (comparator != null) {
-			items.sort(comparator);
+			List<InfoDto> agencyItems = new ArrayList<>();
+			if (!noAgencyIds) {
+				for (Long id : agencyIds) {
+					Agencies agency = agenciesRepository.findById(id)
+						.orElseThrow(MapNotFoundException::notFoundAgency);
+					boolean liked = user != null && agencyLikesRepository
+						.findByAgencyAndUser(agency, user)
+						.isPresent();
+					agencyItems.add(searchInfo.agencySearch(id, liked));
+				}
+			}
+
+			Comparator<InfoDto> comparator = getComparator(request.sortBy(), request.type());
+			if (comparator != null) {
+				buildingItems.sort(comparator);
+				agencyItems.sort(comparator);
+			}
+
+			int maxSize = Math.max(buildingItems.size(), agencyItems.size());
+			for (int i = 0; i < maxSize; i++) {
+				if (i < buildingItems.size()) {
+					items.add(buildingItems.get(i));
+				}
+				if (i < agencyItems.size()) {
+					items.add(agencyItems.get(i));
+				}
+			}
 		}
 
 		// 페이징 처리 (page는 1부터 시작)
@@ -253,11 +295,11 @@ public class MapServiceImpl implements MapService{
 		List<InfoDto> paged = items.subList(from, to);
 
 		return PaginatedResponse.<InfoDto>builder()
-				.num(paged.size())
-				.page(request.page())
-				.itemNum((long) items.size())
-				.items(paged)
-				.build();
+			.num(paged.size())
+			.page(request.page())
+			.itemNum((long) items.size())
+			.items(paged)
+			.build();
 	}
 
 	private Comparator<InfoDto> getComparator(SortType sort, ViewType type) {
