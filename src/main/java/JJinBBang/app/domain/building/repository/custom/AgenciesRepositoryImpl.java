@@ -26,4 +26,21 @@ public class AgenciesRepositoryImpl implements AgenciesRepositoryCustom {
 			.where(builder)
 			.fetch();
 	}
+
+	@Override
+	public List<Agencies> findMarkersWithinBounds(
+		Double neLat, Double neLng,
+		Double swLat, Double swLng
+	) {
+		QAgencies a = QAgencies.agencies;
+
+		BooleanBuilder builder = new BooleanBuilder();
+		builder.and(a.agencyLat.between(swLat, neLat));
+		builder.and(a.agencyLot.between(swLng, neLng));
+
+		return queryFactory.selectFrom(a)
+			.leftJoin(a.reviews).fetchJoin()
+			.where(builder)
+			.fetch();
+	}
 }
