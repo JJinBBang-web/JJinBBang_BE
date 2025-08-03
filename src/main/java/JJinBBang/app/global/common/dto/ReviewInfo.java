@@ -28,19 +28,19 @@ public record ReviewInfo(
 	}
     public static ReviewInfo ofBuilding(Reviews review, Buildings building) {
         return ReviewInfo.builder()
-                .content((review != null) ? review.getContent() : null)
-                .keyword(review.getTags())
+				.content(review != null ? review.getContent() : null)
+				.keyword(review != null ? review.getTags() : null)
                 .likeCount(building.getLikeCount())
-                .updateAt(review.getUpdatedAt())
+				.updateAt(review != null ? review.getUpdatedAt() : null)
                 .build();
     }
 
     public static ReviewInfo ofAgency(Reviews review, Agencies agency) {
         return ReviewInfo.builder()
-            .content((review != null) ? review.getContent() : null)
-            .keyword(review.getTags())
+			.content(review != null ? review.getContent() : null)
+			.keyword(review != null ? review.getTags() : null)
             .likeCount(agency.getLikeCount())
-            .updateAt(review.getUpdatedAt())
+			.updateAt(review != null ? review.getUpdatedAt() : null)
             .build();
     }
 }

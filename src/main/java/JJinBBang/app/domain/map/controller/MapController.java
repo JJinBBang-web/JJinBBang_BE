@@ -7,6 +7,7 @@ import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
 import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.InfoDto;
+import JJinBBang.app.global.common.dto.SearchInfoDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,11 +38,11 @@ public class MapController {
 	}
 
 	@PostMapping("/search")
-	public ResTemplate<PaginatedResponse<InfoDto>> searchMarkers(
+	public ResTemplate<PaginatedResponse<SearchInfoDto>> searchMarkers(
 		@AuthenticationPrincipal Users user,
 		@Valid @RequestBody SearchMarkerRequest request
 	) {
-		PaginatedResponse<InfoDto> response = mapService.searchMarker(request, user);
+		PaginatedResponse<SearchInfoDto> response = mapService.searchMarker(request, user);
 		return new ResTemplate<>(HttpStatus.OK, "지도 검색 성공", response);
 	}
 

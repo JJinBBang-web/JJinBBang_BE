@@ -1,6 +1,7 @@
 package JJinBBang.app.global.common.enums;
 
 public enum VerificationStatus {
+	VERIFIED("인증완료"), // 포괄적 인증 완료
 	NEW_STUDENT_VERIFIED("인증완료"), // 합격증명서 인증
 	ENROLL_STUDENT_VERIFIED("인증완료"), // 재학증명서 인증
 	EMAIL_VERIFIED("인증완료"), // 학교 웹메일 인증

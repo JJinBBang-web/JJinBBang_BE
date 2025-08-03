@@ -9,6 +9,7 @@ import JJinBBang.app.domain.map.dto.request.NearByMapItemRequest;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.global.common.dto.MarkerInfo;
+import JJinBBang.app.global.common.dto.SearchInfoDto;
 
 public interface MapService {
 	/**
@@ -25,7 +26,7 @@ public interface MapService {
 	 * @param request keyword, 페이지네이션, 필터
 	 * @return 마커 상세 정보
 	 */
-	PaginatedResponse<InfoDto> searchMarker(SearchMarkerRequest request, Users user);
+	PaginatedResponse<SearchInfoDto> searchMarker(SearchMarkerRequest request, Users user);
 
 	/**
 	 * 주변 건물, 리뷰들을 상세 조회하는 서비스

@@ -28,6 +28,8 @@ public record NearByMapItemRequest(
 	SortType sortBy, // 정렬 기준
 
 	@NotNull(message = "{idList.notNull}")
-	List<Long> idList
+	List<Long> idList,
+
+	 List<Long> agencyIdList
 ) {
 }
