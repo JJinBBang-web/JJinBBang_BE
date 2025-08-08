@@ -204,7 +204,7 @@ public class ReviewServiceImpl implements ReviewService {
      */
     private Long createDormitoryReview(ReviewRequest dto, Users user) {
         // 1) 캠퍼스 조회
-        Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus())
+        Campuses campus = campusesRepository.findById(dto.dormitoryReview().getCampusId())
                 .orElseThrow(CampusNotFoundException::missingCampus);
 
         // 2) 건물 로드/생성
@@ -491,7 +491,7 @@ public class ReviewServiceImpl implements ReviewService {
 	 */
 	private void updateDormitoryReview(DormReviews oldReview, ReviewRequest dto) {
 		// 1) 캠퍼스 검증
-		Campuses campus = campusesRepository.findByCampusName(dto.dormitoryReview().getCampus())
+		Campuses campus = campusesRepository.findById(dto.dormitoryReview().getCampusId())
 			.orElseThrow(CampusNotFoundException::missingCampus);
 
 		// 2) 건물 엔티티 로드

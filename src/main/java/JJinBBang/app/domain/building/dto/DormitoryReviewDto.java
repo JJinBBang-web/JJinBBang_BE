@@ -11,8 +11,8 @@ import lombok.Getter;
 
 @Getter
 public class DormitoryReviewDto {
-	@NotBlank
-	private String campus;
+	@NotNull
+	private Long campusId;
 	@NotNull
 	@Min(1)
 	private Integer capacity;
