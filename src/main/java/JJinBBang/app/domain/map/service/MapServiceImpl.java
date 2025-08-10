@@ -190,6 +190,11 @@ public class MapServiceImpl implements MapService{
 			items.add(searchInfo.agencySearchWithBound(agency.getAgencyId(), liked, filters.viewType()));
 		}
 
+		Comparator<SearchInfoDto> comparator = getSearchComparator(request.sortBy(), filters.viewType());
+		if (comparator != null) {
+			items.sort(comparator);
+		}
+
 		int from = Math.max(0, (request.page() - 1) * request.num());
 		int to = Math.min(items.size(), from + request.num());
 		if (from > to) {
@@ -302,19 +307,47 @@ public class MapServiceImpl implements MapService{
 			.build();
 	}
 
-	private Comparator<InfoDto> getComparator(SortType sort, ViewType type) {
+	private Comparator<SearchInfoDto> getSearchComparator(SortType sort, ViewType type) {
 		return switch (sort) {
-			case LIKES -> Comparator.comparing(this::extractLikeCount).reversed();
-			case STARS -> Comparator.comparing(this::extractRating, Comparator.nullsLast(BigDecimal::compareTo)).reversed();
-			case LATEST -> Comparator.comparing(this::extractUpdatedAt, Comparator.nullsLast(LocalDateTime::compareTo)).reversed();
+			case LIKES -> Comparator.<SearchInfoDto, Integer>comparing(dto -> extractLikeCount(dto)).reversed();
+			case STARS -> Comparator.comparing((SearchInfoDto dto) -> extractRating(dto), Comparator.nullsLast(BigDecimal::compareTo)).reversed();
+			case LATEST -> Comparator.comparing((SearchInfoDto dto) -> extractUpdatedAt(dto), Comparator.nullsLast(LocalDateTime::compareTo)).reversed();
 			case RCMND -> {
 				if (type == ViewType.BUILDING) {
-					yield Comparator.comparing(this::extractReviewCount).reversed();
+					yield Comparator.<SearchInfoDto, Integer>comparing(dto -> extractReviewCount(dto)).reversed();
 				} else {
 					yield null; // 리뷰 추천순은 요청 순서 유지
 				}
 			}
 		};
+	}
+
+	private Comparator<InfoDto> getComparator(SortType sort, ViewType type) {
+		return switch (sort) {
+			case LIKES -> Comparator.<InfoDto, Integer>comparing(dto -> extractLikeCount(dto)).reversed();
+			case STARS -> Comparator.comparing((InfoDto dto) -> extractRating(dto), Comparator.nullsLast(BigDecimal::compareTo)).reversed();
+			case LATEST -> Comparator.comparing((InfoDto dto) -> extractUpdatedAt(dto), Comparator.nullsLast(LocalDateTime::compareTo)).reversed();
+			case RCMND -> {
+				if (type == ViewType.BUILDING) {
+					yield Comparator.<InfoDto, Integer>comparing(dto -> extractReviewCount(dto)).reversed();
+				} else {
+					yield null; // 리뷰 추천순은 요청 순서 유지
+				}
+			}
+		};
+	}
+
+	private Integer extractReviewCount(SearchInfoDto dto) {
+		if (dto.generalBuildingInfo() != null) {
+			return dto.generalBuildingInfo().reviewCount();
+		}
+		if (dto.agencyBuildingInfo() != null) {
+			return dto.agencyBuildingInfo().reviewCount();
+		}
+		if (dto.dormitoryBuildingInfo() != null) {
+			return dto.dormitoryBuildingInfo().reviewCount();
+		}
+		return 0;
 	}
 
 	private Integer extractReviewCount(InfoDto dto) {
@@ -327,8 +360,34 @@ public class MapServiceImpl implements MapService{
 		return 0;
 	}
 
+	private Integer extractLikeCount(SearchInfoDto dto) {
+		return dto.reviewInfo() != null ? dto.reviewInfo().likeCount() : 0;
+	}
+
 	private Integer extractLikeCount(InfoDto dto) {
 		return dto.reviewInfo() != null ? dto.reviewInfo().likeCount() : 0;
+	}
+
+	private BigDecimal extractRating(SearchInfoDto dto) {
+		if (dto.generalReviewInfo() != null) {
+			return dto.generalReviewInfo().rating();
+		}
+		if (dto.dormitoryReviewInfo() != null) {
+			return dto.dormitoryReviewInfo().rating();
+		}
+		if (dto.agencyReviewInfo() != null) {
+			return dto.agencyReviewInfo().rating();
+		}
+		if (dto.generalBuildingInfo() != null) {
+			return dto.generalBuildingInfo().rating();
+		}
+		if (dto.dormitoryBuildingInfo() != null) {
+			return dto.dormitoryBuildingInfo().rating();
+		}
+		if (dto.agencyBuildingInfo() != null) {
+			return dto.agencyBuildingInfo().rating();
+		}
+		return BigDecimal.ZERO;
 	}
 
 	private BigDecimal extractRating(InfoDto dto) {
@@ -351,6 +410,10 @@ public class MapServiceImpl implements MapService{
 			return dto.agencyBuildingInfo().rating();
 		}
 		return BigDecimal.ZERO;
+	}
+
+	private LocalDateTime extractUpdatedAt(SearchInfoDto dto) {
+		return dto.reviewInfo() != null ? dto.reviewInfo().updateAt() : null;
 	}
 
 	private LocalDateTime extractUpdatedAt(InfoDto dto) {
