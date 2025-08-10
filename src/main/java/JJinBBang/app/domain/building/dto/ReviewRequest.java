@@ -158,6 +158,7 @@ public record ReviewRequest (
 			.content(dormitoryReview.getContent())
 			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(dormitoryReview.getRating())
+			.buildingType(BuildingType.DORMITORY)
 			.user(user)
 			.building(building)
 			.floor(dormitoryReview.getFloor())
@@ -177,6 +178,7 @@ public record ReviewRequest (
 				.content(dormitoryReview.getContent())
 				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(dormitoryReview.getRating())
+				.buildingType(BuildingType.DORMITORY)
 				.user(oldReview.getUser())
 				.building(building)
 				.floor(dormitoryReview.getFloor())
@@ -195,6 +197,7 @@ public record ReviewRequest (
 			.content(agencyReview.getContent())
 			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(agencyReview.getRating())
+			.buildingType(BuildingType.AGENCY)
 			.user(user)
 			.agency(agency)
 			.build();
@@ -209,6 +212,7 @@ public record ReviewRequest (
 				.content(agencyReview.getContent())
 				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(agencyReview.getRating())
+				.buildingType(BuildingType.AGENCY)
 				.user(oldReview.getUser())
 				.agency(agency)
 				.build();

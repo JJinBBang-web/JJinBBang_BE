@@ -36,7 +36,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
 		List<KeywordType> reviewKeywords,
-		List<String> campusNames
+		List<Long> campusIds
 	) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
@@ -60,8 +60,9 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		}
 
 		// 3. 캠퍼스 필터
-		if (campusNames != null && !campusNames.isEmpty()) {
-			builder.and(b.campus.campusName.in(campusNames));
+		// 3. 캠퍼스 필터
+		if (campusIds != null && !campusIds.isEmpty()) {
+			builder.and(b.campus.id.in(campusIds));
 		}
 
 		// 4. Treat()를 이용한 GeneralReviews 전용 조인
@@ -107,7 +108,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
 		List<KeywordType> reviewKeywords,
-		List<String> campusNames
+		List<Long> campusIds
 	) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
@@ -132,8 +133,8 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			builder.and(typeBuilder);
 		}
 
-		if (campusNames != null && !campusNames.isEmpty()) {
-			builder.and(b.campus.campusName.in(campusNames));
+		if (campusIds != null && !campusIds.isEmpty()) {
+			builder.and(b.campus.id.in(campusIds));
 		}
 
 		PathBuilder<GeneralReviews> grPath = new PathBuilder<>(GeneralReviews.class, "generalReview");

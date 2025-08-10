@@ -25,7 +25,7 @@ public record Filters(
 	@NotNull(message = "{filter.contractType.notNull}")
 	String contractType, // 계약 유형 (ALL, MONTHLY_RENT, DEPOSIT_RENT)
 
-	List<String> campus, // 캠퍼스
+	List<Long> campus, // 캠퍼스 ID 목록
 
 	@Min(value = 0, message = "{filter.depositMin.min}")
 	Integer depositMin, // 보증금 최소
