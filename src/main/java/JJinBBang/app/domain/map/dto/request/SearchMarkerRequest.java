@@ -3,6 +3,7 @@ package JJinBBang.app.domain.map.dto.request;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import JJinBBang.app.domain.common.dto.item.Filters;
+import JJinBBang.app.domain.common.enums.SortType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,9 @@ public record SearchMarkerRequest(
 	@NotNull(message = "{pagination.page.notNull}")
 	@Min(value = 0, message = "{pagination.page.min}")
 	Integer page,
+
+	@NotNull(message = "{sortType.notNull}")
+	SortType sortBy,
 
 	@NotNull(message = "{filter.notNull}")
 	Filters filters
