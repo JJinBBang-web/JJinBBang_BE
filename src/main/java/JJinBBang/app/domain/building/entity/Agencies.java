@@ -26,10 +26,7 @@ public class Agencies extends BaseEntity {
 	private Long agencyId;
 
 	@Column(name = "agency_serial")
-	private Long agencySerial;
-
-	@Column(name = "building_code", nullable = false, unique = true)
-	private String buildingCode; // 카카오 건물 관리 번호
+	private String agencySerial;
 
 	@Column(name = "name", length = 255, nullable = false)
 	private String name;
