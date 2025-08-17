@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface AgenciesRepository extends JpaRepository<Agencies, Long>, AgenciesRepositoryCustom {
-    Optional<Agencies> findByAgencySerial(String buildingCode);
+    Optional<Agencies> findByAgencySerial(String agencySerial);
 }
