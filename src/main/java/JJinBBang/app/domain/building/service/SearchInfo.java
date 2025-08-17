@@ -123,7 +123,7 @@ public class SearchInfo {
                 String universityName = universities.getUniversityName();
                 return SearchInfoDto.ofSearchDormitoryBuildingInfo(reviews, building, universityName, liked);
             case AGENCY:
-                Agencies agency = agenciesRepository.findByBuildingCode(building.getBuildingCode())
+                Agencies agency = agenciesRepository.findByAgencySerial(building.getBuildingCode())
                     .orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
                 Reviews agencyReview = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(
                     agency, ReviewType.AGENCY);

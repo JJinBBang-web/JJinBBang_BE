@@ -145,7 +145,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			.leftJoin(b.reviews, r).fetchJoin()
 			.leftJoin(treated).on(r.id.eq(treated.id))
 			.leftJoin(b.campus, c).fetchJoin()
-			.leftJoin(a).on(b.buildingCode.eq(a.buildingCode))
+			.leftJoin(a).on(b.buildingCode.stringValue().eq(a.agencySerial))
 			.where(builder);
 
 		if (contractType != null) {

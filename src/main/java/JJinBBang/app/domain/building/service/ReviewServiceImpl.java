@@ -316,7 +316,7 @@ public class ReviewServiceImpl implements ReviewService {
 	 * @return Agencies 엔티티
 	 */
 	private Agencies findOrCreateAgency(BuildingRequest dto) {
-		return agenciesRepository.findByBuildingCode(dto.buildingCode())
+		return agenciesRepository.findByAgencySerial(dto.buildingCode())
 			.orElseGet(() -> {
 				// 신규 공인중개사 생성 및 초기 키워드 통계 생성
 				Agencies savedAgency = agenciesRepository.save(dto.toAgencyEntity());
@@ -557,7 +557,7 @@ public class ReviewServiceImpl implements ReviewService {
 		boolean newHasImage = dto.imageUrls() != null && !dto.imageUrls().isEmpty();
 
 		// 4) 이미지 변경 및 공인중개사 변경 처리
-		if (!oldAgency.getBuildingCode().equals(newAgency.getBuildingCode())) {
+		if (!oldAgency.getAgencySerial().equals(newAgency.getAgencySerial())) {
 			if (!oldHasImage && newHasImage)
 				newAgency.incrementImagesCount();
 			else if (oldHasImage && !newHasImage)
