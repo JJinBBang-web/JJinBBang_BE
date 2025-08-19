@@ -12,4 +12,8 @@ public class UserAuthException extends AuthGroupException {
     }
 
     public static UserAuthException InvalidToken(){ return new UserAuthException("유효하지 않은 토콘입니다."); }
+
+    public static UserAuthException deletedUser() {
+        return new UserAuthException("탈퇴한 유저입니다.");
+    }
 }
