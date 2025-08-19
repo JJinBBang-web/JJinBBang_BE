@@ -39,7 +39,7 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        Map<String, List<String>> verificationStatusPaths = securityPathProperties.getVerificationStatusBased();
+        Map<String, Map<String, List<String>>> verificationStatusPaths = securityPathProperties.getVerificationStatusBased();
         String requestURI = request.getRequestURI();
 
 

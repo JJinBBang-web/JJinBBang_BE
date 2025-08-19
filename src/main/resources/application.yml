@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: classpath:security-path.yml
+
   profiles:
     active: prod
 
@@ -119,49 +122,4 @@ app:
     mode:
 #      inmemory
       redis
-
-
-security:
-  path:
-    permit-all:
-      - "/swagger-ui/**"
-      - "/v3/api-docs/**"
-      - "/api/v1/user/univ/campus"
-#      - "/api/v1/user/**"
-#      - "/api/v1/map/**"
-    authenticated:
-      - "/api/v1/user/bookmark"
-      - "/api/v1/user/recentReview"
-      - "/api/v1/auth/tokenRefresh"
-      - "/api/v1/auth/logout"
-#      - "/api/v1/user"
-#      - "/api/v1/certificates/**"
-#      - "/api/v1/user/**"
-#      - "/api/v1/building/**"
-#      - "/api/v1/review/**"
-#      - "/api/v1/notification/**"
-    anonymous:
-      - "/api/v1/auth"
-    verification-status-based:
-      VERIFIED:
-        - "/api/v1/verifiedTest"
-      EMAIL_VERIFIED:
-        - "/api/v1/emailVerifiedTest"
-      ENROLL_STUDENT_VERIFIED:
-        - "/api/v1/enrollStudentVerifiedTest"
-      NEW_STUDENT_VERIFIED:
-        - "/api/v1/newStudentVerifiedTest"
-      UNVERIFIED:
-        - "/api/v1/unverifiedTest"
-        - "/api/v1/auth/emailCode"
-        - "/api/v1/auth/emailCode/verify"
-        - "/api/v1/certificates/admission/verify"
-        - "/api/v1/certificates/enrollment/verify"
-      PENDING:
-        - "/api/v1/pendingTest"
-    pending-user:
-      - "/api/v1/auth/signup"
-    refresh:
-      - "/api/v1/auth/tokenRefresh"
-    any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
 

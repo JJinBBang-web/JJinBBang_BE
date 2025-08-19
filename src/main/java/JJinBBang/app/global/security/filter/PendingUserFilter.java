@@ -32,7 +32,8 @@ public class PendingUserFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        List<String> pendingUserPaths = securityPathProperties.getPendingUser();
+        List<String> pendingUserPaths = securityPathProperties.getPendingUser().values().stream()
+            .flatMap(List::stream).toList();
         String requestURI = request.getRequestURI();
 
         boolean isMatch = pendingUserPaths.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, requestURI));
