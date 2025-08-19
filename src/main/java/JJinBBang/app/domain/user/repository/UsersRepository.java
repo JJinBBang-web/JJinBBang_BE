@@ -8,9 +8,9 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import JJinBBang.app.domain.user.entity.Users;
-import io.lettuce.core.dynamic.annotation.Param;
 
 public interface UsersRepository extends JpaRepository<Users, Long> {
 
