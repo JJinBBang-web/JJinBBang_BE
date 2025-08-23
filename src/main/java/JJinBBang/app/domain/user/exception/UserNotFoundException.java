@@ -14,4 +14,8 @@ public class UserNotFoundException extends NotFoundGroupException {
 	public static UserNotFoundException searchFailed(){
 		return new UserNotFoundException("유저 조회에 실패하였습니다.");
 	}
+
+	public static UserNotFoundException systemError() {
+		return new UserNotFoundException("시스템 에러입니다.");
+	}
 }

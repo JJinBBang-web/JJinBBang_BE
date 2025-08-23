@@ -29,4 +29,8 @@ public class InvalidTokenException extends AuthGroupException {
 	public static InvalidTokenException refreshTokenNotAllowed(){
 		return new InvalidTokenException("리프레시 토큰을 사용할 수 없는 요청입니다.");
 	}
+
+	public static InvalidTokenException deletedUser() {
+		return new InvalidTokenException("탈퇴한 유저입니다.");
+	}
 }
