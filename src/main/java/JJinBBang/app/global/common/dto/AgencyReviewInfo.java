@@ -21,7 +21,7 @@ public record AgencyReviewInfo(
                 .id(reviews.getId())
                 .name(agencies.getName())
                 .type(BuildingType.AGENCY)
-                .rating(agencies.getRating())
+                .rating(reviews.getRating())
                 .liked(liked)
                 .build();
 
@@ -32,7 +32,7 @@ public record AgencyReviewInfo(
             .id(agencyReview.getId())
             .name(agencyReview.getAgency().getName())
             .type(BuildingType.AGENCY)
-            .rating(agencyReview.getAgency().getRating())
+            .rating(agencyReview.getRating())
             .liked(liked)
             .build();
 
