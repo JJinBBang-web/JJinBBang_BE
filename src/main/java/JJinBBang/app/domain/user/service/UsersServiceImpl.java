@@ -3,6 +3,9 @@ package JJinBBang.app.domain.user.service;
 import JJinBBang.app.domain.building.dto.PageRequest;
 import JJinBBang.app.domain.building.dto.UserReviewListResponse;
 import JJinBBang.app.domain.building.dto.UserReviewResponse;
+import JJinBBang.app.domain.building.entity.AgencyLikes;
+import JJinBBang.app.domain.building.entity.BuildingLikes;
+import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.UserNotFoundException;
 import JJinBBang.app.domain.user.repository.UsersRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +31,8 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class UsersServiceImpl implements UsersService {
 
+	public static final String SYSTEM_DELETE_ID = "___system_delete_user___";
+
 	private final UsersRepository usersRepository;
 	private final GeneralReviewsRepository generalReviewsRepository;
 	private final DormReviewsRepository dormReviewsRepository;
@@ -34,6 +40,9 @@ public class UsersServiceImpl implements UsersService {
 	private final ReviewLikesRepository reviewLikesRepository;
 	private final ReviewDetailsRepository reviewDetailsRepository;
 	private final UniversityRepository universityRepository;
+	private final BuildingLikesRepository buildingLikesRepository;
+	private final AgencyLikesRepository agencyLikesRepository;
+
 
 	@Override
 	public boolean existsByProviderId(String providerId) {
@@ -152,11 +161,58 @@ public class UsersServiceImpl implements UsersService {
 		return usersRepository.findByUserId(userId).orElseThrow(UserNotFoundException::notFound);
 	}
 
+	@Override
+	@Transactional
+	public void deleteUser(Users user) {
+		if (user.getUserId() == 0L) {
+			throw UserNotFoundException.systemError();
+		}
+
+		// 1) 시스템 유저 보장
+		ensureSystemUserExists(user);
+
+		Users systemUser = usersRepository.findByProviderId(SYSTEM_DELETE_ID)
+			.orElseThrow(UserNotFoundException::systemError);
+
+		Long targetUserId = user.getUserId();
+
+		// 2) 작성 데이터(리뷰) → 시스템 유저로 재매핑 (벌크 업데이트)
+		//  - 벌크 연산 후 1차 캐시와의 불일치 줄이려면 flush/clear 고려
+		generalReviewsRepository.updateUserToSystemUser(targetUserId, systemUser);
+
+		// 3) 행동 데이터(좋아요) → 삭제 + 카운터 보정
+		// 3-1) 건물 좋아요
+		List<BuildingLikes> buildingLikes = buildingLikesRepository.findAllByUser_UserId(targetUserId);
+		buildingLikes.forEach(bl -> bl.getBuilding().decrementLikeCount());
+		buildingLikesRepository.deleteAll(buildingLikes);
+
+		// 3-2) 리뷰 좋아요
+		List<ReviewLikes> reviewLikes = reviewLikesRepository.findAllByUser_UserId(targetUserId);
+		reviewLikes.forEach(rl -> rl.getReview().decrementLikeCount());
+		reviewLikesRepository.deleteAll(reviewLikes);
+
+		// 3-3) 공인중개사 좋아요
+		List<AgencyLikes> agencyLikes = agencyLikesRepository.findAllByUser_UserId(targetUserId);
+		agencyLikes.forEach(al -> al.getAgency().decrementLikeCount());
+		agencyLikesRepository.deleteAll(agencyLikes);
+
+		// 4) 유저 탈퇴일 기록 (스케줄러가 N일 뒤 영구 삭제)
+		user.delete(); // 내부에서 disabledAt = now 등
+		usersRepository.save(user);
+	}
 
 	private String extractDomain(String email) {
 		int atIdx = email.lastIndexOf("@");
 		return (atIdx != -1 && atIdx < email.length() - 1)
 				? email.substring(atIdx + 1)
 				: "";
+	}
+
+	private void ensureSystemUserExists(Users anyUserForFactory) {
+		boolean exists = usersRepository.existsByProviderId(SYSTEM_DELETE_ID);
+		if (!exists) {
+			Users sys = anyUserForFactory.createDeletedSystemUser();
+			usersRepository.saveAndFlush(sys); // 즉시 반영
+		}
 	}
 }

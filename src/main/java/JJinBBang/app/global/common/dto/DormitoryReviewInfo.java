@@ -8,14 +8,12 @@ import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.Floor;
 import lombok.Builder;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 @Builder
 public record DormitoryReviewInfo(
         Long id,
         String name,
         BuildingType type,
+        Long campusId,
         String universityName,
         Floor floor,
         Integer capacity,
@@ -38,11 +36,17 @@ public record DormitoryReviewInfo(
     }
 
     public static DormitoryReviewInfo of(DormReviews dormReviews, Boolean liked) {
+
+        String universityName = dormReviews.getBuilding().getCampus().getUniversity().getUniversityName();
+        String campusName =  dormReviews.getBuilding().getCampus().getCampusName();
+        Long campusId = dormReviews.getBuilding().getCampus().getId();
+
         return DormitoryReviewInfo.builder()
             .id(dormReviews.getId())
             .name(dormReviews.getBuilding().getBuildingName())
             .type(BuildingType.DORMITORY)
-            .universityName(dormReviews.getBuilding().getCampus().getCampusName())
+            .universityName(universityName + " " + campusName)
+            .campusId(campusId)
             .floor(dormReviews.getFloor())
             .capacity(dormReviews.getCapacity())
             .dormFee(dormReviews.getDormFee())

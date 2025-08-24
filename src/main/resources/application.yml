@@ -117,9 +117,12 @@ logging:
 app:
   repository:
     mode:
-#      inmemory
-      redis
+      inmemory
+#      redis
 
+user:
+  deletion:
+    grace-days: 30 # 사용자가 탈퇴한 후, 해당 사용자의 데이터가 삭제되기까지의 기간 (일 단위)
 
 security:
   path:

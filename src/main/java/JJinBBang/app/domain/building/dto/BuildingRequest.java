@@ -41,7 +41,7 @@ public record BuildingRequest (
     }
     public Agencies toAgencyEntity() {
         return Agencies.builder()
-                .buildingCode(buildingCode)
+                .agencySerial(buildingCode)
                 .name(name)
                 .address(address)
                 .agencyLat(latitude)

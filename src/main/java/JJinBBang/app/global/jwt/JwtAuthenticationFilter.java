@@ -1,6 +1,7 @@
 package JJinBBang.app.global.jwt;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,6 +97,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				}
 				else {
 					throw new InvalidTokenException("유효하지 않은 토큰 타입입니다.");
+				}
+
+				// 탈퇴한 유저 확인
+				if (user.getDisabledAt() != null && user.getDisabledAt().isBefore(LocalDateTime.now())) {
+					throw InvalidTokenException.deletedUser();
 				}
 
 				// 5. SecurityContextHolder에 인증 정보 저장

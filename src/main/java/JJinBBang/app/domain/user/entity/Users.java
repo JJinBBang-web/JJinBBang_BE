@@ -1,5 +1,7 @@
 package JJinBBang.app.domain.user.entity;
 
+import static JJinBBang.app.domain.user.service.UsersServiceImpl.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,5 +107,28 @@ public class Users extends BaseEntity {
 
 	public void updateUniversity(Universities university) {
 		this.university = university;
+	}
+
+	public Users createDeletedSystemUser() {
+		Users user = new Users();
+		user.provider = Provider.google;
+		user.providerId = SYSTEM_DELETE_ID;
+		user.studentNumber = null; // 시스템 유저는 학번이 없음
+		user.universityEmail = null; // 시스템 유저는 대학 이메일이 없음
+		user.admissionCertificate = null; // 시스템 유저는 입학 증명서가
+		user.admissionCertificateUploadDate = null; // 시스템 유저는 입학 증명서 업로드 날짜가 없음
+		user.verificationStatus = VerificationStatus.VERIFIED; // 시스템 유저는 검증
+		user.disabledAt = null; // 시스템 유저는 비활성화되지 않음
+		return user;
+	}
+
+	public void delete() {
+		this.disabledAt = LocalDateTime.now();
+		this.studentNumber = null;
+		this.universityEmail = null;
+		this.admissionCertificate = null;
+		this.admissionCertificateUploadDate = null;
+		this.verificationStatus = VerificationStatus.UNVERIFIED;
+		this.university = null; // 대학교 정보 초기화
 	}
 }

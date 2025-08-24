@@ -30,7 +30,7 @@ public record Building (
 	public static Building of(Agencies agency, BuildingType buildingType) {
 		return Building.builder()
 			.buildingId(agency.getAgencyId())
-			.buildingCode(agency.getBuildingCode())
+			.buildingCode(agency.getAgencySerial())
 			.name(agency.getName())
 			.type(buildingType)
 			.address(agency.getAddress())
