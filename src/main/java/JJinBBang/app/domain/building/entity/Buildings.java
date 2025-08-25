@@ -68,6 +68,18 @@ public class Buildings extends BaseEntity {
 	@Column(nullable = false)
 	private Integer imagesCount; // 이미지 수
 
+	@Column(nullable = false)
+	private Long avgDeposit; // 평균 보증금
+
+	@Column(nullable = false)
+	private Long avgMonthlyRent; // 평균 월세
+
+	@Column(nullable = false)
+	private Long avgMaintenanceCost; // 평균 관리비
+
+	@Column(nullable = false)
+	private Long avgRentDeposit; // 평균 전세
+
 	// 연관관계 매핑
 	// 캠퍼스 -> 건물
 	@ManyToOne(fetch = FetchType.LAZY)
