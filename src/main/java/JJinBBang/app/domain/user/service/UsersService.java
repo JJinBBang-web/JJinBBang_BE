@@ -31,4 +31,6 @@ public interface UsersService {
 	Users findByUserId(Long userId);
 
 	void deleteUser(Users user);
+
+	void forceDeleteExecute();
 }

@@ -201,6 +201,20 @@ public class UsersServiceImpl implements UsersService {
 		usersRepository.save(user);
 	}
 
+
+	@Override
+	@Transactional
+	public void forceDeleteExecute(){
+		List<Users> deletedUsers = usersRepository.findAllByDisabledAtIsNotNull();
+
+		// 작성 데이터는 1단계에서 이미 재매핑되어 있으므로 여기선 유저만 삭제
+		for (Users u : deletedUsers) {
+			if (!u.getProviderId().equals(SYSTEM_DELETE_ID)) {
+				usersRepository.delete(u);
+			}
+		}
+	}
+
 	private String extractDomain(String email) {
 		int atIdx = email.lastIndexOf("@");
 		return (atIdx != -1 && atIdx < email.length() - 1)
