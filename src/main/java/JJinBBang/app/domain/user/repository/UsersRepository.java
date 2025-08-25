@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,4 +24,6 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     List<Users> findAllDeletionDue(@Param("deadline") LocalDateTime deadline);
 
     boolean existsByProviderId(@Param("providerId") String providerId);
+
+    List<Users> findAllByDisabledAtIsNotNull();
 }
