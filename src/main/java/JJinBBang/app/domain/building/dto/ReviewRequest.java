@@ -72,7 +72,7 @@ public record ReviewRequest (
 			return size <= 20;
 		}
 
-		return size >= 2 && size <= 20;
+		return size >= 1 && size <= 20;
 	}
 
 
