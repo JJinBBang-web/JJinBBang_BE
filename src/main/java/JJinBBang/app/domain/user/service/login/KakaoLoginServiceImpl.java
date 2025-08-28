@@ -14,6 +14,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -33,8 +34,12 @@ public class KakaoLoginServiceImpl implements LoginService{
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
     private String clientSecret;
 
-    @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
-    private String redirectUri;
+    @Value("${security.oauth.allowed-redirect-uri.local.kakao}")
+    private String localRedirectUri;
+
+    @Value("${security.oauth.allowed-redirect-uri.prod.kakao}")
+    private String prodRedirectUri;
+
 
     private final UsersService usersService;
 
@@ -50,9 +55,14 @@ public class KakaoLoginServiceImpl implements LoginService{
     }
 
     @Override
-    public Users login(String oauthCode) {
+    public Users login(String oauthCode, String redirectUri) {
+        // redirectUri 검증
+        List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
+        if(!allowedRedirectUris.contains(redirectUri)){
+            throw KakaoAuthException.notAllowedRedirectUri();
+        }
 
-        String oauthAccessToken = getAccessToken(oauthCode);
+        String oauthAccessToken = getAccessToken(oauthCode, redirectUri);
 
         Map<String, Object> kakaoUserInfo = getKakaoUserInfo(oauthAccessToken);
 
@@ -74,7 +84,7 @@ public class KakaoLoginServiceImpl implements LoginService{
     }
 
 
-    private String getAccessToken(String code) {
+    private String getAccessToken(String code, String redirectUri) {
         try {
             // 요청 파라미터
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();

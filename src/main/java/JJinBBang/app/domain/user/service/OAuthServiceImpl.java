@@ -34,7 +34,7 @@ public class OAuthServiceImpl implements OAuthService {
 
 
     @Override
-    public Users login(String oauthProvider, String oauthCode) {
+    public Users login(String oauthProvider, String oauthCode, String redirectUri) {
         LoginService loginService = loginServiceMap.get(oauthProvider);
 
         if (loginService == null) {
@@ -42,7 +42,7 @@ public class OAuthServiceImpl implements OAuthService {
             throw AuthNotFoundException.socialProviderNotFound();
         }
 
-        return loginService.login(oauthCode);
+        return loginService.login(oauthCode, redirectUri);
     }
 
     @Override
