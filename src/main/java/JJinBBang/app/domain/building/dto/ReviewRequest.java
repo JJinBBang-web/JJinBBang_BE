@@ -37,16 +37,14 @@ public record ReviewRequest (
 	Keywords keywords,
 
 	// 기숙사 전용
-	@Valid
 	Conditions condition,
 	@Valid
 	FacilitiesDto facilities
 ){
-	@AssertTrue(message = "기숙사 리뷰인 경우 condition 및 facilities 필드는 필수입니다.")
+	@AssertTrue(message = "기숙사 리뷰인 경우 facilities 필드는 필수입니다.")
 	private boolean isDormitoryDetailsProvided() {
 		if (dormitoryReview != null) {
-			return condition   != null
-				&& facilities  != null;
+			return facilities  != null;
 		}
 		return true;
 	}
