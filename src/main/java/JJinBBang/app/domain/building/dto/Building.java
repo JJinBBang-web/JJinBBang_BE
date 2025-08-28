@@ -23,7 +23,7 @@ public record Building (
 			.type(buildingType)
 			.address(building.getBuildingAddress())
 			.latitude(building.getBuildingLat())
-			.longitude(building.getBuildingLat())
+			.longitude(building.getBuildingLot())
 			.build();
 	}
 
@@ -35,7 +35,7 @@ public record Building (
 			.type(buildingType)
 			.address(agency.getAddress())
 			.latitude(agency.getAgencyLat())
-			.longitude(agency.getAgencyLat())
+			.longitude(agency.getAgencyLot())
 			.build();
 	}
 }
