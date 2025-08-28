@@ -34,10 +34,10 @@ public class NaverLoginServiceImpl implements LoginService {
     @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
     private String clientSecret;
 
-    @Value("${security.oauth.allowed-redirect-uri.local.kakao}")
+    @Value("${security.oauth.allowed-redirect-uri.local.naver}")
     private String localRedirectUri;
 
-    @Value("${security.oauth.allowed-redirect-uri.prod.kakao}")
+    @Value("${security.oauth.allowed-redirect-uri.prod.naver}")
     private String prodRedirectUri;
 
     private final UsersService usersService;
