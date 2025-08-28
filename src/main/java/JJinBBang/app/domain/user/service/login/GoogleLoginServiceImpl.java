@@ -57,7 +57,7 @@ public class GoogleLoginServiceImpl implements LoginService {
         // redirectUri 검증
         List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
         if(!allowedRedirectUris.contains(redirectUri)){
-            throw KakaoAuthException.notAllowedRedirectUri();
+            throw GoogleAuthException.notAllowedRedirectUri();
         }
 
         String accessToken = requestAccessToken(oauthCode, redirectUri);

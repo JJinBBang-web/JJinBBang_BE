@@ -57,7 +57,7 @@ public class NaverLoginServiceImpl implements LoginService {
         // redirectUri 검증
         List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
         if(!allowedRedirectUris.contains(redirectUri)){
-            throw KakaoAuthException.notAllowedRedirectUri();
+            throw NaverAuthException.notAllowedRedirectUri();
         }
 
         // 1) 액세스 토큰 발급
