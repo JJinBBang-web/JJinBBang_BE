@@ -2,6 +2,7 @@ package JJinBBang.app.domain.user.service.login;
 
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.GoogleAuthException;
+import JJinBBang.app.domain.user.exception.KakaoAuthException;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -32,8 +34,11 @@ public class GoogleLoginServiceImpl implements LoginService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String redirectUri;
+    @Value("${security.oauth.allowed-redirect-uri.local.google}")
+    private String localRedirectUri;
+
+    @Value("${security.oauth.allowed-redirect-uri.prod.google}")
+    private String prodRedirectUri;
 
     private final UsersService usersService;
 
@@ -48,8 +53,14 @@ public class GoogleLoginServiceImpl implements LoginService {
     }
 
     @Override
-    public Users login(String oauthCode) {
-        String accessToken = requestAccessToken(oauthCode);
+    public Users login(String oauthCode, String redirectUri) {
+        // redirectUri 검증
+        List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
+        if(!allowedRedirectUris.contains(redirectUri)){
+            throw KakaoAuthException.notAllowedRedirectUri();
+        }
+
+        String accessToken = requestAccessToken(oauthCode, redirectUri);
         Map<String, Object> profile = requestUserInfo(accessToken);
 
         String googleId = (String) profile.get("sub");
@@ -66,7 +77,7 @@ public class GoogleLoginServiceImpl implements LoginService {
                 .build();
     }
 
-    private String requestAccessToken(String code) {
+    private String requestAccessToken(String code, String redirectUri) {
         RestTemplate rt = new RestTemplate();
         MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");

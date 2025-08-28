@@ -37,7 +37,7 @@ public class AuthController {
         // 소셜 로그인 API
 
         // 전달받은 provider에 따라 매칭되는 LoginService 인터페이스 구현체를 실행하여 소셜 로그인 진행
-        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode());
+        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode(), loginRequest.redirectUri());
 
         if (user.getUserId() == null) {
             // 약관 동의가 필요한 경우
