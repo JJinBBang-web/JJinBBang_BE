@@ -58,7 +58,7 @@ public class KakaoLoginServiceImpl implements LoginService{
     public Users login(String oauthCode, String redirectUri) {
         // redirectUri 검증
         List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
-        if(!allowedRedirectUris.contains(redirectUri)){
+        if(redirectUri == null || !allowedRedirectUris.contains(redirectUri)){
             throw KakaoAuthException.notAllowedRedirectUri();
         }
 
