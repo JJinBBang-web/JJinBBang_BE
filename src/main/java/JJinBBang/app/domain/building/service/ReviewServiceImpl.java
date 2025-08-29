@@ -103,7 +103,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         // 2) 좋아요 여부 확인
         boolean liked = review.getReviewLikes().stream()
-                .anyMatch(like -> like.getUser().equals(user));
+			.anyMatch(like -> like.getUser().getUserId().equals(user.getUserId()));
 
         // 3) 상세 정보 로드
         ReviewDetails detail = reviewDetailsRepository.findByReviewId(reviewId)
