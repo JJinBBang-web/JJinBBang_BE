@@ -241,4 +241,11 @@ public class Buildings extends BaseEntity {
 		}
 		this.likeCount++;
 	}
+
+	public void applyAverages(Long avgDeposit, Long avgMaintenance, Long avgMonthlyRent, Long avgRentDeposit) {
+		this.avgDeposit         = avgDeposit;
+		this.avgMaintenanceCost = avgMaintenance;
+		this.avgMonthlyRent     = avgMonthlyRent;
+		this.avgRentDeposit     = avgRentDeposit;
+	}
 }
