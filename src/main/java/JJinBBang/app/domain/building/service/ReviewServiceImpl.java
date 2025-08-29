@@ -3,8 +3,8 @@ package JJinBBang.app.domain.building.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import java.util.Set;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,8 +184,11 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         // 4.4) 건물 유형 업데이트
-				Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
-				building.updateBuildingType(newBuildingType);
+		Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
+		building.updateBuildingType(newBuildingType);
+
+		// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
+		recalculateAndApplyBuildingAverages(building);
 
         // 4.5) 건물 엔티티 저장
         buildingsRepository.save(building);
@@ -455,6 +458,11 @@ public class ReviewServiceImpl implements ReviewService {
 			Set<BuildingType> newNewBuildingType = getBuildingTypesFromBuilding(oldBuilding);
 			oldBuilding.updateBuildingType(newNewBuildingType);
 
+			// 이전 건물 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 삭제
+			recalculateAndApplyBuildingAverages(oldBuilding);
+			// 신규 건물 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
+			recalculateAndApplyBuildingAverages(newBuilding);			// 이전 건물 월세인 경우 평균 보증금, 평균 관리비, 평균 월세 정보 삭제
+
 			// c) 두 건물 저장
 			buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
 		} else {
@@ -473,6 +481,9 @@ public class ReviewServiceImpl implements ReviewService {
 			// c) 건물 유형 업데이트
 			Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(oldBuilding);
 			oldBuilding.updateBuildingType(newBuildingType);
+
+			// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
+			recalculateAndApplyBuildingAverages(oldBuilding);
 
 			// d) 건물 저장
 			buildingsRepository.save(oldBuilding);
@@ -651,6 +662,9 @@ public class ReviewServiceImpl implements ReviewService {
 		Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
 		building.updateBuildingType(newBuildingType);
 
+		// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
+		recalculateAndApplyBuildingAverages(building);
+
         buildingsRepository.save(building);
     }
 
@@ -717,5 +731,51 @@ public class ReviewServiceImpl implements ReviewService {
 	private Set<BuildingType> getBuildingTypesFromBuilding(Buildings building) {
 		return reviewsRepository.findDistinctBuildingTypesByBuilding(building);
 	}
-}
 
+	// 건물의 평균 금액(월세/전세/관리비)을 재계산하여 적용
+	private void recalculateAndApplyBuildingAverages(Buildings building) {
+		List<GeneralReviews> list = reviewsRepository.findAllByBuilding(building)
+			.stream()
+			.map(r -> (GeneralReviews)r)
+			.toList();
+
+		long sumDeposit = 0L, sumMonthly = 0L, sumMaint = 0L, sumJeonse = 0L;
+		int cntDeposit = 0, cntMonthly = 0, cntMaint = 0, cntJeonse = 0;
+
+		for (GeneralReviews r : list) {
+			// 관리비: 월세/전세 공통
+			Integer maintenanceCost = r.getMaintenanceCost();
+			if (maintenanceCost != null) {
+				sumMaint += maintenanceCost;
+				cntMaint++;
+			}
+
+			ContractType type = r.getContractType();
+			if (type == ContractType.MONTHLY_RENT) {
+				Integer monthly = r.getPrice();    // 월세
+				if (monthly != null) {
+					sumMonthly += monthly;
+					cntMonthly++;
+				}
+				Integer deposit = r.getDeposit();  // 보증금
+				if (deposit != null) {
+					sumDeposit += deposit;
+					cntDeposit++;
+				}
+			} else {
+				Integer jeonse = r.getDeposit();     // 전세 보증금
+				if (jeonse != null) {
+					sumJeonse += jeonse;
+					cntJeonse++;
+				}
+			}
+		}
+
+		Long avgDeposit = (cntDeposit > 0) ? Math.round((double)sumDeposit / cntDeposit) : null;
+		Long avgMonthlyRent = (cntMonthly > 0) ? Math.round((double)sumMonthly / cntMonthly) : null;
+		Long avgMaintenance = (cntMaint > 0) ? Math.round((double)sumMaint / cntMaint) : null;
+		Long avgRentDeposit = (cntJeonse > 0) ? Math.round((double)sumJeonse / cntJeonse) : null;
+
+		building.applyAverages(avgDeposit, avgMaintenance, avgMonthlyRent, avgRentDeposit);
+	}
+}
