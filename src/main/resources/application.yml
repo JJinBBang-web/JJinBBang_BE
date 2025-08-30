@@ -89,6 +89,15 @@ spring:
     encoding: UTF-8
     basename: ValidationMessages
 
+cloud:
+  aws:
+    region:
+      static: ${cloud.aws.region.static}
+    s3:
+      bucket: ${cloud.aws.s3.bucket}
+    cdn:
+      domain: ${cloud.aws.cdn.domain}
+
 jwt:
   secret: ${jwt.secret}
   expiration-time:
@@ -143,6 +152,7 @@ security:
       - "/api/v1/building/**"
       - "/api/v1/review/**"
 #      - "/api/v1/notification/**"
+      - "/api/v1/s3/**"
     anonymous:
       - "/api/v1/auth"
     verification-status-based:
