@@ -1,5 +1,7 @@
 package JJinBBang.app.domain.common.service;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -14,7 +16,11 @@ import org.springframework.stereotype.Service;
 import JJinBBang.app.domain.common.dto.PresignedUrlResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 
@@ -24,6 +30,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 public class S3Service {
 
 	private final S3Presigner s3Presigner;
+	private final S3Client s3;
 
 	@Value("${cloud.aws.cdn.domain}")
 	private String cdnDomain;
@@ -130,5 +137,38 @@ public class S3Service {
 		String host = cdnDomain.replaceAll("^https?://", "").replaceAll("/+$", "");
 		String path = key.startsWith("/") ? key : "/" + key;
 		return "https://" + host + path;
+	}
+
+	// S3에서 이미지 삭제
+	public void deleteFile(String imageUrl) {
+		String key = toKey(imageUrl);
+		if (key == null || key.isBlank()) return;
+
+		try {
+			s3.deleteObject(DeleteObjectRequest.builder()
+				.bucket(bucket)
+				.key(key)
+				.build());
+		} catch (NoSuchKeyException e) {
+			// 이미 없는 키면 무시
+		} catch (S3Exception e) {
+			log.warn("S3 delete failed. key={}, code={}", key, e.awsErrorDetails().errorCode(), e);
+		}
+
+	}
+
+	// S3 URL에서 Key 추출
+	private String toKey(String url) {
+		if (url == null || url.isBlank()) {
+			throw new IllegalArgumentException("빈 URL입니다.");
+		}
+		int schemeEnd = url.indexOf("://");
+		int pathStart = url.indexOf('/', (schemeEnd >= 0 ? schemeEnd + 3 : 0));
+		if (pathStart < 0 || pathStart == url.length() - 1) {
+			throw new IllegalArgumentException("경로가 없는 URL입니다: " + url);
+		}
+		int q = url.indexOf('?', pathStart);
+		String path = (q >= 0) ? url.substring(pathStart + 1, q) : url.substring(pathStart + 1);
+		return URLDecoder.decode(path, StandardCharsets.UTF_8);
 	}
 }

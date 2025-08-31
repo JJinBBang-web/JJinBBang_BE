@@ -10,4 +10,8 @@ public class ReviewNotFoundException extends NotFoundGroupException {
 	public static ReviewNotFoundException missingReview() {
 		return new ReviewNotFoundException("해당 리뷰 정보가 존재하지 않습니다.");
 	}
+
+	public static ReviewNotFoundException missingReviewType() {
+		return new ReviewNotFoundException("해당 리뷰 유형이 존재하지 않습니다.");
+	}
 }
