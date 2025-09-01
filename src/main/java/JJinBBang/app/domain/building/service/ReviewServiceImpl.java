@@ -16,6 +16,7 @@ import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.common.entity.Campuses;
+import JJinBBang.app.domain.common.service.S3Service;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,9 @@ public class ReviewServiceImpl implements ReviewService {
 	private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
 	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
 	private final CampusesRepository campusesRepository;
+	private final S3Service s3Service;
 
-    /**
+	/**
      * 특정 건물 또는 공인중개사에 대한 리뷰 목록을 페이징 조회
      *
      * @param buildingId  건물 또는 공인중개사 ID
@@ -77,8 +79,10 @@ public class ReviewServiceImpl implements ReviewService {
                 reviewPage,
                 review -> {
                     // 3.1) 좋아요 여부 확인
-                    boolean liked = review.getReviewLikes().stream()
-                            .anyMatch(like -> like.getUser().equals(user));
+					boolean liked = review.getReviewLikes().stream()
+						.anyMatch(like -> like.getUser() != null
+							&& user != null
+							&& like.getUser().getUserId().equals(user.getUserId()));
 
                     // 3.3) 요약 응답 생성
                     return ReviewSummaryResponse.of(review, liked);
@@ -101,8 +105,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(ReviewNotFoundException::missingReview);
 
         // 2) 좋아요 여부 확인
-        boolean liked = review.getReviewLikes().stream()
-			.anyMatch(like -> like.getUser().getUserId().equals(user.getUserId()));
+		boolean liked = review.getReviewLikes().stream()
+			.anyMatch(like -> like.getUser() != null
+				&& user != null
+				&& like.getUser().getUserId().equals(user.getUserId()));
 
         // 3) 상세 정보 로드
         ReviewDetails detail = reviewDetailsRepository.findByReviewId(reviewId)
@@ -178,9 +184,7 @@ public class ReviewServiceImpl implements ReviewService {
         building.addRating(saved.getRating());
 
         // 4.3) 이미지 카운트 반영
-        if (!dto.imageUrls().isEmpty()) {
-            building.incrementImagesCount();
-        }
+		building.incrementImagesCount();
 
         // 4.4) 건물 유형 업데이트
 		building.addBuildingType(dto.buildingRequest().type());
@@ -233,9 +237,7 @@ public class ReviewServiceImpl implements ReviewService {
         building.addRating(saved.getRating());
 
         // 6.3) 이미지 카운트 반영
-        if (!dto.imageUrls().isEmpty()) {
-            building.incrementImagesCount();
-        }
+		building.incrementImagesCount();
 
         // 6.4) 건물 엔티티 저장
         buildingsRepository.save(building);
@@ -269,7 +271,7 @@ public class ReviewServiceImpl implements ReviewService {
 		agency.addRating(saved.getRating());
 
 		// 4.3) 이미지 카운트 반영
-		if (!dto.imageUrls().isEmpty()) {
+		if (details.getImages() != null && !details.getImages().isEmpty()) {
 			agency.incrementImagesCount();
 		}
 
@@ -290,15 +292,8 @@ public class ReviewServiceImpl implements ReviewService {
 		return buildingsRepository.findByBuildingCode(dto.buildingCode())
 			// 기존에 있는 건물인 경우,
 			.map(existing -> {
-				// 1) 건물의 건물 유형 가져와서
-				List<BuildingType> buildingtypeList = new ArrayList<>(existing.getBuildingType());
-
-				// 2) 기존에 없는 건물 타입이면 추가
-				if (!buildingtypeList.contains(dto.type())) {
-					buildingtypeList.add(dto.type());
-					existing.setBuildingType(buildingtypeList);
-					buildingsRepository.save(existing);
-				}
+				existing.addBuildingType(dto.type());
+				buildingsRepository.save(existing);
 				return existing;
 			})
 
@@ -413,7 +408,7 @@ public class ReviewServiceImpl implements ReviewService {
 		} else if (review instanceof AgencyReviews agency) {
 			updateAgencyReview(agency, dto);
 		} else {
-			throw new UnsupportedOperationException("지원하지 않는 리뷰 타입입니다.");
+			throw ReviewNotFoundException.missingReviewType();
 		}
 	}
 
@@ -450,6 +445,9 @@ public class ReviewServiceImpl implements ReviewService {
 			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
 			reviewDetailsRepository.save(updatedDetails);
 
+			// 삭제할 이미지 삭제
+			deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
+
 			// d) 건물 유형 업데이트
 			newBuilding.addBuildingType(dto.buildingRequest().type());
 
@@ -472,6 +470,8 @@ public class ReviewServiceImpl implements ReviewService {
 			reviewsRepository.save(updatedReview);
 			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
 			reviewDetailsRepository.save(updatedDetails);
+			// 삭제할 이미지 삭제
+			deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
 
 			// c) 건물 유형 업데이트
 			oldBuilding.addBuildingType(dto.buildingRequest().type());
@@ -540,6 +540,9 @@ public class ReviewServiceImpl implements ReviewService {
 		// 7) 상세 정보 갱신 저장
 		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
 		reviewDetailsRepository.save(updatedDetails);
+
+		// 삭제할 이미지 삭제
+		deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
 	}
 
 	/**
@@ -557,20 +560,26 @@ public class ReviewServiceImpl implements ReviewService {
 		// 2) 기존 상세 정보 로드
 		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
 			.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+
+		// 리뷰/상세 저장
+		AgencyReviews updatedReview = dto.toUpdatedAgencyReviews(oldReview, newAgency);
+		reviewsRepository.save(updatedReview);
+		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newAgency.getAgencyId());
+		reviewDetailsRepository.save(updatedDetails);
+
+		deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
+
 		// 3) 이미지 유무 확인
-		boolean oldHasImage = oldReview.getThumbnailImage() != null;
-		boolean newHasImage = dto.imageUrls() != null && !dto.imageUrls().isEmpty();
+		boolean oldHas = oldDetails.getImages() != null && !oldDetails.getImages().isEmpty();
+		boolean nowHas = updatedDetails.getImages() != null && !updatedDetails.getImages().isEmpty();
 
 		// 4) 이미지 변경 및 공인중개사 변경 처리
 		if (!oldAgency.getAgencySerial().equals(newAgency.getAgencySerial())) {
-			if (!oldHasImage && newHasImage)
-				newAgency.incrementImagesCount();
-			else if (oldHasImage && !newHasImage)
+			if (oldHas)
 				oldAgency.decrementImagesCount();
-			else if (oldHasImage && newHasImage) {
-				oldAgency.decrementImagesCount();
+			if (nowHas)
 				newAgency.incrementImagesCount();
-			}
+
 			updateKeywordCounts(oldAgency.getAgencyId(), true, oldDetails.getKeywords().positive(),
 				Collections.emptyList());
 			updateKeywordCounts(newAgency.getAgencyId(), true, Collections.emptyList(), dto.keywords().positive());
@@ -578,21 +587,18 @@ public class ReviewServiceImpl implements ReviewService {
 			newAgency.addRating(dto.agencyReview().getRating());
 			agenciesRepository.saveAll(List.of(oldAgency, newAgency));
 		} else {
-			if (!oldHasImage && newHasImage)
+			if (!oldHas && nowHas) {
 				oldAgency.incrementImagesCount();
-			else if (oldHasImage && !newHasImage)
+			} else if (oldHas && !nowHas) {
 				oldAgency.decrementImagesCount();
+			}
+
 			updateKeywordCounts(oldAgency.getAgencyId(), true, oldDetails.getKeywords().positive(),
 				dto.keywords().positive());
 			oldAgency.updateRating(oldReview.getRating(), dto.agencyReview().getRating());
 			agenciesRepository.save(oldAgency);
 		}
 
-		// 5) 리뷰 및 상세 정보 저장
-		AgencyReviews updatedReview = dto.toUpdatedAgencyReviews(oldReview, newAgency);
-		reviewsRepository.save(updatedReview);
-		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newAgency.getAgencyId());
-		reviewDetailsRepository.save(updatedDetails);
 	}
 
     /**
@@ -640,16 +646,19 @@ public class ReviewServiceImpl implements ReviewService {
 
         // b)평점 제거
         building.removeRating(review.getRating());
+
         // c)이미지 카운트 감소
-        if (review.getThumbnailImage() != null) {
-            building.decrementImagesCount();
-        }
+		building.decrementImagesCount();
+
         // d)키워드 통계 감소
         updateKeywordCounts(building.getId(), false,
                 detail.getKeywords().positive(), Collections.emptyList());
 
-        // e)연관 데이터 삭제
-        reviewDetailsRepository.deleteByReviewId(review.getId());
+		// 리뷰 데이터 삭제
+		detail.getImages().forEach(s3Service::deleteFile);
+
+		// e)연관 데이터 삭제
+		reviewDetailsRepository.delete(detail);
         reviewsRepository.delete(review);
 
 		// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
@@ -674,9 +683,8 @@ public class ReviewServiceImpl implements ReviewService {
         // 평점 제거
         building.removeRating(review.getRating());
         // 이미지 카운트 감소
-        if (review.getThumbnailImage() != null) {
-            building.decrementImagesCount();
-        }
+		building.decrementImagesCount();
+
         // 키워드 통계 감소
         updateKeywordCounts(building.getId(), false,
                 detail.getKeywords().positive(), Collections.emptyList());
@@ -684,7 +692,13 @@ public class ReviewServiceImpl implements ReviewService {
 
         // b) 연관된 시설, 상세정보, 리뷰 삭제
         dormitoryFacilitiesRepository.deleteAllByDormitoryReview(review);
-        reviewDetailsRepository.deleteByReviewId(review.getId());
+
+		// 리뷰 데이터 삭제
+		detail.getImages().forEach(s3Service::deleteFile);
+
+		// e)연관 데이터 삭제
+		reviewDetailsRepository.delete(detail);
+
         reviewsRepository.delete(review);
     }
 
@@ -704,23 +718,29 @@ public class ReviewServiceImpl implements ReviewService {
         // b) 평점 제거
         agency.removeRating(review.getRating());
         // 이미지 카운트 감소
-        if (review.getThumbnailImage() != null) {
-            agency.decrementImagesCount();
-        }
+		if (detail.getImages() != null && !detail.getImages().isEmpty()) {
+			agency.decrementImagesCount();
+		}
+
         // c) 키워드 통계 감소
         updateKeywordCounts(agency.getAgencyId(), true,
                 detail.getKeywords().positive(), Collections.emptyList());
         agenciesRepository.save(agency);
 
-        // d) 상세정보 및 리뷰 삭제
-        reviewDetailsRepository.deleteByReviewId(review.getId());
+		// 리뷰 데이터 삭제
+		if (detail.getImages() != null) {
+			detail.getImages().forEach(s3Service::deleteFile);
+		}
+
+		// e)연관 데이터 삭제
+		reviewDetailsRepository.delete(detail);
         reviewsRepository.delete(review);
     }
 
 	// 건물의 평균 금액(월세/전세/관리비)을 재계산하여 적용
 	private void recalculateAndApplyBuildingAverages(Buildings building) {
-		List<GeneralReviews> list = reviewsRepository.findAllByBuilding(building)
-			.stream()
+		List<GeneralReviews> list = reviewsRepository.findAllByBuilding(building).stream()
+			.filter(r -> r instanceof GeneralReviews)
 			.map(r -> (GeneralReviews)r)
 			.toList();
 
@@ -762,5 +782,15 @@ public class ReviewServiceImpl implements ReviewService {
 		Long avgRentDeposit = (cntJeonse > 0) ? Math.round((double)sumJeonse / cntJeonse) : null;
 
 		building.applyAverages(avgDeposit, avgMaintenance, avgMonthlyRent, avgRentDeposit);
+	}
+
+	// null-safe로 상세 이미지 삭제 (old - new 차집합)
+	private void deleteRemovedImages(List<String> oldImages, List<String> newImages) {
+		List<String> safeOld = (oldImages == null) ? Collections.emptyList() : oldImages;
+		List<String> safeNew = (newImages == null) ? Collections.emptyList() : newImages;
+
+		List<String> imagesToDelete = new ArrayList<>(safeOld);
+		imagesToDelete.removeAll(safeNew);
+		imagesToDelete.forEach(s3Service::deleteFile);
 	}
 }

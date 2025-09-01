@@ -224,10 +224,13 @@ public class Buildings extends BaseEntity {
 		}
 	}
 
-	public void updateBuildingType(Set<BuildingType> newBuildingTypes) {
-		this.buildingType = newBuildingTypes.stream()
-				.map(BuildingType::toString)
-				.collect(Collectors.joining(","));
+	public void addBuildingType(BuildingType type) {
+		Set<BuildingType> set = new HashSet<>(this.getBuildingType());
+		set.add(type);
+
+		this.buildingType = set.stream()
+			.map(BuildingType::toString)
+			.collect(Collectors.joining(","));
 	}
 
     public void decrementLikeCount() {
@@ -248,11 +251,5 @@ public class Buildings extends BaseEntity {
 		this.avgMaintenanceCost = avgMaintenance;
 		this.avgMonthlyRent     = avgMonthlyRent;
 		this.avgRentDeposit     = avgRentDeposit;
-	}
-
-	public void addBuildingType(BuildingType buildingType) {
-		Set<BuildingType> buildingTypes = new HashSet<>(this.getBuildingType());
-		buildingTypes.add(buildingType);
-		this.updateBuildingType(buildingTypes);
 	}
 }
