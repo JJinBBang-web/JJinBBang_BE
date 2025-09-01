@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -223,10 +224,13 @@ public class Buildings extends BaseEntity {
 		}
 	}
 
-	public void updateBuildingType(Set<BuildingType> newBuildingTypes) {
-		this.buildingType = newBuildingTypes.stream()
-				.map(BuildingType::toString)
-				.collect(Collectors.joining(","));
+	public void addBuildingType(BuildingType type) {
+		Set<BuildingType> set = new HashSet<>(this.getBuildingType());
+		set.add(type);
+
+		this.buildingType = set.stream()
+			.map(BuildingType::toString)
+			.collect(Collectors.joining(","));
 	}
 
     public void decrementLikeCount() {
