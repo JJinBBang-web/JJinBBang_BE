@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -247,5 +248,11 @@ public class Buildings extends BaseEntity {
 		this.avgMaintenanceCost = avgMaintenance;
 		this.avgMonthlyRent     = avgMonthlyRent;
 		this.avgRentDeposit     = avgRentDeposit;
+	}
+
+	public void addBuildingType(BuildingType buildingType) {
+		Set<BuildingType> buildingTypes = new HashSet<>(this.getBuildingType());
+		buildingTypes.add(buildingType);
+		this.updateBuildingType(buildingTypes);
 	}
 }

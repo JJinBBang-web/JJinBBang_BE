@@ -3,7 +3,6 @@ package JJinBBang.app.domain.building.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -184,8 +183,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         // 4.4) 건물 유형 업데이트
-		Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
-		building.updateBuildingType(newBuildingType);
+		building.addBuildingType(dto.buildingRequest().type());
 
 		// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
 		recalculateAndApplyBuildingAverages(building);
@@ -453,10 +451,7 @@ public class ReviewServiceImpl implements ReviewService {
 			reviewDetailsRepository.save(updatedDetails);
 
 			// d) 건물 유형 업데이트
-			Set<BuildingType> newOldBuildingType = getBuildingTypesFromBuilding(oldBuilding);
-			oldBuilding.updateBuildingType(newOldBuildingType);
-			Set<BuildingType> newNewBuildingType = getBuildingTypesFromBuilding(oldBuilding);
-			oldBuilding.updateBuildingType(newNewBuildingType);
+			newBuilding.addBuildingType(dto.buildingRequest().type());
 
 			// 이전 건물 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 삭제
 			recalculateAndApplyBuildingAverages(oldBuilding);
@@ -479,8 +474,7 @@ public class ReviewServiceImpl implements ReviewService {
 			reviewDetailsRepository.save(updatedDetails);
 
 			// c) 건물 유형 업데이트
-			Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(oldBuilding);
-			oldBuilding.updateBuildingType(newBuildingType);
+			oldBuilding.addBuildingType(dto.buildingRequest().type());
 
 			// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
 			recalculateAndApplyBuildingAverages(oldBuilding);
@@ -658,10 +652,6 @@ public class ReviewServiceImpl implements ReviewService {
         reviewDetailsRepository.deleteByReviewId(review.getId());
         reviewsRepository.delete(review);
 
-		// f)건물 유형 업데이트
-		Set<BuildingType> newBuildingType = getBuildingTypesFromBuilding(building);
-		building.updateBuildingType(newBuildingType);
-
 		// 평균 보증금, 평균 관리비, 평균 월세, 평균 전세 정보 추가
 		recalculateAndApplyBuildingAverages(building);
 
@@ -726,11 +716,6 @@ public class ReviewServiceImpl implements ReviewService {
         reviewDetailsRepository.deleteByReviewId(review.getId());
         reviewsRepository.delete(review);
     }
-
-	// 건물과 관련된 리뷰들의 건물 유형 집합 조회하는 메서드
-	private Set<BuildingType> getBuildingTypesFromBuilding(Buildings building) {
-		return reviewsRepository.findDistinctBuildingTypesByBuilding(building);
-	}
 
 	// 건물의 평균 금액(월세/전세/관리비)을 재계산하여 적용
 	private void recalculateAndApplyBuildingAverages(Buildings building) {
