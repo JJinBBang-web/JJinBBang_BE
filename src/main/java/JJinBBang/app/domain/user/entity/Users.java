@@ -11,6 +11,7 @@ import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.common.entity.Universities;
+import JJinBBang.app.domain.user.enums.UserRole;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.entity.BaseEntity;
@@ -49,6 +50,10 @@ public class Users extends BaseEntity {
 	@Column(name = "verification_status", nullable = false)
 	private VerificationStatus verificationStatus;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "role", nullable = false)
+	private UserRole role;
+
 	@Column(name = "disabled_at")
 	private LocalDateTime disabledAt;
 
@@ -59,6 +64,7 @@ public class Users extends BaseEntity {
 		this.admissionCertificateUploadDate = null;
 		this.verificationStatus = VerificationStatus.UNVERIFIED;
 		this.disabledAt = null;
+		this.role = UserRole.USER;
 	}
 
 	// 연관관계 매핑

@@ -3,19 +3,20 @@ package JJinBBang.app.global.jwt;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.jwt.enums.TokenType;
 import JJinBBang.app.global.security.SecurityPathProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.UsersService;
@@ -38,6 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtUtils jwtUtils;
 	private final UsersService usersService;
 	private final SecurityPathProperties securityPathProperties;
+	private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
 	private final AntPathMatcher pathMatcher = new AntPathMatcher(); // Ant 패턴 매칭 객체
 
 	@Override
@@ -54,7 +56,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				Claims claims = jwtUtils.parseClaims(token);
 				String providerId = claims.getSubject();
 				String tokenType = claims.get("tokenType", String.class);
+				// 유저
 				Users user;
+				// 유저의 권한
+				List<GrantedAuthority> authorities = Collections.emptyList();
 
 				String requestURI = request.getRequestURI();
 				boolean isPendingUserPath = securityPathProperties.getPendingUser().stream()
@@ -94,6 +99,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 					// 4. DB에서 유저 정보 조회
 					user = usersService.findByProviderId(providerId);
+					// 유저 권한 설정
+					authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 				}
 				else {
 					throw new InvalidTokenException("유효하지 않은 토큰 타입입니다.");
@@ -105,38 +112,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				}
 
 				// 5. SecurityContextHolder에 인증 정보 저장
-				var authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+				var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
 			// 6. 필터 체인 진행
 			filterChain.doFilter(request, response);
 
-		} catch (InvalidTokenException | NotFoundGroupException e) {
-			makeErrorResponse(e, response);
+		} catch (InvalidTokenException e){
+			authenticationEntryPoint.commence(request , response, e);
+		} catch (NotFoundGroupException e) {
+			authenticationEntryPoint.commence(request , response, InvalidTokenException.userNotFound());
 		}
-	}
-
-	private void makeErrorResponse(Exception e, HttpServletResponse response) throws IOException {
-		log.error(e.getMessage());
-		response.setContentType("application/json;charset=UTF-8");
-		ObjectMapper mapper = new ObjectMapper();
-		Map<String, Object> errorDetails = new HashMap<>();
-
-		if(e instanceof InvalidTokenException){
-			// 토큰 관련 예외 처리
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-			errorDetails.put("code", HttpServletResponse.SC_UNAUTHORIZED);
-			errorDetails.put("message", e.getMessage());
-		}
-		else if(e instanceof NotFoundGroupException){
-			// 유저 관련 예외 처리
-			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
-			errorDetails.put("code", HttpServletResponse.SC_NOT_FOUND);
-			errorDetails.put("message", e.getMessage());
-		}
-
-		response.getWriter().write(mapper.writeValueAsString(errorDetails));
 	}
 }

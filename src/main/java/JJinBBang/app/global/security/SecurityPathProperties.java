@@ -20,5 +20,6 @@ public class SecurityPathProperties {
 	private Map<String, List<String>> verificationStatusBased;
 	private List<String> pendingUser;
 	private List<String> refresh;
+	private List<String> admin;
 	private String anyRequest;
 }
