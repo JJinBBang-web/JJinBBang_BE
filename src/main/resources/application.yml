@@ -92,6 +92,15 @@ spring:
     encoding: UTF-8
     basename: ValidationMessages
 
+cloud:
+  aws:
+    region:
+      static: ${cloud.aws.region.static}
+    s3:
+      bucket: ${cloud.aws.s3.bucket}
+    cdn:
+      domain: ${cloud.aws.cdn.domain}
+
 jwt:
   secret: ${jwt.secret}
   expiration-time:
@@ -120,6 +129,9 @@ logging:
 app:
   repository:
     mode:
-#      inmemory
-      redis
+      inmemory
+#      redis
 
+user:
+  deletion:
+    grace-days: 30 # 사용자가 탈퇴한 후, 해당 사용자의 데이터가 삭제되기까지의 기간 (일 단위)

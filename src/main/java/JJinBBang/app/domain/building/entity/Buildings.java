@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,6 +68,18 @@ public class Buildings extends BaseEntity {
 
 	@Column(nullable = false)
 	private Integer imagesCount; // 이미지 수
+
+	@Column(nullable = true)
+	private Long avgDeposit; // 평균 보증금
+
+	@Column(nullable = true)
+	private Long avgMonthlyRent; // 평균 월세
+
+	@Column(nullable = true)
+	private Long avgMaintenanceCost; // 평균 관리비
+
+	@Column(nullable = true)
+	private Long avgRentDeposit; // 평균 전세
 
 	// 연관관계 매핑
 	// 캠퍼스 -> 건물
@@ -211,10 +224,13 @@ public class Buildings extends BaseEntity {
 		}
 	}
 
-	public void updateBuildingType(Set<BuildingType> newBuildingTypes) {
-		this.buildingType = newBuildingTypes.stream()
-				.map(BuildingType::toString)
-				.collect(Collectors.joining(","));
+	public void addBuildingType(BuildingType type) {
+		Set<BuildingType> set = new HashSet<>(this.getBuildingType());
+		set.add(type);
+
+		this.buildingType = set.stream()
+			.map(BuildingType::toString)
+			.collect(Collectors.joining(","));
 	}
 
     public void decrementLikeCount() {
@@ -228,5 +244,12 @@ public class Buildings extends BaseEntity {
 			this.likeCount = 0;
 		}
 		this.likeCount++;
+	}
+
+	public void applyAverages(Long avgDeposit, Long avgMaintenance, Long avgMonthlyRent, Long avgRentDeposit) {
+		this.avgDeposit         = avgDeposit;
+		this.avgMaintenanceCost = avgMaintenance;
+		this.avgMonthlyRent     = avgMonthlyRent;
+		this.avgRentDeposit     = avgRentDeposit;
 	}
 }

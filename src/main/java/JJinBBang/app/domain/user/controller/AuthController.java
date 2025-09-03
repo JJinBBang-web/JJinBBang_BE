@@ -1,11 +1,14 @@
 package JJinBBang.app.domain.user.controller;
 
+import java.time.LocalDateTime;
+
 import JJinBBang.app.domain.user.dto.request.IssueEmailCodeRequest;
 import JJinBBang.app.domain.user.dto.request.LoginRequest;
 import JJinBBang.app.domain.user.dto.request.VerifyEmailCodeRequest;
 import JJinBBang.app.domain.user.dto.response.TokenResponse;
 import JJinBBang.app.domain.user.dto.response.SignupRequiredResponse;
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.UserAuthException;
 import JJinBBang.app.domain.user.service.OAuthService;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.jwt.JwtUtils;
@@ -34,7 +37,7 @@ public class AuthController {
         // 소셜 로그인 API
 
         // 전달받은 provider에 따라 매칭되는 LoginService 인터페이스 구현체를 실행하여 소셜 로그인 진행
-        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode());
+        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode(), loginRequest.redirectUri());
 
         if (user.getUserId() == null) {
             // 약관 동의가 필요한 경우
@@ -45,6 +48,11 @@ public class AuthController {
             SignupRequiredResponse signupRequiredResponse = SignupRequiredResponse.of(signupToken);
             return new ResTemplate<>(HttpStatus.PRECONDITION_REQUIRED, "약관동의가 필요합니다.", signupRequiredResponse);
         } else {
+            if(user.getDisabledAt() != null && user.getDisabledAt().isBefore(LocalDateTime.now())) {
+                // 탈퇴한 유저인 경우
+                throw UserAuthException.deletedUser();
+            }
+
             // 약관 동의가 완료된 유저의 경우
             // user 객체는 DB에 저장된 상태 -> 엑세스 토큰, 리프레시 토큰 발급
             String accessToken = jwtUtils.generateAccessToken(user);
@@ -119,5 +127,13 @@ public class AuthController {
     ){
         jwtUtils.deleteRefreshToken(user.getUserId());
         return new ResTemplate<>(HttpStatus.OK, "로그아웃 성공", null);
+    }
+
+    @DeleteMapping("/user")
+    public ResTemplate<?> deleteUser(
+            @AuthenticationPrincipal Users user
+    ) {
+        usersService.deleteUser(user);
+        return new ResTemplate<>(HttpStatus.OK, "회원 탈퇴 성공", null);
     }
 }

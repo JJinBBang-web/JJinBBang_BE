@@ -18,4 +18,7 @@ public class NaverAuthException extends RuntimeException {
         return new NaverAuthException("네이버 API 엑세스 토큰으로 유저 정보 조회에 실패하였습니다.");
     }
 
+    public static NaverAuthException notAllowedRedirectUri() {
+        return new NaverAuthException("허용되지 않은 리다이렉트 URI 입니다.");
+    }
 }

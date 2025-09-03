@@ -1,6 +1,8 @@
 package JJinBBang.app.domain.building.repository;
 
 import JJinBBang.app.domain.building.entity.Buildings;
+import JJinBBang.app.domain.building.repository.custom.BuildingsRepositoryCustom;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;

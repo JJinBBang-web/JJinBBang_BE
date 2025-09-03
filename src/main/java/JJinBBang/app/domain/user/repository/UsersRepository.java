@@ -1,9 +1,13 @@
 package JJinBBang.app.domain.user.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import JJinBBang.app.domain.user.entity.Users;
 
@@ -15,4 +19,11 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Optional<Users> findWithUniversityByProviderId(String providerId);
 
     Optional<Users> findByUserId(Long userId);
+
+    @Query("SELECT u FROM Users u WHERE u.disabledAt IS NOT NULL AND u.disabledAt <= :deadline")
+    List<Users> findAllDeletionDue(@Param("deadline") LocalDateTime deadline);
+
+    boolean existsByProviderId(@Param("providerId") String providerId);
+
+    List<Users> findAllByDisabledAtIsNotNull();
 }

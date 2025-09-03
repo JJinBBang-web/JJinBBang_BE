@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.user.service.login;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.KakaoAuthException;
 import JJinBBang.app.domain.user.exception.NaverAuthException;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
@@ -13,6 +14,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -32,8 +34,11 @@ public class NaverLoginServiceImpl implements LoginService {
     @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
     private String clientSecret;
 
-    @Value("${spring.security.oauth2.client.registration.naver.redirect-uri}")
-    private String redirectUri;
+    @Value("${security.oauth.allowed-redirect-uri.local.naver}")
+    private String localRedirectUri;
+
+    @Value("${security.oauth.allowed-redirect-uri.prod.naver}")
+    private String prodRedirectUri;
 
     private final UsersService usersService;
 
@@ -48,9 +53,15 @@ public class NaverLoginServiceImpl implements LoginService {
     }
 
     @Override
-    public Users login(String oauthCode) {
+    public Users login(String oauthCode, String redirectUri) {
+        // redirectUri 검증
+        List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
+        if(redirectUri == null || !allowedRedirectUris.contains(redirectUri)){
+            throw NaverAuthException.notAllowedRedirectUri();
+        }
+
         // 1) 액세스 토큰 발급
-        String accessToken = getAccessToken(oauthCode);
+        String accessToken = getAccessToken(oauthCode, redirectUri);
 
         // 2) 유저 정보 조회
         Map<String, Object> naverUserInfo = getUserInfo(accessToken);
@@ -72,7 +83,7 @@ public class NaverLoginServiceImpl implements LoginService {
                 .build();
     }
 
-    private String getAccessToken(String code) {
+    private String getAccessToken(String code, String redirectUri) {
         try {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "authorization_code");

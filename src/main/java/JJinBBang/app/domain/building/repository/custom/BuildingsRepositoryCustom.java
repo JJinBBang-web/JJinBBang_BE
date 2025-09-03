@@ -1,4 +1,4 @@
-package JJinBBang.app.domain.building.repository;
+package JJinBBang.app.domain.building.repository.custom;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public interface BuildingsRepositoryCustom {
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
 		List<KeywordType> reviewKeywords,
-		List<String> campusNames
+		List<Long> campusIds
 	);
 
 	List<Buildings> searchBuildings(
@@ -28,6 +28,6 @@ public interface BuildingsRepositoryCustom {
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
 		List<KeywordType> reviewKeywords,
-		List<String> campusNames
+		List<Long> campusIds
 	);
 }

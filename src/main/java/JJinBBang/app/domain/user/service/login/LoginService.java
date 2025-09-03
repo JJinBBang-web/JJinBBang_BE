@@ -9,5 +9,5 @@ public interface LoginService {
 
     String makeProviderId(String id);
 
-    Users login(String oauthCode);
+    Users login(String oauthCode, String redirectUri);
 }

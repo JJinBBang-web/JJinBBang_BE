@@ -29,4 +29,8 @@ public interface UsersService {
 	Users verifyUniversityEmail(Users user, String universityEmail);
 
 	Users findByUserId(Long userId);
+
+	void deleteUser(Users user);
+
+	void forceDeleteExecute();
 }

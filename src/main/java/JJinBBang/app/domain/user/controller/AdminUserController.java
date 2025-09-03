@@ -2,13 +2,11 @@ package JJinBBang.app.domain.user.controller;
 
 import JJinBBang.app.domain.user.dto.request.UpdateVerificationStatusDto;
 import JJinBBang.app.domain.user.service.CertificateService;
+import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminUserController {
 
     private final CertificateService certificateService;
+    private final UsersService usersService;
 
     /**
      * Admin Controller
@@ -37,4 +36,16 @@ public class AdminUserController {
                 null
         );
     }
+
+    @DeleteMapping("/deletedUsers/executeDeletion")
+    public ResTemplate<?> executeUserDeletion() {
+        usersService.forceDeleteExecute();
+        return new ResTemplate<>(
+                HttpStatus.OK,
+                "탈퇴한 유저의 데이터 영구 삭제 완료",
+                null
+        );
+    }
+
+
 }

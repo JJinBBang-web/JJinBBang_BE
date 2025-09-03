@@ -39,7 +39,7 @@ public record InfoDto(
         return InfoDto.builder()
                 .generalBuildingInfo(GeneralBuildingInfo.of(building,liked))
                 .reviewInfo(ReviewInfo.ofBuilding(review,building))
-                .image(review.getThumbnailImage())
+                .image(review != null ? review.getThumbnailImage() : null)
                 .build();
     }
 
@@ -55,7 +55,7 @@ public record InfoDto(
         return InfoDto.builder()
                 .dormitoryBuildingInfo(DormitoryBuildingInfo.of(building,universityName,liked))
                 .reviewInfo(ReviewInfo.ofBuilding(review,building))
-                .image(review.getThumbnailImage())
+                .image(review != null ? review.getThumbnailImage() : null)
                 .build();
     }
 
@@ -71,7 +71,7 @@ public record InfoDto(
         return InfoDto.builder()
                 .agencyBuildingInfo(AgencyBuildingInfo.of(agency,liked))
                 .reviewInfo(ReviewInfo.ofAgency(review,agency))
-                .image(review.getThumbnailImage())
+                .image(review != null ? review.getThumbnailImage() : null)
                 .build();
     }
 }

@@ -2,6 +2,7 @@ package JJinBBang.app.domain.user.dto.request;
 
 public record LoginRequest(
         String oauthProvider,
-        String oauthCode
+        String oauthCode,
+		String redirectUri
 ) {
 }

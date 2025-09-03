@@ -23,19 +23,19 @@ public record Building (
 			.type(buildingType)
 			.address(building.getBuildingAddress())
 			.latitude(building.getBuildingLat())
-			.longitude(building.getBuildingLat())
+			.longitude(building.getBuildingLot())
 			.build();
 	}
 
 	public static Building of(Agencies agency, BuildingType buildingType) {
 		return Building.builder()
 			.buildingId(agency.getAgencyId())
-			.buildingCode(agency.getBuildingCode())
+			.buildingCode(agency.getAgencySerial())
 			.name(agency.getName())
 			.type(buildingType)
 			.address(agency.getAddress())
 			.latitude(agency.getAgencyLat())
-			.longitude(agency.getAgencyLat())
+			.longitude(agency.getAgencyLot())
 			.build();
 	}
 }

@@ -1,4 +1,4 @@
-package JJinBBang.app.domain.building.repository;
+package JJinBBang.app.domain.building.repository.custom;
 
 import java.util.List;
 
@@ -9,8 +9,10 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.entity.GeneralReviews;
+import JJinBBang.app.domain.building.entity.QAgencies;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
+import JJinBBang.app.domain.building.repository.custom.BuildingsRepositoryCustom;
 import JJinBBang.app.global.common.enums.KeywordType;
 import lombok.RequiredArgsConstructor;
 
@@ -34,12 +36,13 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
 		List<KeywordType> reviewKeywords,
-		List<String> campusNames
+		List<Long> campusIds
 	) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
 		QReviews r = QReviews.reviews;
 		QGeneralReviews gr = QGeneralReviews.generalReviews;
+		QAgencies a = QAgencies.agencies;
 
 		BooleanBuilder builder = new BooleanBuilder();
 
@@ -57,8 +60,9 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		}
 
 		// 3. 캠퍼스 필터
-		if (campusNames != null && !campusNames.isEmpty()) {
-			builder.and(b.campus.campusName.in(campusNames));
+		// 3. 캠퍼스 필터
+		if (campusIds != null && !campusIds.isEmpty()) {
+			builder.and(b.campus.id.in(campusIds));
 		}
 
 		// 4. Treat()를 이용한 GeneralReviews 전용 조인
@@ -104,18 +108,21 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
 		List<KeywordType> reviewKeywords,
-		List<String> campusNames
+		List<Long> campusIds
 	) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
 		QReviews r = QReviews.reviews;
 		QGeneralReviews gr = QGeneralReviews.generalReviews;
+		QAgencies a = QAgencies.agencies;
 
 		BooleanBuilder builder = new BooleanBuilder();
 
 		if (keyword != null && !keyword.isEmpty()) {
 			builder.and(b.buildingName.containsIgnoreCase(keyword)
-				.or(b.buildingAddress.containsIgnoreCase(keyword)));
+				.or(b.buildingAddress.containsIgnoreCase(keyword))
+				.or(a.name.containsIgnoreCase(keyword))
+				.or(a.address.containsIgnoreCase(keyword)));
 		}
 
 		if (buildTypes != null && !buildTypes.contains(BuildingType.ALL)) {
@@ -126,8 +133,8 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			builder.and(typeBuilder);
 		}
 
-		if (campusNames != null && !campusNames.isEmpty()) {
-			builder.and(b.campus.campusName.in(campusNames));
+		if (campusIds != null && !campusIds.isEmpty()) {
+			builder.and(b.campus.id.in(campusIds));
 		}
 
 		PathBuilder<GeneralReviews> grPath = new PathBuilder<>(GeneralReviews.class, "generalReview");
@@ -138,6 +145,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			.leftJoin(b.reviews, r).fetchJoin()
 			.leftJoin(treated).on(r.id.eq(treated.id))
 			.leftJoin(b.campus, c).fetchJoin()
+			.leftJoin(a).on(b.buildingCode.stringValue().eq(a.agencySerial))
 			.where(builder);
 
 		if (contractType != null) {
