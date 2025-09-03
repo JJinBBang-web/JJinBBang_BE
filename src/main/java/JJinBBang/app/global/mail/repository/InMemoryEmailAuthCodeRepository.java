@@ -30,11 +30,11 @@ public class InMemoryEmailAuthCodeRepository implements EmailAuthCodeRepository 
 
     @Override
     public void save(Long userId, String email, String authCode) {
-        EmailAuthInfo info = new EmailAuthInfo(email, authCode, System.currentTimeMillis());
-        EmailAuthInfo prev = emailAuthCodeMap.putIfAbsent(userId, info);
-        if (prev != null) {
-            throw new DuplicateKeyException("Duplicate key: " + userId);
-        }
+        long now = System.currentTimeMillis();
+        emailAuthCodeMap.compute(userId, (k, prev) -> {
+            // prev가 없거나, 만료됐거나, 혹은 정책상 재발급은 항상 갱신
+            return new EmailAuthInfo(email, authCode, now);
+        });
     }
 
     @Override
