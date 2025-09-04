@@ -102,6 +102,7 @@ public class AuthController {
         boolean verifyResult = mailAuthService.verifyAuthCode(user.getUserId(), email, code);
         if(verifyResult) {
             usersService.verifyUniversityEmail(user, email);
+            mailAuthService.deleteAuthCode(user.getUserId());
             return new ResTemplate<>(HttpStatus.OK, "인증이 완료되었습니다.", null);
         } else {
             return new ResTemplate<>(HttpStatus.I_AM_A_TEAPOT, "인증코드 검증에 실패하였습니다.", null);

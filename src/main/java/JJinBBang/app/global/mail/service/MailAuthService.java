@@ -30,4 +30,10 @@ public interface MailAuthService {
      * @throws MailInvalidException  코드 미발급·만료
      */
     boolean verifyAuthCode(Long userId, String email, String authCode);
+
+    /**
+     * 주어진 userId에 대한 인증코드를 삭제합니다.
+     * @param userId 인증코드를 발급받은 유저의 아이디
+     */
+    void deleteAuthCode(Long userId);
 }

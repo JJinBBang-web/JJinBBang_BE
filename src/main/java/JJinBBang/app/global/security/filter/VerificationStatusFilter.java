@@ -5,24 +5,24 @@ import JJinBBang.app.global.security.SecurityPathProperties;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
 import JJinBBang.app.domain.user.entity.Users;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 특정 경로에서 사용자의 verificationStatus(이메일 인증 상태)를 확인하는 필터
@@ -33,6 +33,8 @@ import java.util.Objects;
 public class VerificationStatusFilter extends OncePerRequestFilter {
 
     private final SecurityPathProperties securityPathProperties;
+    private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
+    private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
     private final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
@@ -53,15 +55,16 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
             if (isMatch) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                // 인증이 없을 경우 401 Unauthorized 반환
+                // 인증이 없을 경우
                 if (authentication == null || !(authentication.getPrincipal() instanceof Users user)) {
-                    makeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, SecurityAuthException.noAuthentication());
+                    authenticationEntryPoint.commence(request, response, SecurityAuthException.noAuthentication());
                     return;
                 }
 
-                if(!isValidVerificationStatus(user.getVerificationStatus(), requiredStatus)) {
-                    makeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN,
-                            getCustomSecurityAuthException(requiredStatus));
+                AccessDeniedException exception = getCustomSecurityAuthException(
+                    user.getVerificationStatus(), requiredStatus);
+                if(exception != null) {
+                    accessDeniedHandler.handle(request, response, exception);
                     return;
                 }
             }
@@ -71,21 +74,11 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isValidVerificationStatus(VerificationStatus userStatus, VerificationStatus requiredStatus) {
-		if (requiredStatus.equals(VerificationStatus.VERIFIED)) {
-			return userStatus.equals(VerificationStatus.EMAIL_VERIFIED) ||
-				userStatus.equals(VerificationStatus.ENROLL_STUDENT_VERIFIED) ||
-				userStatus.equals(VerificationStatus.NEW_STUDENT_VERIFIED);
-		}
-		return userStatus.equals(requiredStatus);
-	}
-
-
-    /**
-     * 현재 verificationStatus와 필요한 verificationStatus를 비교하여 예외 메시지 생성
-     */
-    private AuthenticationException getCustomSecurityAuthException(VerificationStatus requiredStatus) {
-        // userStatus와 requiredStatus 매칭이 유효하지 않은 경우에만 함수 실행
+    private SecurityAccessDeniedException getCustomSecurityAuthException(VerificationStatus userStatus, VerificationStatus requiredStatus) {
+        if(isValidVerificationStatus(userStatus, requiredStatus)) {
+            // 유효한 상태인 경우
+            return null;
+        }
 
         switch (requiredStatus){
             case VERIFIED -> {
@@ -113,19 +106,17 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
                 return SecurityAccessDeniedException.unverifiedStatusRequired();
             }
             default -> {
-                return SecurityAuthException.noPermission();
+                return SecurityAccessDeniedException.wrongAccess();
             }
         }
     }
 
-
-    private void makeErrorResponse(HttpServletResponse response, int status, AuthenticationException exception) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(status);
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("code", status);
-        errorDetails.put("message", exception.getMessage());
-        ObjectMapper mapper = new ObjectMapper();
-        response.getWriter().write(mapper.writeValueAsString(errorDetails));
+    private boolean isValidVerificationStatus(VerificationStatus userStatus, VerificationStatus requiredStatus) {
+        if (requiredStatus.equals(VerificationStatus.VERIFIED)) {
+            return userStatus.equals(VerificationStatus.EMAIL_VERIFIED) ||
+                userStatus.equals(VerificationStatus.ENROLL_STUDENT_VERIFIED) ||
+                userStatus.equals(VerificationStatus.NEW_STUDENT_VERIFIED);
+        }
+        return userStatus.equals(requiredStatus);
     }
 }

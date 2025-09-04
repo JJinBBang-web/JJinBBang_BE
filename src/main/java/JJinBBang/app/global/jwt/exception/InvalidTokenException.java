@@ -1,8 +1,8 @@
 package JJinBBang.app.global.jwt.exception;
 
-import JJinBBang.app.global.error.exception.AuthGroupException;
+import org.springframework.security.core.AuthenticationException;
 
-public class InvalidTokenException extends AuthGroupException {
+public class InvalidTokenException extends AuthenticationException {
 	public InvalidTokenException(String message) {
 		super(message);
 	}
@@ -32,5 +32,9 @@ public class InvalidTokenException extends AuthGroupException {
 
 	public static InvalidTokenException deletedUser() {
 		return new InvalidTokenException("탈퇴한 유저입니다.");
+	}
+
+	public static InvalidTokenException userNotFound() {
+		return new InvalidTokenException("존재하지 않는 유저입니다.");
 	}
 }

@@ -3,6 +3,7 @@ package JJinBBang.app.global.security;
 import java.util.List;
 import java.util.Map;
 
+import JJinBBang.app.domain.user.enums.UserRole;
 import JJinBBang.app.global.security.filter.PendingUserFilter;
 import JJinBBang.app.global.security.filter.VerificationStatusFilter;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -28,7 +31,8 @@ public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final SecurityPathProperties securityPathProperties;
-	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	private final AuthenticationEntryPoint authenticationEntryPoint;
+	private final AccessDeniedHandler accessDeniedHandler;
 	private final PendingUserFilter pendingUserFilter;
 	private final VerificationStatusFilter verificationStatusFilter;
 
@@ -57,6 +61,48 @@ public class SecurityConfig {
 		return source;
 	}
 
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+		httpSecurity.
+				httpBasic(HttpBasicConfigurer::disable)
+				.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource())) // CORS 설정 추가
+				.csrf(AbstractHttpConfigurer::disable)
+				.exceptionHandling(ex -> ex
+						.authenticationEntryPoint(authenticationEntryPoint) // 401 (인증이 없는거)
+						.accessDeniedHandler(accessDeniedHandler) // 403 (권한이 잘못된거)
+				)
+				.authorizeHttpRequests(authorize -> {
+					authorize
+							.requestMatchers(securityPathProperties.getPermitAll().toArray(new String[0])).permitAll()
+							.requestMatchers(securityPathProperties.getAuthenticated().toArray(new String[0])).authenticated()
+							.requestMatchers(securityPathProperties.getRefresh().toArray(new String[0])).authenticated()
+							.requestMatchers(securityPathProperties.getAnonymous().toArray(new String[0])).anonymous()
+							.requestMatchers(securityPathProperties.getAdmin().toArray(new String[0])).hasRole(UserRole.ADMIN.name())
+					;
+
+
+					switch (securityPathProperties.getAnyRequest()) {
+						case "permit-all":
+							authorize.anyRequest().permitAll();
+							break;
+						case "anonymous":
+							authorize.anyRequest().anonymous();
+							break;
+						case "authenticated":
+						default:
+							authorize.anyRequest().authenticated();
+							break;
+					}
+				})
+				.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(pendingUserFilter, VerificationStatusFilter.class)
+				.addFilterBefore(jwtAuthenticationFilter, PendingUserFilter.class)
+
+				;
+		return httpSecurity.build();
+	}
+
+	/*
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
@@ -126,4 +172,6 @@ public class SecurityConfig {
 
 		return http.build();
 	}
+
+	 */
 }
