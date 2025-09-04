@@ -7,7 +7,7 @@ import java.util.List;
 
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.jwt.enums.TokenType;
-import JJinBBang.app.global.security.SecurityPathMatcher;
+import JJinBBang.app.global.security.SecurityPathMatchUtil;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtUtils jwtUtils;
 	private final UsersService usersService;
 	private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
-	private final SecurityPathMatcher securityPathMatcher;
+	private final SecurityPathMatchUtil securityPathMatchUtil;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -59,8 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				// 유저의 권한
 				List<GrantedAuthority> authorities = Collections.emptyList();
 
-				boolean isPendingUserPath = securityPathMatcher.pendingUserMatch(request);
-				boolean isRefreshPath = securityPathMatcher.refreshTokenMatch(request);
+				boolean isPendingUserPath = securityPathMatchUtil.pendingUserMatch(request);
+				boolean isRefreshPath = securityPathMatchUtil.refreshTokenMatch(request);
 
 				if(tokenType.equals(TokenType.SIGNUP.getType())){
 					// 회원가입용 토큰인 경우

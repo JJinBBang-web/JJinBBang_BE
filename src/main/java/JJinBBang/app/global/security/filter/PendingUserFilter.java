@@ -1,7 +1,7 @@
 package JJinBBang.app.global.security.filter;
 
 import JJinBBang.app.domain.user.entity.Users;
-import JJinBBang.app.global.security.SecurityPathMatcher;
+import JJinBBang.app.global.security.SecurityPathMatchUtil;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
 import jakarta.servlet.FilterChain;
@@ -23,13 +23,13 @@ import java.io.IOException;
 public class PendingUserFilter extends OncePerRequestFilter {
     private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
     private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
-    private final SecurityPathMatcher securityPathMatcher;
+    private final SecurityPathMatchUtil securityPathMatchUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (securityPathMatcher.pendingUserMatch(request)) {
+        if (securityPathMatchUtil.pendingUserMatch(request)) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             // 인증이 없을 경우 401 Unauthorized 반환

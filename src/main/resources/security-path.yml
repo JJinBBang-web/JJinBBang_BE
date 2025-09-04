@@ -1,3 +1,23 @@
+# 경로 설정 시 서로 다른 카테고리에 중복된 경로가 존재할 경우, 의도하지 않은 접근 제어가 발생할 수 있으므로 주의해야 합니다.
+
+# 구조도
+# security
+# └── path
+#     ├── permit-all                    : 모든 요청에 대해 인증을 요구하지 않음
+#     ├── authenticated                 : 인증된 사용자만 접근 가능
+#     ├── anonymous                     : 인증되지 않은 사용자만 접근 가능
+#     ├── verification-status-based     : 유저의 학교 인증 상태에 따라 접근 가능
+#     │   ├── VERIFIED                  : 어떠한 방식으로든 대학교 인증을 받은 사용자만 접근 가능
+#     │   ├── EMAIL_VERIFIED            : 이메일 인증을 수행한 사용자만 접근 가능
+#     │   ├── ENROLL_STUDENT_VERIFIED   : 재학생 인증을 수행한 사용자만 접근 가능
+#     │   ├── NEW_STUDENT_VERIFIED      : 신입생 인증을 수행한 사용자만 접근 가능
+#     │   ├── UNVERIFIED                : 대학교 인증을 수행하지 않은 사용자만 접근 가능
+#     │   └── PENDING                   : 대학교 인증(재학생 or 신입생) 검토중인 사용자만 접근 가능
+#     ├── pending-user                  : 약관 동의를 하지 않아 DB에 유저 엔티티 생성 대기중인 경우에만 접근 가능 (JWT 토큰 필요)
+#     ├── refresh                       : 리프레시 토큰을 이용한 토큰 갱신 요청에 대한 경로 설정
+#     └── any-request                   : 위에서 설정하지 않은 모든 요청에 대한 접근 제어 설정
+
+
 security:
   path:
     # 모든 요청에 대해 인증을 요구하지 않는 경로 설정
@@ -78,7 +98,7 @@ security:
       # 이메일 인증을 수행한 사용자만 접근 가능한 경로
       EMAIL_VERIFIED:
         ALL:
-          - "/api/v1/test/emailVerified"
+          - "/api/v1/test/emailVerified/**"
         GET:
 #          - "/api/v1/test/emailVerified"
         POST:

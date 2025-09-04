@@ -1,7 +1,7 @@
 package JJinBBang.app.global.security.filter;
 
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import JJinBBang.app.global.security.SecurityPathMatcher;
+import JJinBBang.app.global.security.SecurityPathMatchUtil;
 import JJinBBang.app.global.security.SecurityPathProperties;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
@@ -35,42 +35,29 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
     private final SecurityPathProperties securityPathProperties;
     private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
     private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
-    private final SecurityPathMatcher securityPathMatcher;
+    private final SecurityPathMatchUtil securityPathMatchUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String requestURI = request.getRequestURI();
-        System.out.println("requestURI = " + requestURI);
-        String method = request.getMethod();
-        System.out.println("method = " + method);
 
-        Map<String, Map<String, List<String>>> verificationStatusPaths = securityPathProperties.getVerificationStatusBased();
+        // 이 요청이 어떤 VerificationStatus를 요구하는 경로에 매칭되는지 확인
+        VerificationStatus required = securityPathMatchUtil.matchAnyVerificationRequired(request);
+        if (required == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        // verificationStatus 확인
-        for (Map.Entry<String, Map<String, List<String>>> entry : verificationStatusPaths.entrySet()) {
-            // 필요한 학교 인증 상태
-            VerificationStatus requiredStatus = VerificationStatus.valueOf(entry.getKey());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Users user)) {
+            authenticationEntryPoint.commence(request, response, SecurityAuthException.noAuthentication());
+            return;
+        }
 
-            // 현재 순회하는 학교인증상태 경로 중에서 요청 method에 해당하는 경로들
-            boolean isMatch = securityPathMatcher.match(requestURI, method, entry.getValue());
-
-            if (isMatch) {
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-                // 인증이 없을 경우
-                if (authentication == null || !(authentication.getPrincipal() instanceof Users user)) {
-                    authenticationEntryPoint.commence(request, response, SecurityAuthException.noAuthentication());
-                    return;
-                }
-
-                AccessDeniedException exception = getCustomSecurityAuthException(
-                    user.getVerificationStatus(), requiredStatus);
-                if(exception != null) {
-                    accessDeniedHandler.handle(request, response, exception);
-                    return;
-                }
-            }
+        AccessDeniedException ex = getCustomSecurityAuthException(user.getVerificationStatus(), required);
+        if (ex != null) {
+            accessDeniedHandler.handle(request, response, ex);
+            return;
         }
 
         // 검증 성공 시 필터 체인 계속 진행
