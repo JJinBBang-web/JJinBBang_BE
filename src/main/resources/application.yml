@@ -126,8 +126,8 @@ logging:
 app:
   repository:
     mode:
-      inmemory
-#      redis
+#      inmemory
+      redis
 
 user:
   deletion:
@@ -176,5 +176,7 @@ security:
       - "/api/v1/auth/signup"
     refresh:
       - "/api/v1/auth/tokenRefresh"
+    admin:
+      - "/api/admin/**"
     any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
 

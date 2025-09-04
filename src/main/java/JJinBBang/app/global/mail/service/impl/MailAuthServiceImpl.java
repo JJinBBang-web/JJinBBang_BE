@@ -41,6 +41,10 @@ public class MailAuthServiceImpl implements MailAuthService {
         return savedAuthCode.email().equals(email) && savedAuthCode.code().equals(authCode);
     }
 
+    @Override
+    public void deleteAuthCode(Long userId) {
+        emailAuthCodeRepository.deleteByUserId(userId);
+    }
 
     // utility --------------------------------------------------------------------------------------------------------
     private String generateAuthCode() {
@@ -54,11 +58,6 @@ public class MailAuthServiceImpl implements MailAuthService {
     }
 
     private void saveAuthCode(Long userId, String email, String authCode) {
-        if(emailAuthCodeRepository.isExistByUserId(userId)) {
-            // 이미 인증 코드가 발급된 이메일인 경우
-            log.info("이미 인증 코드가 발급된 이메일입니다. [userId: {}]. 기존 인증 코드를 삭제합니다.", userId);
-            emailAuthCodeRepository.deleteByUserId(userId);
-        }
         emailAuthCodeRepository.save(userId, email, authCode);
     }
 

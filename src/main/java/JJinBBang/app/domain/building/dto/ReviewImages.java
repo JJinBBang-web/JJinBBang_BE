@@ -4,6 +4,7 @@ import java.util.List;
 
 import JJinBBang.app.domain.building.entity.Agencies;
 import JJinBBang.app.domain.building.entity.Buildings;
+import JJinBBang.app.domain.building.entity.ReviewDetails;
 import JJinBBang.app.domain.building.entity.Reviews;
 import lombok.Builder;
 
@@ -24,5 +25,12 @@ public record ReviewImages(
 				.count(agency.getImagesCount())
 				.imageUrl(agency.getReviews().stream().map(Reviews::getThumbnailImage).toList())
 				.build();
+	}
+
+	public static ReviewImages from(ReviewDetails reviewDetails) {
+		return ReviewImages.builder()
+			.count(reviewDetails.getImageCount())
+			.imageUrl(reviewDetails.getImages())
+			.build();
 	}
 }

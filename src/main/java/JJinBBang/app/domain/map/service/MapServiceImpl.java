@@ -102,7 +102,7 @@ public class MapServiceImpl implements MapService{
 			// 건물에 딸린 리뷰 ID별로 마커 생성
 			buildings.forEach(b ->
 				b.getReviews().forEach(r ->
-					markers.add(new MarkerInfo(
+					markers.add(MarkerInfo.fromReview(
 						r.getId(),
 						b.getBuildingType().get(0),
 						b.getBuildingLat(),
@@ -110,25 +110,28 @@ public class MapServiceImpl implements MapService{
 
 			agencies.forEach(a ->
 				a.getReviews().forEach(r ->
-					markers.add(new MarkerInfo(
+					markers.add(MarkerInfo.fromReview(
 						r.getId(),
 						BuildingType.AGENCY,
 						a.getAgencyLat(),
 						a.getAgencyLot()))));
 		} else {
 			buildings.forEach(b ->
-				markers.add(new MarkerInfo(
-					b.getId(),
-					b.getBuildingType().get(0),
-					b.getBuildingLat(),
-					b.getBuildingLot())));
+				markers.add(MarkerInfo.fromBuidling(
+                        b.getId(),
+                        b.getBuildingType().get(0),
+                        b.getBuildingLat(),
+                        b.getBuildingLot(),
+                        b.getReviewCount() > 0
+                )));
 
 			agencies.forEach(a ->
-				markers.add(new MarkerInfo(
+				markers.add(MarkerInfo.fromBuidling(
 					a.getAgencyId(),
 					BuildingType.AGENCY,
 					a.getAgencyLat(),
-					a.getAgencyLot())));
+					a.getAgencyLot(),
+           a.getReviewCount() > 0)));
 		}
 
 		return markers;
