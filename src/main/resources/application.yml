@@ -129,8 +129,8 @@ logging:
 app:
   repository:
     mode:
-      inmemory
-#      redis
+#      inmemory
+      redis
 
 user:
   deletion:
