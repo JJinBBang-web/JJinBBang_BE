@@ -1,6 +1,7 @@
 package JJinBBang.app.global.security.filter;
 
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.security.SecurityPathMatcher;
 import JJinBBang.app.global.security.SecurityPathProperties;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
@@ -17,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -35,22 +35,25 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
     private final SecurityPathProperties securityPathProperties;
     private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
     private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
-    private final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    private final SecurityPathMatcher securityPathMatcher;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        System.out.println("requestURI = " + requestURI);
+        String method = request.getMethod();
+        System.out.println("method = " + method);
 
         Map<String, Map<String, List<String>>> verificationStatusPaths = securityPathProperties.getVerificationStatusBased();
-        String requestURI = request.getRequestURI();
-
 
         // verificationStatus 확인
-        for (Map.Entry<String, List<String>> entry : verificationStatusPaths.entrySet()) {
+        for (Map.Entry<String, Map<String, List<String>>> entry : verificationStatusPaths.entrySet()) {
+            // 필요한 학교 인증 상태
             VerificationStatus requiredStatus = VerificationStatus.valueOf(entry.getKey());
 
-            boolean isMatch = entry.getValue().stream()
-                .anyMatch(pattern -> PATH_MATCHER.match(pattern, requestURI));
+            // 현재 순회하는 학교인증상태 경로 중에서 요청 method에 해당하는 경로들
+            boolean isMatch = securityPathMatcher.match(requestURI, method, entry.getValue());
 
             if (isMatch) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -1,7 +1,7 @@
 package JJinBBang.app.global.security.filter;
 
 import JJinBBang.app.domain.user.entity.Users;
-import JJinBBang.app.global.security.SecurityPathProperties;
+import JJinBBang.app.global.security.SecurityPathMatcher;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
 import jakarta.servlet.FilterChain;
@@ -14,31 +14,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class PendingUserFilter extends OncePerRequestFilter {
-    private final SecurityPathProperties securityPathProperties;
     private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
     private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
-    private final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    private final SecurityPathMatcher securityPathMatcher;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        List<String> pendingUserPaths = securityPathProperties.getPendingUser().values().stream()
-            .flatMap(List::stream).toList();
-        String requestURI = request.getRequestURI();
-
-        boolean isMatch = pendingUserPaths.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, requestURI));
-
-        if (isMatch) {
+        if (securityPathMatcher.pendingUserMatch(request)) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             // 인증이 없을 경우 401 Unauthorized 반환

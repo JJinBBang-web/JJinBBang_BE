@@ -1,9 +1,10 @@
 package JJinBBang.app.global.security;
 
+import static JJinBBang.app.global.security.SecurityPathProperties.*;
+
 import java.util.List;
 import java.util.Map;
 
-import JJinBBang.app.domain.user.enums.UserRole;
 import JJinBBang.app.global.security.filter.PendingUserFilter;
 import JJinBBang.app.global.security.filter.VerificationStatusFilter;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -61,111 +63,18 @@ public class SecurityConfig {
 		return source;
 	}
 
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.
-				httpBasic(HttpBasicConfigurer::disable)
-				.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource())) // CORS 설정 추가
-				.csrf(AbstractHttpConfigurer::disable)
-				.exceptionHandling(ex -> ex
-						.authenticationEntryPoint(authenticationEntryPoint) // 401 (인증이 없는거)
-						.accessDeniedHandler(accessDeniedHandler) // 403 (권한이 잘못된거)
-				)
-				.authorizeHttpRequests(authorize -> {
-					authorize
-							.requestMatchers(securityPathProperties.getPermitAll().toArray(new String[0])).permitAll()
-							.requestMatchers(securityPathProperties.getAuthenticated().toArray(new String[0])).authenticated()
-							.requestMatchers(securityPathProperties.getRefresh().toArray(new String[0])).authenticated()
-							.requestMatchers(securityPathProperties.getAnonymous().toArray(new String[0])).anonymous()
-							.requestMatchers(securityPathProperties.getAdmin().toArray(new String[0])).hasRole(UserRole.ADMIN.name())
-					;
 
-
-					switch (securityPathProperties.getAnyRequest()) {
-						case "permit-all":
-							authorize.anyRequest().permitAll();
-							break;
-						case "anonymous":
-							authorize.anyRequest().anonymous();
-							break;
-						case "authenticated":
-						default:
-							authorize.anyRequest().authenticated();
-							break;
-					}
-				})
-				.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
-				.addFilterBefore(pendingUserFilter, VerificationStatusFilter.class)
-				.addFilterBefore(jwtAuthenticationFilter, PendingUserFilter.class)
-
-				;
-		return httpSecurity.build();
-	}
-
-	/*
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
 			.httpBasic(HttpBasicConfigurer::disable)
 			.cors(c -> c.configurationSource(corsConfigurationSource()))
 			.csrf(AbstractHttpConfigurer::disable)
-			.exceptionHandling(e -> e.authenticationEntryPoint(customAuthenticationEntryPoint))
-			.authorizeHttpRequests(authorize -> {
-				// 1) permitAll: 특정 메서드 우선 → ALL
-				Map<String, List<String>> permit = securityPathProperties.getPermitAll();
-				permit.entrySet().stream()
-					.filter(e -> !"ALL".equalsIgnoreCase(e.getKey()))
-					.forEach(e -> {
-						HttpMethod m = HttpMethod.valueOf(e.getKey());
-						e.getValue().forEach(p -> authorize.requestMatchers(m, p).permitAll());
-					});
-				if (permit.containsKey("ALL")) {
-					permit.get("ALL").forEach(p -> authorize.requestMatchers(p).permitAll());
-				}
-
-				// 2) authenticated
-				Map<String, List<String>> auth = securityPathProperties.getAuthenticated();
-				auth.entrySet().stream()
-					.filter(e -> !"ALL".equalsIgnoreCase(e.getKey()))
-					.forEach(e -> {
-						HttpMethod m = HttpMethod.valueOf(e.getKey());
-						e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
-					});
-				if (auth.containsKey("ALL")) {
-					auth.get("ALL").forEach(p -> authorize.requestMatchers(p).authenticated());
-				}
-
-				// 3) anonymous
-				Map<String, List<String>> anon = securityPathProperties.getAnonymous();
-				anon.entrySet().stream()
-					.filter(e -> !"ALL".equalsIgnoreCase(e.getKey()))
-					.forEach(e -> {
-						HttpMethod m = HttpMethod.valueOf(e.getKey());
-						e.getValue().forEach(p -> authorize.requestMatchers(m, p).anonymous());
-					});
-				if (anon.containsKey("ALL")) {
-					anon.get("ALL").forEach(p -> authorize.requestMatchers(p).anonymous());
-				}
-
-				// 4) refresh (인증 처리)
-				Map<String, List<String>> ref = securityPathProperties.getRefresh();
-				ref.entrySet().stream()
-					.filter(e -> !"ALL".equalsIgnoreCase(e.getKey()))
-					.forEach(e -> {
-						HttpMethod m = HttpMethod.valueOf(e.getKey());
-						e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
-					});
-				if (ref.containsKey("ALL")) {
-					ref.get("ALL").forEach(p -> authorize.requestMatchers(p).authenticated());
-				}
-
-				// anyRequest
-				switch (securityPathProperties.getAnyRequest()) {
-					case "permit-all"  -> authorize.anyRequest().permitAll();
-					case "anonymous"   -> authorize.anyRequest().anonymous();
-					default            -> authorize.anyRequest().authenticated();
-				}
-			})
+			.exceptionHandling(e -> e
+				.authenticationEntryPoint(authenticationEntryPoint)
+				.accessDeniedHandler(accessDeniedHandler)
+			)
+			.authorizeHttpRequests(this::authorizeSetting)
 			.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
 			.addFilterBefore(pendingUserFilter, VerificationStatusFilter.class)
 			.addFilterBefore(jwtAuthenticationFilter, PendingUserFilter.class);
@@ -173,5 +82,62 @@ public class SecurityConfig {
 		return http.build();
 	}
 
-	 */
+	private void authorizeSetting(
+		AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorize) {
+		// 특정 메서드 우선 → ALL
+		// 1) permitAll 등록된 경로 권한 설정
+		Map<String, List<String>> permit = securityPathProperties.getPermitAll();
+		permit.entrySet().stream()
+			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+			.forEach(e -> {
+				HttpMethod m = HttpMethod.valueOf(e.getKey());
+				e.getValue().forEach(p -> authorize.requestMatchers(m, p).permitAll());
+			});
+		if (permit.containsKey(METHOD_ALL)) {
+			permit.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).permitAll());
+		}
+
+		// 2) authenticated 등록된 경로 권한 설정
+		Map<String, List<String>> auth = securityPathProperties.getAuthenticated();
+		auth.entrySet().stream()
+			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+			.forEach(e -> {
+				HttpMethod m = HttpMethod.valueOf(e.getKey());
+				e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
+			});
+		if (auth.containsKey(METHOD_ALL)) {
+			auth.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).authenticated());
+		}
+
+		// 3) anonymous 등록된 경로 권한 설정
+		Map<String, List<String>> anon = securityPathProperties.getAnonymous();
+		anon.entrySet().stream()
+			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+			.forEach(e -> {
+				HttpMethod m = HttpMethod.valueOf(e.getKey());
+				e.getValue().forEach(p -> authorize.requestMatchers(m, p).anonymous());
+			});
+		if (anon.containsKey(METHOD_ALL)) {
+			anon.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).anonymous());
+		}
+
+		// 4) refresh 등록된 경로 권한 설정 (리프레시 토큰)
+		Map<String, List<String>> ref = securityPathProperties.getRefresh();
+		ref.entrySet().stream()
+			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+			.forEach(e -> {
+				HttpMethod m = HttpMethod.valueOf(e.getKey());
+				e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
+			});
+		if (ref.containsKey(METHOD_ALL)) {
+			ref.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).authenticated());
+		}
+
+		// anyRequest
+		switch (securityPathProperties.getAnyRequest()) {
+			case "permit-all"  -> authorize.anyRequest().permitAll();
+			case "anonymous"   -> authorize.anyRequest().anonymous();
+			default            -> authorize.anyRequest().authenticated();
+		}
+	}
 }

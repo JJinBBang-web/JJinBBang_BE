@@ -9,15 +9,15 @@ security:
       #        - "/api/v1/user/**"
       #        - "/api/v1/map/**"
       GET:
-        - "/api/v1/test"
+        - "/api/v1/test/permit-all"
       POST:
-        - "/api/v1/test"
+        - "/api/v1/test/permit-all"
       PUT:
-        - "/api/v1/test"
+        - "/api/v1/test/permit-all"
       PATCH:
-        - "/api/v1/test"
+        - "/api/v1/test/permit-all"
       DELETE:
-        - "/api/v1/test"
+        - "/api/v1/test/permit-all"
 
     # 인증된 사용자만 접근 가능한 경로 설정
     authenticated:
@@ -33,156 +33,156 @@ security:
       #        - "/api/v1/review/**"
       #        - "/api/v1/notification/**"
       GET:
-        - "/api/v1/test"
+        - "/api/v1/test/authenticated"
       POST:
-        - "/api/v1/test"
+        - "/api/v1/test/authenticated"
       PUT:
-        - "/api/v1/test"
+        - "/api/v1/test/authenticated"
       PATCH:
-        - "/api/v1/test"
+        - "/api/v1/test/authenticated"
       DELETE:
-        - "/api/v1/test"
+        - "/api/v1/test/authenticated"
 
     # 인증되지 않은 사용자만 접근 가능한 경로 설정
     anonymous:
       ALL:
-        - "/api/v1/auth"
+        - "/api/v1/auth/anonymous"
       GET:
-        - "/api/v1/test"
+        - "/api/v1/test/anonymous"
       POST:
-        - "/api/v1/test"
+        - "/api/v1/test/anonymous"
       PUT:
-        - "/api/v1/test"
+        - "/api/v1/test/anonymous"
       PATCH:
-        - "/api/v1/test"
+        - "/api/v1/test/anonymous"
       DELETE:
-        - "/api/v1/test"
+        - "/api/v1/test/anonymous"
 
     # 유저의 학교 인증 상태에 따라 접근 가능한 경로 설정
     verification-status-based:
       # 어떠한 방식으로든 대학교 인증을 받은 사용자만 접근 가능한 경로
       VERIFIED:
         ALL:
-          - "/api/v1/verifiedTest"
+#          - "/api/v1/test/verified"
         GET:
-          - "/api/v1/verifiedTest"
+#          - "/api/v1/test/verified"
         POST:
-          - "/api/v1/verifiedTest"
+#          - "/api/v1/test/verified"
         PUT:
-          - "/api/v1/verifiedTest"
+#          - "/api/v1/test/verified"
         PATCH:
-          - "/api/v1/verifiedTest"
+#          - "/api/v1/test/verified"
         DELETE:
-          - "/api/v1/verifiedTest"
+#          - "/api/v1/test/verified"
 
       # 이메일 인증을 수행한 사용자만 접근 가능한 경로
       EMAIL_VERIFIED:
         ALL:
-          - "/api/v1/emailVerifiedTest"
+          - "/api/v1/test/emailVerified"
         GET:
-          - "/api/v1/emailVerifiedTest"
+#          - "/api/v1/test/emailVerified"
         POST:
-          - "/api/v1/emailVerifiedTest"
+#          - "/api/v1/test/emailVerified"
         PUT:
-          - "/api/v1/emailVerifiedTest"
+#          - "/api/v1/test/emailVerified"
         PATCH:
-          - "/api/v1/emailVerifiedTest"
+#          - "/api/v1/test/emailVerified"
         DELETE:
-          - "/api/v1/emailVerifiedTest"
+#          - "/api/v1/test/emailVerified"
 
       # 재학생 인증을 수행한 사용자만 접근 가능한 경로
       ENROLL_STUDENT_VERIFIED:
         ALL:
-          - "/api/v1/enrollStudentVerifiedTest"
+#          - "/api/v1/test/enrollStudentVerified"
         GET:
-          - "/api/v1/enrollStudentVerifiedTest"
+          - "/api/v1/test/enrollStudentVerified"
         POST:
-          - "/api/v1/enrollStudentVerifiedTest"
+#          - "/api/v1/test/enrollStudentVerified"
         PUT:
-          - "/api/v1/enrollStudentVerifiedTest"
+          - "/api/v1/test/enrollStudentVerified"
         PATCH:
-          - "/api/v1/enrollStudentVerifiedTest"
+          - "/api/v1/test/enrollStudentVerified"
         DELETE:
-          - "/api/v1/enrollStudentVerifiedTest"
+#          - "/api/v1/test/enrollStudentVerified"
 
       # 신입생 인증을 수행한 사용자만 접근 가능한 경로
       NEW_STUDENT_VERIFIED:
         ALL:
-          - "/api/v1/newStudentVerifiedTest"
+          - "/api/v1/test/newStudentVerified"
         GET:
-          - "/api/v1/newStudentVerifiedTest"
+#          - "/api/v1/test/newStudentVerified"
         POST:
-          - "/api/v1/newStudentVerifiedTest"
+          - "/api/v1/test/newStudentVerified"
         PUT:
-          - "/api/v1/newStudentVerifiedTest"
+          - "/api/v1/test/newStudentVerified"
         PATCH:
-          - "/api/v1/newStudentVerifiedTest"
+          - "/api/v1/test/newStudentVerified"
         DELETE:
-          - "/api/v1/newStudentVerifiedTest"
+          - "/api/v1/test/newStudentVerified"
 
       # 대학교 인증을 수행하지 않은 사용자만 접근 가능한 경로
       UNVERIFIED:
         ALL:
-          - "/api/v1/unverifiedTest"
+          - "/api/v1/test/unverified"
           - "/api/v1/auth/emailCode"
           - "/api/v1/auth/emailCode/verify"
           - "/api/v1/certificates/admission/verify"
           - "/api/v1/certificates/enrollment/verify"
         GET:
-          - "/api/v1/unverifiedTest"
+          - "/api/v1/test/unverified"
         POST:
-          - "/api/v1/unverifiedTest"
+#          - "/api/v1/test/unverified"
         PUT:
-          - "/api/v1/unverifiedTest"
+          - "/api/v1/test/unverified"
         PATCH:
-          - "/api/v1/unverifiedTest"
+          - "/api/v1/test/unverified"
         DELETE:
-          - "/api/v1/unverifiedTest"
+          - "/api/v1/test/unverified"
 
       # 대학교 인증 검토중인 사용자만 접근 가능한 경로
       PENDING:
         ALL:
-          - "/api/v1/pendingTest"
+          - "/api/v1/test/pending"
         GET:
-          - "/api/v1/pendingTest"
+          - "/api/v1/test/pending"
         POST:
-          - "/api/v1/pendingTest"
+          - "/api/v1/test/pending"
         PUT:
-          - "/api/v1/pendingTest"
+#          - "/api/v1/test/pending"
         PATCH:
-          - "/api/v1/pendingTest"
+          - "/api/v1/test/pending"
         DELETE:
-          - "/api/v1/pendingTest"
+          - "/api/v1/test/pending"
 
     # 약관 동의를 하지 않아 DB에 유저 엔티티 생성 대기중인 경우에만 접근 가능한 경로 (JWT 토큰 필요)
     pending-user:
       ALL:
         - "/api/v1/auth/signup"
       GET:
-        - "/api/v1/test"
+        - "/api/v1/test/pending-user"
       POST:
-        - "/api/v1/test"
+        - "/api/v1/test/pending-user"
       PUT:
-        - "/api/v1/test"
+        - "/api/v1/test/pending-user"
       PATCH:
-        - "/api/v1/test"
+#        - "/api/v1/test/pending-user"
       DELETE:
-        - "/api/v1/test"
+        - "/api/v1/test/pending-user"
 
     # 리프레시 토큰을 이용한 토큰 갱신 요청에 대한 경로 설정
     refresh:
       ALL:
         - "/api/v1/auth/tokenRefresh"
       GET:
-        - "/api/v1/test"
+        - "/api/v1/test/refresh"
       POST:
-        - "/api/v1/test"
+        - "/api/v1/test/refresh"
       PUT:
-        - "/api/v1/test"
+        - "/api/v1/test/refresh"
       PATCH:
-        - "/api/v1/test"
+        - "/api/v1/test/refresh"
       DELETE:
-        - "/api/v1/test"
+#        - "/api/v1/test/refresh"
 
     # 위에서 설정하지 않은 모든 요청에 대한 접근 제어 설정
     any-request: "permit-all"  # 'authenticated', 'permit-all', 'anonymous' 중 하나
