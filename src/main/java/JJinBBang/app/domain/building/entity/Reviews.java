@@ -37,8 +37,8 @@ public class Reviews extends BaseEntity {
     @Column(name = "thumbnail_image", nullable = true, length = 2083)
     private String thumbnailImage; // 썸네일 이미지
 
-    @Column(nullable = false)
-    private String content; // 후기 내용
+    @Column(nullable = false, columnDefinition = "TEXT")
+	private String content; // 후기 내용
 
     @Column(length = 70)
     private String tags; // 태그
