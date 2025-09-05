@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "security.oauth.allowed-redirect-uris")
+@ConfigurationProperties(prefix = "security.oauth.allowed-redirect-uri")
 public class RedirectUriProperties {
 
 	private List<String> kakao = new ArrayList<>();
