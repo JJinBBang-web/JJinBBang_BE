@@ -34,11 +34,7 @@ public class GoogleLoginServiceImpl implements LoginService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
-    @Value("${security.oauth.allowed-redirect-uri.local.google}")
-    private String localRedirectUri;
-
-    @Value("${security.oauth.allowed-redirect-uri.prod.google}")
-    private String prodRedirectUri;
+    private final RedirectUriProperties redirectUriProperties;
 
     private final UsersService usersService;
 
@@ -55,8 +51,7 @@ public class GoogleLoginServiceImpl implements LoginService {
     @Override
     public Users login(String oauthCode, String redirectUri) {
         // redirectUri 검증
-        List<String> allowedRedirectUris = List.of(localRedirectUri, prodRedirectUri);
-        if(redirectUri == null || !allowedRedirectUris.contains(redirectUri)){
+        if(redirectUri == null || !redirectUriProperties.getGoogle().contains(redirectUri)){
             throw GoogleAuthException.notAllowedRedirectUri();
         }
 

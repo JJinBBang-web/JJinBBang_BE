@@ -1,6 +1,7 @@
 package JJinBBang.app.global.security.filter;
 
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.security.SecurityPathMatchUtil;
 import JJinBBang.app.global.security.SecurityPathProperties;
 import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
@@ -17,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -35,39 +35,29 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
     private final SecurityPathProperties securityPathProperties;
     private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
     private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
-    private final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    private final SecurityPathMatchUtil securityPathMatchUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        Map<String, List<String>> verificationStatusPaths = securityPathProperties.getVerificationStatusBased();
-        String requestURI = request.getRequestURI();
+        // 이 요청이 어떤 VerificationStatus를 요구하는 경로에 매칭되는지 확인
+        VerificationStatus required = securityPathMatchUtil.matchAnyVerificationRequired(request);
+        if (required == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Users user)) {
+            authenticationEntryPoint.commence(request, response, SecurityAuthException.noAuthentication());
+            return;
+        }
 
-        // verificationStatus 확인
-        for (Map.Entry<String, List<String>> entry : verificationStatusPaths.entrySet()) {
-            VerificationStatus requiredStatus = VerificationStatus.valueOf(entry.getKey());
-
-            boolean isMatch = entry.getValue().stream()
-                .anyMatch(pattern -> PATH_MATCHER.match(pattern, requestURI));
-
-            if (isMatch) {
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-                // 인증이 없을 경우
-                if (authentication == null || !(authentication.getPrincipal() instanceof Users user)) {
-                    authenticationEntryPoint.commence(request, response, SecurityAuthException.noAuthentication());
-                    return;
-                }
-
-                AccessDeniedException exception = getCustomSecurityAuthException(
-                    user.getVerificationStatus(), requiredStatus);
-                if(exception != null) {
-                    accessDeniedHandler.handle(request, response, exception);
-                    return;
-                }
-            }
+        AccessDeniedException ex = getCustomSecurityAuthException(user.getVerificationStatus(), required);
+        if (ex != null) {
+            accessDeniedHandler.handle(request, response, ex);
+            return;
         }
 
         // 검증 성공 시 필터 체인 계속 진행
