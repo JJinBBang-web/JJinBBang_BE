@@ -39,8 +39,10 @@ jobs:
           cd ./src/main/resources
           touch ./application-prod.yml
           touch ./gcp_iam_key.json
+          touch ./security-path.yml
           echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > ./application-prod.yml
           echo "${{ secrets.GCP_IAM_KEY }}" | base64 --decode > ./gcp_iam_key.json
+          echo "${{ secrets.SECURITY_PATH }}" > ./security-path.yml
 
       # 실행 권한 부여
       - name: Grant execute permission for gradlew
