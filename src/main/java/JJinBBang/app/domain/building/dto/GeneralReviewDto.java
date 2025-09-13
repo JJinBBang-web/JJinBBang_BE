@@ -2,6 +2,8 @@ package JJinBBang.app.domain.building.dto;
 
 import java.math.BigDecimal;
 
+import org.hibernate.validator.constraints.Length;
+
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.enums.Floor;
 import jakarta.validation.constraints.*;
@@ -24,7 +26,7 @@ public class GeneralReviewDto {
 	private Double space;
 	@NotNull @Min(1) @Max(5)
 	private BigDecimal rating;
-	@NotBlank
+	@NotBlank @Length(min = 1, max = 1000)
 	private String content;
 
 	@AssertTrue(message = "계약 타입에 따라 deposit, monthlyRent, maintenanceCost 필드를 올바르게 설정해주세요.")

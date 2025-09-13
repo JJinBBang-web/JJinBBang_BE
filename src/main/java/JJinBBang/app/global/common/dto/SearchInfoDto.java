@@ -47,7 +47,7 @@ public record SearchInfoDto(
 			.generalBuildingInfo(GeneralBuildingInfo.of(building, liked))
 			.reviewInfo(ReviewInfo.ofBuilding(review, building))
 			.boundInfo(BoundInfo.of(building.getBuildingLat(), building.getBuildingLot()))
-			.image(review.getThumbnailImage())
+            .image(review != null ? review.getThumbnailImage() : null)
 			.build();
 	}
 
@@ -65,18 +65,21 @@ public record SearchInfoDto(
 			.dormitoryBuildingInfo(DormitoryBuildingInfo.of(building, universityName, liked))
 			.reviewInfo(ReviewInfo.ofBuilding(review, building))
 			.boundInfo(BoundInfo.of(building.getBuildingLat(), building.getBuildingLot()))
-			.image(review.getThumbnailImage())
+            .image(review != null ? review.getThumbnailImage() : null)
 			.build();
 	}
 
-	public static SearchInfoDto ofSearchAgencyReviewInfo(Reviews review, Agencies agency, Boolean liked) {
-		return SearchInfoDto.builder()
-			.agencyReviewInfo(AgencyReviewInfo.of(review, agency, liked))
-			.reviewInfo(ReviewInfo.of(review))
-			.boundInfo(BoundInfo.of(agency.getAgencyLat(), agency.getAgencyLot()))
-			.image(review.getThumbnailImage())
-			.build();
-	}
+    public static SearchInfoDto ofSearchAgencyReviewInfo(Reviews review, Agencies agency, Boolean liked) {
+        if (review == null) {
+            return ofSearchAgencyBuildingInfo(null, agency, liked);
+        }
+        return SearchInfoDto.builder()
+                .agencyReviewInfo(AgencyReviewInfo.of(review, agency, liked))
+                .reviewInfo(ReviewInfo.of(review))
+                .boundInfo(BoundInfo.of(agency.getAgencyLat(), agency.getAgencyLot()))
+                .image(review.getThumbnailImage())
+                .build();
+    }
 
 	public static SearchInfoDto ofSearchAgencyBuildingInfo(Reviews review, Agencies agency, Boolean liked) {
 		return SearchInfoDto.builder()
