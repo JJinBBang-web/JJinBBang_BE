@@ -18,10 +18,10 @@ public record AgencyReviewInfo(
 ) {
     public static AgencyReviewInfo of(Reviews reviews, Agencies agencies, Boolean liked) {
         return AgencyReviewInfo.builder()
-                .id(reviews.getId())
+                .id(reviews != null ? reviews.getId() : null)
                 .name(agencies.getName())
                 .type(BuildingType.AGENCY)
-                .rating(reviews.getRating())
+                .rating(reviews != null ? reviews.getRating() : null)
                 .liked(liked)
                 .build();
 

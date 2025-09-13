@@ -136,10 +136,15 @@ public class SearchInfo {
     public SearchInfoDto agencySearchWithBound(Long itemId, Boolean liked, ViewType viewType){
         Agencies agencies = agenciesRepository.findById(itemId)
             .orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
-        Reviews reviews = reviewsRepository.findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies, ReviewType.AGENCY);
+        Reviews reviews = reviewsRepository
+                .findFirstByAgencyAndDtypeOrderByCreatedAtDesc(agencies, ReviewType.AGENCY);
         if (viewType == ViewType.REVIEW) {
+            if (reviews == null) {
+                return SearchInfoDto.ofSearchAgencyBuildingInfo(null, agencies, liked);
+            }
             return SearchInfoDto.ofSearchAgencyReviewInfo(reviews, agencies, liked);
         }
+
         return SearchInfoDto.ofSearchAgencyBuildingInfo(reviews, agencies, liked);
     }
 }
