@@ -1,5 +1,6 @@
 package JJinBBang.app.global.config;
 
+import JJinBBang.app.global.sheets.properties.GoogleProperties;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
