@@ -124,6 +124,23 @@ logging:
     org.hibernate.typ e: trace
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"   # health, info만 외부 노출
+  endpoint:
+    health:
+      show-details: when_authorized # 인증된 경우에만 상세 표시
+  health:
+    # 필수 의존성만 활성화할 것..!
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: false   # 디스크 용량 체크 일단 꺼둠
+
 
 # JWT 토큰, 이메일 인증코드 저장 방식 설정 (inmemory, redis 등)
 app:
