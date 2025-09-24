@@ -73,6 +73,9 @@ dependencies {
 
 	// AWS S3
 	implementation 'software.amazon.awssdk:s3:2.32.31'
+
+    // Actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 // Q 클래스 경로 지정
