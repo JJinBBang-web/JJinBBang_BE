@@ -93,11 +93,12 @@ public class UsersController {
 
 		UserOpinionDto data = new UserOpinionDto(
 				userId,
+				userOpinionRequest.targetId(),
 				userOpinionRequest.opinion(),
 				LocalDateTime.now()
 		);
 
-		googleSheetsService.appendUserOpinion(data);
+		googleSheetsService.appendUserOpinion(data, userOpinionRequest.opinionType());
 
 		return new ResTemplate<>(HttpStatus.OK, "문의 성공", null);
 	}

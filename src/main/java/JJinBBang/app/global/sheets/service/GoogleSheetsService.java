@@ -2,6 +2,7 @@ package JJinBBang.app.global.sheets.service;
 
 import JJinBBang.app.global.sheets.dto.UnregisterReasonDto;
 import JJinBBang.app.global.sheets.dto.UserOpinionDto;
+import JJinBBang.app.global.sheets.enums.OpinionType;
 
 import java.io.IOException;
 
@@ -12,8 +13,10 @@ public interface GoogleSheetsService {
             UnregisterReasonDto unregisterReasonDto
     ) throws IOException;
 
+
     // 문의 내용
     void appendUserOpinion(
-            UserOpinionDto userOpinionDto
+            UserOpinionDto userOpinionDto,
+            OpinionType opinionType
     ) throws IOException;
 }

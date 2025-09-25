@@ -2,6 +2,7 @@ package JJinBBang.app.global.sheets.service.impl;
 
 import JJinBBang.app.global.sheets.dto.UnregisterReasonDto;
 import JJinBBang.app.global.sheets.dto.UserOpinionDto;
+import JJinBBang.app.global.sheets.enums.OpinionType;
 import JJinBBang.app.global.sheets.properties.GoogleProperties;
 import JJinBBang.app.global.sheets.service.GoogleSheetsService;
 import com.google.api.services.sheets.v4.Sheets;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -28,11 +30,11 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
     // 시트 데이터 입력
     private AppendValuesResponse appendRowToGoogleSheets(
             GoogleProperties.Spreadsheet sheet,
-            String sheetName,
+            String sheetKey,
             List<Object> data
     ) throws IOException {
         String sheetsId = sheet.getId();
-        String name = sheet.getSheets().get(sheetName);
+        String name = sheet.getSheets().get(sheetKey);
         String range = String.format(sheet.getRangeTemplate(), name);
 
         ValueRange row = new ValueRange().setValues(List.of(data));
@@ -66,16 +68,31 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
     // 문의 내용
     @Override
     public void appendUserOpinion(
-            UserOpinionDto userOpinionDto
+            UserOpinionDto userOpinionDto,
+            OpinionType opinionType
     ) throws IOException {
+        Objects.requireNonNull(userOpinionDto, "userOpinionDto is null");
+
         var sheet = googleProperties.getSpreadsheetOpinion();
+        String sheetKey = resolveOpinionSheetKey(opinionType);
 
         List<Object> row = List.of(
                 userOpinionDto.userId(),
+                userOpinionDto.targetId(),
                 userOpinionDto.opinion(),
                 userOpinionDto.timestamp().format(DATE_TIME_FORMATTER)
         );
 
-        appendRowToGoogleSheets(sheet, "user-opinion", row);
+        appendRowToGoogleSheets(sheet, sheetKey, row);
+    }
+
+    // 문의 타입에 따라 시트 선택
+    private String resolveOpinionSheetKey(OpinionType opinionType) {
+        if (opinionType == null) throw new IllegalArgumentException("opinionType is null");
+
+        return switch (opinionType) {
+            case BUILDING_REPORT -> "user-building-opinion";
+            case REVIEW_REPORT ->  "user-review-opinion";
+        };
     }
 }
