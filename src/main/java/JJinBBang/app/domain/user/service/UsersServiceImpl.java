@@ -12,6 +12,7 @@ import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import JJinBBang.app.domain.user.exception.OpinionException;
 import JJinBBang.app.domain.user.exception.UniversityNotFoundException;
 import JJinBBang.app.domain.user.repository.UniversityRepository;
+import JJinBBang.app.global.common.enums.UnregisterReason;
 import org.springframework.data.domain.Pageable;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import org.springframework.stereotype.Service;
@@ -44,15 +45,6 @@ public class UsersServiceImpl implements UsersService {
 	private final UniversityRepository universityRepository;
 	private final BuildingLikesRepository buildingLikesRepository;
 	private final AgencyLikesRepository agencyLikesRepository;
-
-	private static final Map<Integer, String> UnregisterReasonMap = Map.of(
-			1, "대체 서비스로 이동",
-			2, "개인정보/보안 우려",
-			3, "알림/마케팅 메시지가 많음",
-			4, "일시 사용 중단을 위해",
-			5, "사용 빈도가 낮음",
-			6, "이용이 불편하고 장애가 많음"
-	);
 
 
 	@Override
@@ -245,11 +237,6 @@ public class UsersServiceImpl implements UsersService {
 	// 탈퇴 사유 문항 조회
 	@Override
 	public String optionToText(Integer option) {
-		if (option == null) throw OpinionException.NoOptionException();
-
-		String text = UnregisterReasonMap.get(option);
-		if (text == null) throw OpinionException.OptionMappingException();
-
-		return text;
+		return UnregisterReason.fromNumber(option).getDescription();
 	}
 }
