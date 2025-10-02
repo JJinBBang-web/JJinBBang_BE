@@ -33,4 +33,7 @@ public interface UsersService {
 	void deleteUser(Users user);
 
 	void forceDeleteExecute();
+
+	// 탈퇴 사유 문항 조회
+	String optionToText(Integer option);
 }

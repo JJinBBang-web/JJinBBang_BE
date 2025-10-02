@@ -9,8 +9,10 @@ import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
+import JJinBBang.app.domain.user.exception.OpinionException;
 import JJinBBang.app.domain.user.exception.UniversityNotFoundException;
 import JJinBBang.app.domain.user.repository.UniversityRepository;
+import JJinBBang.app.global.common.enums.UnregisterReason;
 import org.springframework.data.domain.Pageable;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -228,5 +231,12 @@ public class UsersServiceImpl implements UsersService {
 			Users sys = anyUserForFactory.createDeletedSystemUser();
 			usersRepository.saveAndFlush(sys); // 즉시 반영
 		}
+	}
+
+
+	// 탈퇴 사유 문항 조회
+	@Override
+	public String optionToText(Integer option) {
+		return UnregisterReason.fromNumber(option).getDescription();
 	}
 }
