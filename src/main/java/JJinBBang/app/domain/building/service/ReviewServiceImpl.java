@@ -3,6 +3,7 @@ package JJinBBang.app.domain.building.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.locationtech.jts.geom.*;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class ReviewServiceImpl implements ReviewService {
 	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
 	private final CampusesRepository campusesRepository;
 	private final S3Service s3Service;
+	private final BuildingCodeResolver buildingCodeResolver;
 
 	/**
      * 특정 건물 또는 공인중개사에 대한 리뷰 목록을 페이징 조회
@@ -213,7 +215,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(CampusNotFoundException::missingCampus);
 
         // 2) 건물 로드/생성
-        Buildings building = findOrCreateBuilding(dto.buildingRequest(), campus);
+        Buildings building = findOrCreateDormitory(dto.buildingRequest(), campus);
 
 
         // 3) DormReviews 엔티티 저장
@@ -245,7 +247,20 @@ public class ReviewServiceImpl implements ReviewService {
         return saved.getId();
     }
 
-    /**
+	private Buildings findOrCreateDormitory(BuildingRequest buildingRequest, Campuses campus) {
+		// 카카오 장소 ID를 건물관리번호로 변환
+		String resolvedCode = buildingCodeResolver.resolve(
+			buildingRequest.longitude(),
+			buildingRequest.latitude(),
+			buildingRequest.buildingCode()
+		);
+
+		BuildingRequest updatedRequest = buildingRequest.updateBuildingCode(resolvedCode);
+
+		return findOrCreateBuilding(updatedRequest, campus);
+	}
+
+	/**
      * 공인중개사 리뷰 생성 로직
      * 1) 공인중개사 조회 또는 생성
      * 2) AgencyReviews 저장
