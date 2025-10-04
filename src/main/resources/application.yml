@@ -107,6 +107,8 @@ jwt:
     access-token: ${jwt.expiration-time.access-token}
     refresh-token: ${jwt.expiration-time.refresh-token}
     signup-token: ${jwt.expiration-time.signup-token}
+  issuer: ${jwt.issuer}
+  audience: ${jwt.audience}
 
 mail-auth:
   expiration-time: ${mail-auth.expiration-time}
