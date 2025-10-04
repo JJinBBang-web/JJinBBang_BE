@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import JJinBBang.app.domain.user.entity.Users;
-import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.global.jwt.dto.TokenPair;
 import JJinBBang.app.global.jwt.enums.RotationResult;
 import JJinBBang.app.global.jwt.enums.TokenType;
@@ -29,7 +28,6 @@ public class JwtServiceImpl implements JwtService {
 	private final JwtVerifier jwtVerifier;
 	private final RefreshTokenGenerator refreshTokenGenerator;
 	private final AccessTokenGenerator accessTokenGenerator;
-	private final UsersRepository userRepository;
 
 	@Value("${jwt.refresh-ttl-minutes:43200}")
 	private long refreshTtlMinutes;
