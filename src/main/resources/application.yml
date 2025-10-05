@@ -109,6 +109,11 @@ jwt:
     signup-token: ${jwt.expiration-time.signup-token}
   issuer: ${jwt.issuer}
   audience: ${jwt.audience}
+  cookie:
+    http-only: ${jwt.cookie.http-only}
+    secure: ${jwt.cookie.secure}
+    same-site: ${jwt.cookie.same-site}
+    domain: ${jwt.cookie.domain}
 
 mail-auth:
   expiration-time: ${mail-auth.expiration-time}
