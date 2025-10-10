@@ -42,14 +42,14 @@ public class BookmarkServiceImpl implements BookmarkService{
         // 원래 좋아요가 없고, 현재 좋아요를 누른 경우
         if(!isLiked && liked){
             BuildingLikes newLike = BuildingLikes.create(buildings, users);
-            buildings.incrementLikeCount();
+            buildingsRepository.incrementLikeCount(buildingId);
             buildingLikesRepository.save(newLike);
         }
 
         // 원래 좋아요가 있고, 현재 좋아요를 취소한 경우
         if (isLiked && !liked){
             BuildingLikes savedLike = buildingLikesRepository.findByBuildingAndUser(buildings,users).orElseThrow(() -> new BookmarkNotFoundException("BuildingLikes"));
-            buildings.decrementLikeCount();
+            buildingsRepository.decrementLikeCount(buildingId);
             buildingLikesRepository.delete(savedLike);
         }
 
@@ -70,14 +70,14 @@ public class BookmarkServiceImpl implements BookmarkService{
         // 원래 좋아요가 없고, 현재 좋아요 누른 경우
         if(!isLiked && liked) {
             ReviewLikes newLike = ReviewLikes.create(reviews, users);
-            reviews.incrementLikeCount();
+            reviewsRepository.incrementLikeCount(reviewId);
             reviewLikesRepository.save(newLike);
         }
 
         // 원래 좋아요가 있고, 현재 좋아요 취소를 누른 경우
         if(isLiked && !liked) {
             ReviewLikes savedLike = reviewLikesRepository.findByReviewAndUser(reviews,users).orElseThrow(() -> new BookmarkNotFoundException("ReviewLikes"));
-            reviews.decrementLikeCount();
+            reviewsRepository.decrementLikeCount(reviewId);
             reviewLikesRepository.delete(savedLike);
         }
 
@@ -98,14 +98,14 @@ public class BookmarkServiceImpl implements BookmarkService{
         // 원래 좋아요가 없고, 현재 좋아요를 누른 경우
         if(!isLiked && liked){
             AgencyLikes newLike = AgencyLikes.create(agencies, users);
-            agencies.incrementLikeCount();
+            agenciesRepository.incrementLikeCount(agencyId);
             agencyLikesRepository.save(newLike);
         }
 
         // 원래 좋아요가 있고, 현재 좋아요 취소를 누른 경우
         if(isLiked && !liked){
             AgencyLikes saveLike = agencyLikesRepository.findByAgencyAndUser(agencies,users).orElseThrow(() -> new BookmarkNotFoundException("AgencyLikes"));
-            agencies.decrementLikeCount();
+            agenciesRepository.decrementLikeCount(agencyId);
             agencyLikesRepository.delete(saveLike);
         }
 
