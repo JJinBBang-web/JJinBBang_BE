@@ -1,4 +1,4 @@
-package JJinBBang.app.global.config;
+package JJinBBang.app.global.sheets.properties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +12,11 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "google")
 public class GoogleProperties {
     private Drive drive = new Drive();
-    private Spreadsheet spreadsheet = new Spreadsheet();
+
+    private Spreadsheet spreadsheetCertificate = new Spreadsheet(); // 중명서 시트
+
+    private Spreadsheet spreadsheetUnregister = new Spreadsheet(); // 탈퇴 사유 시트
+    private Spreadsheet spreadsheetOpinion = new Spreadsheet(); // 문의(신고) 시트
 
     @Setter
     @Getter
@@ -27,6 +31,5 @@ public class GoogleProperties {
         private String id;
         private Map<String, String> sheets;
         private String rangeTemplate;
-
     }
 }

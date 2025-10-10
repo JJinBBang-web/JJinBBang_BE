@@ -1,0 +1,98 @@
+package JJinBBang.app.global.sheets.service.impl;
+
+import JJinBBang.app.global.sheets.dto.UnregisterReasonDto;
+import JJinBBang.app.global.sheets.dto.UserOpinionDto;
+import JJinBBang.app.global.sheets.enums.OpinionType;
+import JJinBBang.app.global.sheets.properties.GoogleProperties;
+import JJinBBang.app.global.sheets.service.GoogleSheetsService;
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.AppendValuesResponse;
+import com.google.api.services.sheets.v4.model.ValueRange;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Objects;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class GoogleSheetsServiceImpl implements GoogleSheetsService {
+
+    private final Sheets googleSheets;
+    private final GoogleProperties googleProperties;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    // 시트 데이터 입력
+    private AppendValuesResponse appendRowToGoogleSheets(
+            GoogleProperties.Spreadsheet sheet,
+            String sheetKey,
+            List<Object> data
+    ) throws IOException {
+        String sheetsId = sheet.getId();
+        String name = sheet.getSheets().get(sheetKey);
+        String range = String.format(sheet.getRangeTemplate(), name);
+
+        ValueRange row = new ValueRange().setValues(List.of(data));
+
+        return googleSheets.spreadsheets().values()
+                .append(sheetsId, range, row)
+                .setValueInputOption("USER_ENTERED")
+                .execute();
+    }
+
+
+    // 탈퇴 사유
+    @Override
+    public void appendUnregisterReason(
+            UnregisterReasonDto unregisterReasonDto
+    ) throws IOException {
+        var sheet = googleProperties.getSpreadsheetUnregister();
+
+        List<Object> row = List.of(
+                unregisterReasonDto.userId(),
+                unregisterReasonDto.option(),
+                unregisterReasonDto.unregisterReason(),
+                unregisterReasonDto.registeredAt().format(DATE_TIME_FORMATTER),
+                unregisterReasonDto.unregisteredAt().format(DATE_TIME_FORMATTER)
+        );
+
+        appendRowToGoogleSheets(sheet, "unregister-reason", row);
+    }
+
+
+    // 문의 내용
+    @Override
+    public void appendUserOpinion(
+            UserOpinionDto userOpinionDto,
+            OpinionType opinionType
+    ) throws IOException {
+        Objects.requireNonNull(userOpinionDto, "userOpinionDto is null");
+
+        var sheet = googleProperties.getSpreadsheetOpinion();
+        String sheetKey = resolveOpinionSheetKey(opinionType);
+
+        List<Object> row = List.of(
+                userOpinionDto.userId(),
+                userOpinionDto.targetId(),
+                userOpinionDto.opinion(),
+                userOpinionDto.timestamp().format(DATE_TIME_FORMATTER)
+        );
+
+        appendRowToGoogleSheets(sheet, sheetKey, row);
+    }
+
+    // 문의 타입에 따라 시트 선택
+    private String resolveOpinionSheetKey(OpinionType opinionType) {
+        if (opinionType == null) throw new IllegalArgumentException("opinionType is null");
+
+        return switch (opinionType) {
+            case BUILDING_REPORT -> "user-building-opinion";
+            case REVIEW_REPORT ->  "user-review-opinion";
+        };
+    }
+}

@@ -4,7 +4,7 @@ import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import JJinBBang.app.global.config.GoogleProperties;
+import JJinBBang.app.global.sheets.properties.GoogleProperties;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
