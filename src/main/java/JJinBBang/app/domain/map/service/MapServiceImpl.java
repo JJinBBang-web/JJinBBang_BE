@@ -22,7 +22,9 @@ import JJinBBang.app.domain.map.exception.MapNotFoundException;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.InfoDto;
 import org.springframework.stereotype.Service;
+import JJinBBang.app.domain.common.entity.Campuses;
 
+import JJinBBang.app.domain.common.repository.CampusesRepository;
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.common.dto.item.Filters;
 import JJinBBang.app.domain.map.dto.item.Bounds;
@@ -44,13 +46,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class MapServiceImpl implements MapService{
-	private final BuildingsRepository buildingsRepository;
-	private final ReviewsRepository reviewsRepository;
-	private final BuildingLikesRepository buildingLikesRepository;
-	private final ReviewLikesRepository reviewLikesRepository;
-	private final AgenciesRepository agenciesRepository;
-	private final AgencyLikesRepository agencyLikesRepository;
-	private final SearchInfo searchInfo;
+    private static final double DEFAULT_CAMPUS_RADIUS_METERS = 5_000d;
+    private static final double EARTH_RADIUS_METERS = 6_371_000d;
+
+    private final BuildingsRepository buildingsRepository;
+    private final ReviewsRepository reviewsRepository;
+    private final BuildingLikesRepository buildingLikesRepository;
+    private final ReviewLikesRepository reviewLikesRepository;
+    private final AgenciesRepository agenciesRepository;
+    private final AgencyLikesRepository agencyLikesRepository;
+    private final CampusesRepository campusesRepository;
+    private final SearchInfo searchInfo;;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -66,32 +72,61 @@ public class MapServiceImpl implements MapService{
 		ContractType contractType = parseContractType(filters.contractType());
 
 		// 모든 조건 기반으로 건물 리스트를 먼저 조회
-		List<Buildings> buildings = buildingsRepository.findMarkersWithinBounds(
-			bounds.neLat(), bounds.neLng(),
-			bounds.swLat(), bounds.swLng(),
-			filters.buildType(), contractType,
-			filters.depositMin(), filters.depositMax(),
-			filters.monthlyRentMin(), filters.monthlyRentMax(),
-			filters.inMaintenanceCost(),
-			filters.reviewKeyword(),
-			filters.campus()
-		);
+        List<Long> campusFilters = filters.campus();
+        boolean hasCampusFilters = campusFilters != null && !campusFilters.isEmpty();
+        List<Buildings> buildings = buildingsRepository.findMarkersWithinBounds(
+                bounds.neLat(), bounds.neLng(),
+                bounds.swLat(), bounds.swLng(),
+                filters.buildType(), contractType,
+                filters.depositMin(), filters.depositMax(),
+                filters.monthlyRentMin(), filters.monthlyRentMax(),
+                filters.inMaintenanceCost(),
+                filters.reviewKeyword(),
+                hasCampusFilters ? null : campusFilters
+        );
 
-		boolean includeAgency = filters.buildType() == null
-			|| filters.buildType().contains(BuildingType.ALL)
-			|| filters.buildType().contains(BuildingType.AGENCY);
+        boolean includeAgency = filters.buildType() == null
+                || filters.buildType().contains(BuildingType.ALL)
+                || filters.buildType().contains(BuildingType.AGENCY);
 
-		List<Agencies> agencies = includeAgency
-			? agenciesRepository.findMarkersWithinBounds(
-			bounds.neLat(), bounds.neLng(),
-			bounds.swLat(), bounds.swLng()
-		)
-			: List.of();
+        List<Agencies> agencies = includeAgency
+                ? agenciesRepository.findMarkersWithinBounds(
+                bounds.neLat(), bounds.neLng(),
+                bounds.swLat(), bounds.swLng()
+        )
+                : List.of();
 
-		if (buildings.isEmpty() && agencies.isEmpty()) {
-			if (filters.viewType() == ViewType.REVIEW) {
-				throw MapNoContentException.notFoundReview();
-			} else {
+        if (hasCampusFilters) {
+            List<Campuses> campuses = campusesRepository.findAllById(campusFilters);
+            if (campuses.isEmpty()) {
+                buildings = List.of();
+                agencies = includeAgency ? List.of() : agencies;
+            } else {
+                double radiusMeters = resolveCampusRadiusMeters(filters);
+                buildings = buildings.stream()
+                        .filter(b -> isWithinCampusRadius(
+                                b.getBuildingLat(),
+                                b.getBuildingLot(),
+                                campuses,
+                                radiusMeters))
+                        .toList();
+
+                if (includeAgency) {
+                    agencies = agencies.stream()
+                            .filter(a -> isWithinCampusRadius(
+                                    a.getAgencyLat(),
+                                    a.getAgencyLot(),
+                                    campuses,
+                                    radiusMeters))
+                            .toList();
+                }
+            }
+        }
+
+        if (buildings.isEmpty() && agencies.isEmpty()) {
+            if (filters.viewType() == ViewType.REVIEW) {
+                throw MapNoContentException.notFoundReview();
+            } else {
 				throw MapNoContentException.notFoundBuilding();
 			}
 		}
@@ -151,21 +186,48 @@ public class MapServiceImpl implements MapService{
 
 		ContractType contractType = parseContractType(filters.contractType());
 
-		List<Buildings> buildings = buildingsRepository.searchBuildings(
-			request.keyword(),
-			filters.buildType(), contractType,
-			filters.depositMin(), filters.depositMax(),
-			filters.monthlyRentMin(), filters.monthlyRentMax(),
-			filters.inMaintenanceCost(),
-			filters.reviewKeyword(),
-			filters.campus()
-		);
+        List<Long> campusFilters = filters.campus();
+        boolean hasCampusFilters = campusFilters != null && !campusFilters.isEmpty();
+        List<Buildings> buildings = buildingsRepository.searchBuildings(
+                request.keyword(),
+                filters.buildType(), contractType,
+                filters.depositMin(), filters.depositMax(),
+                filters.monthlyRentMin(), filters.monthlyRentMax(),
+                filters.inMaintenanceCost(),
+                filters.reviewKeyword(),
+                hasCampusFilters ? null : campusFilters
+        );
 
-		List<Agencies> agencies = agenciesRepository.searchAgencies(request.keyword());
+        List<Agencies> agencies = agenciesRepository.searchAgencies(request.keyword());
 
-		if (buildings.isEmpty() && agencies.isEmpty()) {
-			throw MapNoContentException.searchFailed();
-		}
+        if (hasCampusFilters) {
+            List<Campuses> campuses = campusesRepository.findAllById(campusFilters);
+            if (campuses.isEmpty()) {
+                buildings = List.of();
+                agencies = List.of();
+            } else {
+                double radiusMeters = resolveCampusRadiusMeters(filters);
+                buildings = buildings.stream()
+                        .filter(b -> isWithinCampusRadius(
+                                b.getBuildingLat(),
+                                b.getBuildingLot(),
+                                campuses,
+                                radiusMeters))
+                        .toList();
+
+                agencies = agencies.stream()
+                        .filter(a -> isWithinCampusRadius(
+                                a.getAgencyLat(),
+                                a.getAgencyLot(),
+                                campuses,
+                                radiusMeters))
+                        .toList();
+            }
+        }
+
+        if (buildings.isEmpty() && agencies.isEmpty()) {
+            throw MapNoContentException.searchFailed();
+        }
 
 		List<SearchInfoDto> items = new ArrayList<>();
 		for (Buildings b : buildings) {
@@ -309,6 +371,37 @@ public class MapServiceImpl implements MapService{
 			.items(paged)
 			.build();
 	}
+
+    private double resolveCampusRadiusMeters(Filters filters) {
+        return DEFAULT_CAMPUS_RADIUS_METERS;
+    }
+
+    private boolean isWithinCampusRadius(Double lat, Double lng, List<Campuses> campuses, double radiusMeters) {
+        if (lat == null || lng == null) {
+            return false;
+        }
+
+        return campuses.stream().anyMatch(campus -> {
+            Double campusLat = campus.getCampusLat();
+            Double campusLot = campus.getCampusLot();
+            if (campusLat == null || campusLot == null) {
+                return false;
+            }
+            return calculateDistanceMeters(lat, lng, campusLat, campusLot) <= radiusMeters;
+        });
+    }
+
+    private double calculateDistanceMeters(double lat1, double lng1, double lat2, double lng2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS_METERS * c;
+    }
 
 	private Comparator<SearchInfoDto> getSearchComparator(SortType sort, ViewType type) {
 		return switch (sort) {
