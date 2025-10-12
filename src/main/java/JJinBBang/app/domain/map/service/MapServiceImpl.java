@@ -46,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class MapServiceImpl implements MapService{
-    private static final double DEFAULT_CAMPUS_RADIUS_METERS = 5_000d;
+    private static final double DEFAULT_CAMPUS_RADIUS_METERS = 2_000d;
     private static final double EARTH_RADIUS_METERS = 6_371_000d;
 
     private final BuildingsRepository buildingsRepository;
