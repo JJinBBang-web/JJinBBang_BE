@@ -1,0 +1,23 @@
+# Build artifacts
+.gradle/
+build
+**/build
+
+# IDE metadata
+*.iml
+.idea
+
+# Git
+.git
+.gitignore
+
+# Misc
+logs
+tmp
+
+# ETC
+**/.DS_Store
+**/Thumbs.db
+.env
+.env.*
+config/
