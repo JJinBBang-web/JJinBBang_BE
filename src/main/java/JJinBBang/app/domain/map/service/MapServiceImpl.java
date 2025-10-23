@@ -56,7 +56,7 @@ public class MapServiceImpl implements MapService{
     private final AgenciesRepository agenciesRepository;
     private final AgencyLikesRepository agencyLikesRepository;
     private final CampusesRepository campusesRepository;
-    private final SearchInfo searchInfo;;
+    private final SearchInfo searchInfo;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -81,8 +81,7 @@ public class MapServiceImpl implements MapService{
                 filters.depositMin(), filters.depositMax(),
                 filters.monthlyRentMin(), filters.monthlyRentMax(),
                 filters.inMaintenanceCost(),
-                filters.reviewKeyword(),
-                hasCampusFilters ? null : campusFilters
+                filters.reviewKeyword()
         );
 
         boolean includeAgency = filters.buildType() == null
@@ -194,8 +193,7 @@ public class MapServiceImpl implements MapService{
                 filters.depositMin(), filters.depositMax(),
                 filters.monthlyRentMin(), filters.monthlyRentMax(),
                 filters.inMaintenanceCost(),
-                filters.reviewKeyword(),
-                hasCampusFilters ? null : campusFilters
+                filters.reviewKeyword()
         );
 
         List<Agencies> agencies = agenciesRepository.searchAgencies(request.keyword());
