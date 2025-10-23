@@ -1,20 +1,23 @@
 package JJinBBang.app.domain.user.controller;
 
-import java.time.LocalDateTime;
+import static JJinBBang.app.global.cookie.CookieType.*;
+
 
 import JJinBBang.app.domain.user.dto.request.IssueEmailCodeRequest;
-import JJinBBang.app.domain.user.dto.request.LoginRequest;
 import JJinBBang.app.domain.user.dto.request.VerifyEmailCodeRequest;
 import JJinBBang.app.domain.user.dto.response.TokenResponse;
-import JJinBBang.app.domain.user.dto.response.SignupRequiredResponse;
+import JJinBBang.app.domain.user.entity.PendingUser;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.UserAuthException;
-import JJinBBang.app.domain.user.service.OAuthService;
+import JJinBBang.app.domain.user.exception.UserNotFoundException;
+import JJinBBang.app.domain.user.repository.PendingUserRepository;
 import JJinBBang.app.domain.user.service.UsersService;
-import JJinBBang.app.global.jwt.JwtUtils;
+import JJinBBang.app.global.cookie.CookieUtils;
+import JJinBBang.app.global.jwt.dto.TokenPair;
+import JJinBBang.app.global.jwt.service.JwtService;
 import JJinBBang.app.global.mail.service.MailAuthService;
 import JJinBBang.app.global.template.ResTemplate;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,57 +31,44 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UsersService usersService;
-    private final OAuthService oAuthService;
-    private final JwtUtils jwtUtils;
     private final MailAuthService mailAuthService;
-
-    @PostMapping
-    public ResTemplate<?> signIn(@RequestBody LoginRequest loginRequest) {
-        // 소셜 로그인 API
-
-        // 전달받은 provider에 따라 매칭되는 LoginService 인터페이스 구현체를 실행하여 소셜 로그인 진행
-        Users user = oAuthService.login(loginRequest.oauthProvider(), loginRequest.oauthCode(), loginRequest.redirectUri());
-
-        if (user.getUserId() == null) {
-            // 약관 동의가 필요한 경우
-            // user 객체는 DB에 저장되지 않은 상태. (provider, providerId 만 존재)
-            // -> 약관동의를 위한 임시 토큰 발급 (토큰에 provider, providerId 포함)
-            String signupToken = jwtUtils.generateSignupToken(user);
-
-            SignupRequiredResponse signupRequiredResponse = SignupRequiredResponse.of(signupToken);
-            return new ResTemplate<>(HttpStatus.PRECONDITION_REQUIRED, "약관동의가 필요합니다.", signupRequiredResponse);
-        } else {
-            if(user.getDisabledAt() != null && user.getDisabledAt().isBefore(LocalDateTime.now())) {
-                // 탈퇴한 유저인 경우
-                throw UserAuthException.deletedUser();
-            }
-
-            // 약관 동의가 완료된 유저의 경우
-            // user 객체는 DB에 저장된 상태 -> 엑세스 토큰, 리프레시 토큰 발급
-            String accessToken = jwtUtils.generateAccessToken(user);
-            String refreshToken = jwtUtils.generateRefreshToken(user);
-
-            TokenResponse response = TokenResponse.of(accessToken, refreshToken);
-            return new ResTemplate<>(HttpStatus.OK, "로그인 성공", response);
-        }
-    }
+    private final PendingUserRepository pendingUserRepository;
+    private final JwtService jwtService;
+    private final CookieUtils cookieUtils;
 
     @PostMapping("/signup")
-    public ResTemplate<TokenResponse> signUp(@AuthenticationPrincipal Users user) {
+    public ResTemplate<TokenResponse> signUp(
+        @CookieValue(value = PENDING_TOKEN_COOKIE, required = false) String pendingToken,
+        HttpServletResponse res
+    ) {
+        if(pendingToken == null || pendingToken.isBlank()) {
+            throw UserAuthException.loginSessionExpired();
+        }
+
         // 로그인 한 유저에 대해 약관 동의를 수행하는 API 입니다.
+        PendingUser pendingUser = pendingUserRepository.findById(pendingToken)
+            .orElseThrow(UserNotFoundException::notFound);
 
-        user = oAuthService.signup(user);
-        String accessToken = jwtUtils.generateAccessToken(user);
-        String refreshToken = jwtUtils.generateRefreshToken(user);
+        Users user = Users.builder()
+            .provider(pendingUser.provider())
+            .providerId(pendingUser.providerId())
+            .build();
 
-        TokenResponse response = TokenResponse.of(accessToken, refreshToken);
-        return new ResTemplate<>(HttpStatus.OK, "회원가입 성공", response);
+        Users save = usersService.save(user);
+
+        TokenPair tokenPair = jwtService.generateTokenPair(save);
+        cookieUtils.addCookie(res, REFRESH_TOKEN_COOKIE, tokenPair.refreshToken(), null);
+
+        pendingUserRepository.delete(pendingToken);
+        cookieUtils.deleteCookie(res, PENDING_TOKEN_COOKIE);
+
+        return new ResTemplate<>(HttpStatus.OK, "회원가입 성공", TokenResponse.of(tokenPair.accessToken()));
     }
 
     @PostMapping("/emailCode")
     public ResTemplate<?> sendEmailCode(
-            @AuthenticationPrincipal Users user,
-            @RequestBody IssueEmailCodeRequest request
+        @AuthenticationPrincipal Users user,
+        @RequestBody IssueEmailCodeRequest request
     ) {
         // VerificationFilter에서 Users의 VerificationStatus가 UNVERIFIED인 요청만 허용하도록 필터링됨
         // -> 여기서는 VerificationStatus를 확인할 필요 없음
@@ -90,8 +80,8 @@ public class AuthController {
 
     @PostMapping("/emailCode/verify")
     public ResTemplate<?> verifyEmailCode(
-            @AuthenticationPrincipal Users user,
-            @RequestBody VerifyEmailCodeRequest request
+        @AuthenticationPrincipal Users user,
+        @RequestBody VerifyEmailCodeRequest request
     ) {
         // 여기서도 VerificationFilter에서 Users의 VerificationStatus가 UNVERIFIED인 요청만 허용하도록 필터링됨
         String email = request.emailAddress();
@@ -100,7 +90,7 @@ public class AuthController {
         // 인증코드 검증
         // 인증코드 만료 또는 미발급은 예외 반환
         boolean verifyResult = mailAuthService.verifyAuthCode(user.getUserId(), email, code);
-        if(verifyResult) {
+        if (verifyResult) {
             usersService.verifyUniversityEmail(user, email);
             mailAuthService.deleteAuthCode(user.getUserId());
             return new ResTemplate<>(HttpStatus.OK, "인증이 완료되었습니다.", null);
@@ -111,29 +101,68 @@ public class AuthController {
 
     @PutMapping("/tokenRefresh")
     public ResTemplate<TokenResponse> reissueAccessToken(
-            HttpServletRequest request,
-            @AuthenticationPrincipal Users user
-    ){
-        String refreshToken = jwtUtils.extractToken(request);
-        String accessToken = jwtUtils.reissueAccessToken(user, refreshToken);
-        String newRefreshToken = jwtUtils.generateRefreshToken(user);
+        @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+        HttpServletResponse res
+    ) {
+        if(refreshToken == null || refreshToken.isBlank()) {
+            throw UserAuthException.loginSessionExpired();
+        }
+        var claims = jwtService.parseClaims(refreshToken);
+        Long userId = Long.valueOf(claims.getSubject());
+        Users user = usersService.findById(userId);
+        TokenPair rotate;
+        try {
+            rotate = jwtService.rotate(user, refreshToken);
+        } catch (Exception e){
+            cookieUtils.deleteCookie(res, REFRESH_TOKEN_COOKIE);
+            throw e;
+        }
+        cookieUtils.addCookie(res, REFRESH_TOKEN_COOKIE, rotate.refreshToken(), null);
 
-        TokenResponse response = TokenResponse.of(accessToken, newRefreshToken);
-        return new ResTemplate<>(HttpStatus.OK, "엑세스 토큰, 리프레시 토큰 재발급 성공", response);
+        return new ResTemplate<>(HttpStatus.OK, "엑세스 토큰, 리프레시 토큰 재발급 성공", TokenResponse.of(rotate.accessToken()));
     }
 
     @DeleteMapping("/logout")
     public ResTemplate<?> logout(
-            @AuthenticationPrincipal Users user
-    ){
-        jwtUtils.deleteRefreshToken(user.getUserId());
+        @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+        HttpServletResponse res
+    ) {
+        if(refreshToken == null || refreshToken.isBlank()) {
+            throw UserAuthException.loginSessionExpired();
+        }
+        var claims = jwtService.parseClaims(refreshToken);
+        Long userId = Long.valueOf(claims.getSubject());
+        jwtService.logout(userId, refreshToken);
+        cookieUtils.deleteCookie(res, REFRESH_TOKEN_COOKIE);
+        return new ResTemplate<>(HttpStatus.OK, "로그아웃 성공", null);
+    }
+
+    @DeleteMapping("/logout-all")
+    public ResTemplate<?> logoutAll(
+        @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+        HttpServletResponse res
+    ) {
+        if(refreshToken == null || refreshToken.isBlank()) {
+            throw UserAuthException.loginSessionExpired();
+        }
+        var claims = jwtService.parseClaims(refreshToken);
+        Long userId = Long.valueOf(claims.getSubject());
+        jwtService.logoutAll(userId);
+        cookieUtils.deleteCookie(res, REFRESH_TOKEN_COOKIE);
         return new ResTemplate<>(HttpStatus.OK, "로그아웃 성공", null);
     }
 
     @DeleteMapping("/user")
     public ResTemplate<?> deleteUser(
-            @AuthenticationPrincipal Users user
+        @AuthenticationPrincipal Users user,
+        @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+        HttpServletResponse res
     ) {
+        if(refreshToken == null || refreshToken.isBlank()) {
+            throw UserAuthException.loginSessionExpired();
+        }
+        jwtService.logoutAll(user.getUserId());
+        cookieUtils.deleteCookie(res, REFRESH_TOKEN_COOKIE);
         usersService.deleteUser(user);
         return new ResTemplate<>(HttpStatus.OK, "회원 탈퇴 성공", null);
     }
