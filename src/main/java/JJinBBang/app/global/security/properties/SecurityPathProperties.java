@@ -1,4 +1,4 @@
-package JJinBBang.app.global.security;
+package JJinBBang.app.global.security.properties;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +30,6 @@ public class SecurityPathProperties {
 	private Map<String, List<String>> permitAll = new HashMap<>();
 	private Map<String, List<String>> authenticated = new HashMap<>();
 	private Map<String, List<String>> anonymous = new HashMap<>();
-	private Map<String, List<String>> pendingUser = new HashMap<>();
-	private Map<String, List<String>> refresh = new HashMap<>();
 	/**
 	 * 키=VerificationStatus 이름(VERIFIED, EMAIL_VERIFIED, …)
 	 * 값=Map<HTTP 메서드, 경로 리스트>

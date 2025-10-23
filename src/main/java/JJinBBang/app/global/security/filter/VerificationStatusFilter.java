@@ -1,28 +1,28 @@
 package JJinBBang.app.global.security.filter;
 
-import JJinBBang.app.global.common.enums.VerificationStatus;
-import JJinBBang.app.global.security.SecurityPathMatchUtil;
-import JJinBBang.app.global.security.SecurityPathProperties;
-import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
-import JJinBBang.app.global.security.exception.SecurityAuthException;
-import JJinBBang.app.domain.user.entity.Users;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.security.exception.SecurityAccessDeniedException;
+import JJinBBang.app.global.security.exception.SecurityAuthException;
+import JJinBBang.app.global.security.properties.CompiledSecurityPathMatcher;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 특정 경로에서 사용자의 verificationStatus(이메일 인증 상태)를 확인하는 필터
@@ -32,17 +32,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class VerificationStatusFilter extends OncePerRequestFilter {
 
-    private final SecurityPathProperties securityPathProperties;
     private final AuthenticationEntryPoint authenticationEntryPoint; // 401 예외 핸들러
     private final AccessDeniedHandler accessDeniedHandler; // 403 예외 핸들러
-    private final SecurityPathMatchUtil securityPathMatchUtil;
+    private final CompiledSecurityPathMatcher compiled;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         // 이 요청이 어떤 VerificationStatus를 요구하는 경로에 매칭되는지 확인
-        VerificationStatus required = securityPathMatchUtil.matchAnyVerificationRequired(request);
+        VerificationStatus required = matchAnyVerificationRequired(request);
         if (required == null) {
             filterChain.doFilter(request, response);
             return;
@@ -108,5 +107,17 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
                 userStatus.equals(VerificationStatus.NEW_STUDENT_VERIFIED);
         }
         return userStatus.equals(requiredStatus);
+    }
+
+    private VerificationStatus matchAnyVerificationRequired(HttpServletRequest request) {
+        String method = request.getMethod();
+        for (Map.Entry<VerificationStatus, Map<String, List<RequestMatcher>>> e
+            : compiled.getVerificationMatchers().entrySet()) {
+            List<RequestMatcher> merged = compiled.mergeByMethod(e.getValue(), method);
+            if (merged.stream().anyMatch(m -> m.matches(request))) {
+                return e.getKey();
+            }
+        }
+        return null; // 일치 없음
     }
 }
