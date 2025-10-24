@@ -49,3 +49,9 @@ security-path.yml
 
 # Google Cloud Platform IAM key
 src/main/resources/gcp_iam_key.json
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.sample
