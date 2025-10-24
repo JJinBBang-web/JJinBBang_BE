@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 
 ### 빌드 단계 ###
-FROM gradle:8.7-jdk17-alpine AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /workspace/app
 
 # 캐싱 최적화를 위해 Gradle wrapper와 설정 파일을 먼저 복사
 COPY build.gradle settings.gradle gradlew gradlew.bat ./
 COPY gradle ./gradle
-RUN chmod +x gradlew
+# Windows CRLF -> LF 변환 후 실행권한 부여
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
 
 # 애플리케이션 소스 복사
 COPY src ./src
@@ -19,7 +20,7 @@ RUN ./gradlew --no-daemon clean bootJar \
     && cp "${JAR_FILE}" app.jar
 
 ### 런타임 단계 ###
-FROM eclipse-temurin:17-jre-jammy AS runtime
+FROM eclipse-temurin:21-jre-jammy AS runtime
 WORKDIR /app
 
 # 애플리케이션 아티팩트 복사

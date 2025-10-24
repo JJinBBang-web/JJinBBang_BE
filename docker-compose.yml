@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8.0
@@ -16,7 +14,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --default-authentication-plugin=mysql_native_password
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "3307:3306" # 기존에 백그라운드로 돌아가는 mysql 충돌때문에 3307로 변경했슴다
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -86,14 +84,6 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME}
-      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
       SPRING_CONFIG_ADDITIONAL_LOCATION: optional:file:/app/config/
     volumes:
       - ./config:/app/config:ro

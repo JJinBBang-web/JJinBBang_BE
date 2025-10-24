@@ -19,5 +19,4 @@ tmp
 **/.DS_Store
 **/Thumbs.db
 .env
-.env.*
 config/
