@@ -33,12 +33,12 @@ jobs:
         run: |
           mkdir -p ./config
           # docker-compose가 마운트하는 외부 설정
-          echo "${{ secrets.TEST_APPLICATION_PROD }}" > ./config/application-prod.yml
-          echo "${{ secrets.TEST_SECURITY_PATH }}"   > ./config/security-path.yml
-          echo "${{ secrets.TEST_GCP_IAM_KEY }}"     > ./config/gcp_iam_key.json
+          printf '%s' "${{ secrets.TEST_APPLICATION_PROD }}" > ./config/application-prod.yml
+          printf '%s' "${{ secrets.TEST_SECURITY_PATH }}" > ./config/security-path.yml
+          printf '%s' "${{ secrets.TEST_GCP_IAM_KEY }}" > ./config/gcp_iam_key.json
 
           # 환경변수 (compose의 env_file 로 사용)
-          echo "${{ secrets.TEST_ENV }}" > ./.env
+          printf '%s' "${{ secrets.TEST_ENV }}" > ./.env
           echo "" >> ./.env
           echo "CLOUD_AWS_S3_PREFIX=test" >> ./.env
 
