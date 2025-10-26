@@ -60,8 +60,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_IAM_ACCESS_KEY_TEST }}
-          aws-secret-access-key: ${{ secrets.AWS_IAM_PRIVATE_KEY_TEST }}
+          aws-access-key-id: ${{ secrets.AWS_IAM_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_IAM_PRIVATE_KEY }}
 
       # S3에 배포 번들 업로드 (test/ prefix로 구분)
       - name: Upload to S3
