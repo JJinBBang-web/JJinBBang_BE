@@ -7,9 +7,12 @@ files:
     overwrite: yes
 
 permissions:
-  - object: /
+  - object: /home/ubuntu
     owner: ubuntu
     group: ubuntu
+    mode: 755
+    type:
+      - file
 
 hooks:
   ApplicationStart:
