@@ -1,6 +1,6 @@
 spring:
   config:
-    import: classpath:security-path.yml
+    import: optional:classpath:security-path.yml
 
   profiles:
     active: prod
