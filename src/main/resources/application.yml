@@ -157,3 +157,7 @@ vworld:
   base-url: https://api.vworld.kr/req/data
   api-key: ${vworld.api-key}
   buffer-meter: 5 # 버퍼 영역 (단위: m)
+
+google:
+  credentials:
+    path: "classpath:gcp_iam_key.json"
