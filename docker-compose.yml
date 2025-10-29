@@ -85,6 +85,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_CONFIG_ADDITIONAL_LOCATION: optional:file:/app/config/
+      SPRING_CONFIG_IMPORT: optional:file:/app/config/security-path.yml   # security-path.yml
+      GOOGLE_CREDENTIALS_PATH: file:/app/config/gcp_iam_key.json      # GCP 키
       LOADER_PATH: /app/config/
     volumes:
       - ./config:/app/config:ro
