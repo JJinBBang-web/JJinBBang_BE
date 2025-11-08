@@ -94,6 +94,39 @@ services:
       - "${APP_PORT:-8080}:8080"
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep '\"status\":\"UP\"' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+
+  db-init:
+    image: ${DB_INIT_DOCKER_USERNAME}/${DB_INIT_DOCKER_IMAGE_NAME}:latest
+    container_name: jjinbbang-db-init
+    restart: "no"
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_DB: ${MONGO_INITDB_DATABASE}
+      MONGO_USER: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_AUTH_DB: admin
+
+      REVIEWS_PER_BUILDING: 2
+    networts:
+      - backend
+    
 
 volumes:
   mysql_data:
