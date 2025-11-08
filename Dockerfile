@@ -23,6 +23,10 @@ RUN ./gradlew --no-daemon clean bootJar \
 FROM eclipse-temurin:21-jre-jammy AS runtime
 WORKDIR /app
 
+# curl 설치 (compose healthcheck 용)
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # 애플리케이션 아티팩트 복사
 COPY --from=builder /workspace/app/app.jar ./app.jar
 COPY --from=builder /workspace/app/wait-for-it.sh ./wait-for-it.sh
