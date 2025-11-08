@@ -124,7 +124,7 @@ services:
       MONGO_AUTH_DB: admin
 
       REVIEWS_PER_BUILDING: 2
-    networts:
+    networks:
       - backend
     
 
