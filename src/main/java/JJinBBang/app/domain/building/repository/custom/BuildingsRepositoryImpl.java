@@ -35,8 +35,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		Integer depositMin, Integer depositMax,
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
-		List<KeywordType> reviewKeywords,
-		List<Long> campusIds
+		List<KeywordType> reviewKeywords
 	) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
@@ -59,13 +58,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			builder.and(typeBuilder);
 		}
 
-		// 3. 캠퍼스 필터
-		// 3. 캠퍼스 필터
-		if (campusIds != null && !campusIds.isEmpty()) {
-			builder.and(b.campus.id.in(campusIds));
-		}
-
-		// 4. Treat()를 이용한 GeneralReviews 전용 조인
+		// 3. Treat()를 이용한 GeneralReviews 전용 조인
 		PathBuilder<GeneralReviews> grPath = new PathBuilder<>(GeneralReviews.class, "generalReview");
 		QGeneralReviews treated = new QGeneralReviews(grPath);
 
@@ -76,7 +69,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 			.leftJoin(b.campus, c).fetchJoin()
 			.where(builder);
 
-		// 5. 계약 조건 필터
+		// 4. 계약 조건 필터
 		if (contractType != null) {
 			query.where(treated.contractType.eq(contractType));
 		}
@@ -107,8 +100,7 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		Integer depositMin, Integer depositMax,
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
-		List<KeywordType> reviewKeywords,
-		List<Long> campusIds
+		List<KeywordType> reviewKeywords
 	) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
@@ -131,10 +123,6 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 				typeBuilder.or(b.buildingType.containsIgnoreCase(type.name()));
 			}
 			builder.and(typeBuilder);
-		}
-
-		if (campusIds != null && !campusIds.isEmpty()) {
-			builder.and(b.campus.id.in(campusIds));
 		}
 
 		PathBuilder<GeneralReviews> grPath = new PathBuilder<>(GeneralReviews.class, "generalReview");
