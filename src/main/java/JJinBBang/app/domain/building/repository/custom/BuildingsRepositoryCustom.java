@@ -16,8 +16,7 @@ public interface BuildingsRepositoryCustom {
 		Integer depositMin, Integer depositMax,
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
-		List<KeywordType> reviewKeywords,
-		List<Long> campusIds
+		List<KeywordType> reviewKeywords
 	);
 
 	List<Buildings> searchBuildings(
@@ -27,7 +26,6 @@ public interface BuildingsRepositoryCustom {
 		Integer depositMin, Integer depositMax,
 		Integer monthlyRentMin, Integer monthlyRentMax,
 		Boolean inMaintenanceCost,
-		List<KeywordType> reviewKeywords,
-		List<Long> campusIds
+		List<KeywordType> reviewKeywords
 	);
 }
