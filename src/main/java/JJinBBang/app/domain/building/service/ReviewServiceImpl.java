@@ -186,7 +186,8 @@ public class ReviewServiceImpl implements ReviewService {
         building.addRating(saved.getRating());
 
         // 4.3) 이미지 카운트 반영
-		building.incrementImagesCount();
+		if (details.hasImages())
+			building.incrementImagesCount();
 
         // 4.4) 건물 유형 업데이트
 		building.addBuildingType(dto.buildingRequest().type());
@@ -239,7 +240,9 @@ public class ReviewServiceImpl implements ReviewService {
         building.addRating(saved.getRating());
 
         // 6.3) 이미지 카운트 반영
-		building.incrementImagesCount();
+		if (details.hasImages()) {
+			building.incrementImagesCount();
+		}
 
         // 6.4) 건물 엔티티 저장
         buildingsRepository.save(building);
@@ -286,7 +289,7 @@ public class ReviewServiceImpl implements ReviewService {
 		agency.addRating(saved.getRating());
 
 		// 4.3) 이미지 카운트 반영
-		if (details.getImages() != null && !details.getImages().isEmpty()) {
+		if (details.hasImages()) {
 			agency.incrementImagesCount();
 		}
 
@@ -443,15 +446,13 @@ public class ReviewServiceImpl implements ReviewService {
 
 		// 2) 건물 변경 여부 판단
 		if (!oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode())) {
-			// a) 이전 건물: 평점 제거, 이미지 감소, 키워드 통계 감소
+			// a) 이전 건물: 평점 제거, 키워드 통계 감소
 			oldBuilding.removeRating(oldReview.getRating());
-			oldBuilding.decrementImagesCount();
 			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
 				Collections.emptyList());
 
-			// b) 신규 건물: 평점 추가, 이미지 증가, 키워드 통계 증가
+			// b) 신규 건물: 평점 추가, 키워드 통계 증가
 			newBuilding.addRating(dto.generalReview().getRating());
-			newBuilding.incrementImagesCount();
 			updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
 
 			// c) 리뷰 엔티티 및 상세 정보 갱신 저장
@@ -459,6 +460,10 @@ public class ReviewServiceImpl implements ReviewService {
 			reviewsRepository.save(updatedReview);
 			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
 			reviewDetailsRepository.save(updatedDetails);
+
+			// 이미지 변경 처리
+			if (oldDetails.hasImages()) oldBuilding.decrementImagesCount();
+			if (updatedDetails.hasImages()) newBuilding.incrementImagesCount();
 
 			// 삭제할 이미지 삭제
 			deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
@@ -481,10 +486,17 @@ public class ReviewServiceImpl implements ReviewService {
 				dto.keywords().positive());
 
 			// b) 리뷰 엔티티 및 상세 정보 갱신 저장
-			GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, newBuilding);
+			GeneralReviews updatedReview = dto.toUpdatedGeneralReviews(oldReview, oldBuilding);
 			reviewsRepository.save(updatedReview);
-			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
+			ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, oldBuilding.getId());
 			reviewDetailsRepository.save(updatedDetails);
+
+			// 이미지 증감 반영
+			boolean oldHas = oldDetails.hasImages();
+			boolean nowHas = updatedDetails.hasImages();
+			if (!oldHas && nowHas) oldBuilding.incrementImagesCount();
+			else if (oldHas && !nowHas) oldBuilding.decrementImagesCount();
+
 			// 삭제할 이미지 삭제
 			deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
 
@@ -500,14 +512,19 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	/**
-	 * 기숙사 리뷰 업데이트 로직:
+	 * 기숙사 리뷰 업데이트 로직
 	 * 1) 캠퍼스 검증 및 조회
 	 * 2) 기존/신규 건물 엔티티 로드
 	 * 3) 기존 상세 정보 로드
-	 * 4) 건물 변경 시 평점·이미지·키워드 이동, 동일 건물 시 업데이트
-	 * 5) 리뷰 엔티티 갱신 저장
-	 * 6) 기존 시설 삭제 후 재생성과 저장
-	 * 7) 상세 정보 갱신 저장
+	 * 4) 건물 변경 여부 판단(moved)
+	 *    - moved = true  : 이전 건물 평점/키워드 감소, 신규 건물 평점/키워드 증가
+	 *    - moved = false : 동일 건물 평점/키워드 갱신
+	 * 5) 리뷰 엔티티 및 상세 정보 갱신 저장
+	 * 6) 시설 정보 재설정(기존 삭제 후 요청 기준으로 재생성)
+	 * 7) 이미지 변경 사항 비교 후 이미지 카운트 정확 조정 (null-safe)
+	 *    - moved = true  : oldHas면 이전 건물 decrement, nowHas면 신규 건물 increment
+	 *    - moved = false : (없→있) increment, (있→없) decrement
+	 * 8) 삭제된 이미지 S3 정리(old - new 차집합 삭제)
 	 */
 	private void updateDormitoryReview(DormReviews oldReview, ReviewRequest dto) {
 		// 1) 캠퍼스 검증
@@ -516,31 +533,26 @@ public class ReviewServiceImpl implements ReviewService {
 
 		// 2) 건물 엔티티 로드
 		Buildings oldBuilding = oldReview.getBuilding();
-		Buildings newBuilding = findOrCreateBuilding(dto.buildingRequest(), campus);
+		Buildings newBuilding = findOrCreateDormitory(dto.buildingRequest(), campus);
 
 		// 3) 기존 상세 정보 로드
 		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
 			.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
-		// 4) 건물 변경 처리
-		if (!oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode())) {
-			// a) 이전 건물 통계 감소
-			oldBuilding.removeRating(oldReview.getRating());
-			oldBuilding.decrementImagesCount();
-			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
-				Collections.emptyList());
+		boolean moved = !oldBuilding.getBuildingCode().equals(newBuilding.getBuildingCode());
 
-			// b) 신규 건물 통계 증가
+		if (moved) {
+			// a) 이전 건물 통계 감소(평점/키워드) ― 이미지 카운트는 나중에 old/new 비교로 처리
+			oldBuilding.removeRating(oldReview.getRating());
+			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(), Collections.emptyList());
+
+			// b) 신규 건물 통계 증가(평점/키워드)
 			newBuilding.addRating(dto.dormitoryReview().getRating());
-			newBuilding.incrementImagesCount();
 			updateKeywordCounts(newBuilding.getId(), false, Collections.emptyList(), dto.keywords().positive());
-			buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
 		} else {
-			// 동일 건물: 평점·키워드 업데이트
+			// 동일 건물: 평점·키워드만 선반영
 			oldBuilding.updateRating(oldReview.getRating(), dto.dormitoryReview().getRating());
-			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(),
-				dto.keywords().positive());
-			buildingsRepository.save(oldBuilding);
+			updateKeywordCounts(oldBuilding.getId(), false, oldDetails.getKeywords().positive(), dto.keywords().positive());
 		}
 
 		// 5) 리뷰 엔티티 갱신 저장
@@ -556,7 +568,23 @@ public class ReviewServiceImpl implements ReviewService {
 		ReviewDetails updatedDetails = dto.toUpdatedReviewDetails(oldDetails, newBuilding.getId());
 		reviewDetailsRepository.save(updatedDetails);
 
-		// 삭제할 이미지 삭제
+		boolean oldHas = oldDetails.getImages() != null && !oldDetails.getImages().isEmpty();
+		boolean nowHas = updatedDetails.getImages() != null && !updatedDetails.getImages().isEmpty();
+
+		if (moved) {
+			if (oldHas) oldBuilding.decrementImagesCount();
+			if (nowHas) newBuilding.incrementImagesCount();
+			buildingsRepository.saveAll(List.of(oldBuilding, newBuilding));
+		} else {
+			if (!oldHas && nowHas) {
+				oldBuilding.incrementImagesCount();
+			} else if (oldHas && !nowHas) {
+				oldBuilding.decrementImagesCount();
+			}
+			buildingsRepository.save(oldBuilding);
+		}
+
+		// 삭제할 이미지 실제 삭제 (old - new)
 		deleteRemovedImages(oldDetails.getImages(), updatedDetails.getImages());
 	}
 
@@ -662,15 +690,18 @@ public class ReviewServiceImpl implements ReviewService {
         // b)평점 제거
         building.removeRating(review.getRating());
 
-        // c)이미지 카운트 감소
-		building.decrementImagesCount();
+   		if (detail.hasImages()) {
+			building.decrementImagesCount();
+		}
 
         // d)키워드 통계 감소
         updateKeywordCounts(building.getId(), false,
                 detail.getKeywords().positive(), Collections.emptyList());
 
 		// 리뷰 데이터 삭제
-		detail.getImages().forEach(s3Service::deleteFile);
+		if (detail.hasImages()) {
+			detail.getImages().forEach(s3Service::deleteFile);
+		}
 
 		// e)연관 데이터 삭제
 		reviewDetailsRepository.delete(detail);
@@ -698,7 +729,8 @@ public class ReviewServiceImpl implements ReviewService {
         // 평점 제거
         building.removeRating(review.getRating());
         // 이미지 카운트 감소
-		building.decrementImagesCount();
+		if (detail.hasImages())
+			building.decrementImagesCount();
 
         // 키워드 통계 감소
         updateKeywordCounts(building.getId(), false,
@@ -709,7 +741,8 @@ public class ReviewServiceImpl implements ReviewService {
         dormitoryFacilitiesRepository.deleteAllByDormitoryReview(review);
 
 		// 리뷰 데이터 삭제
-		detail.getImages().forEach(s3Service::deleteFile);
+		if (detail.hasImages())
+			detail.getImages().forEach(s3Service::deleteFile);
 
 		// e)연관 데이터 삭제
 		reviewDetailsRepository.delete(detail);
@@ -733,7 +766,7 @@ public class ReviewServiceImpl implements ReviewService {
         // b) 평점 제거
         agency.removeRating(review.getRating());
         // 이미지 카운트 감소
-		if (detail.getImages() != null && !detail.getImages().isEmpty()) {
+		if (detail.hasImages()) {
 			agency.decrementImagesCount();
 		}
 
@@ -743,7 +776,7 @@ public class ReviewServiceImpl implements ReviewService {
         agenciesRepository.save(agency);
 
 		// 리뷰 데이터 삭제
-		if (detail.getImages() != null) {
+		if (detail.hasImages()) {
 			detail.getImages().forEach(s3Service::deleteFile);
 		}
 
