@@ -1,4 +1,4 @@
-package JJinBBang.app.global.security;
+package JJinBBang.app.global.security.properties;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,11 +30,6 @@ public class CompiledSecurityPathMatcher {
 	@Getter
 	private Map<String, List<RequestMatcher>> anonymousMatchers;
 	@Getter
-	private Map<String, List<RequestMatcher>> pendingUserMatchers;
-	@Getter
-	private Map<String, List<RequestMatcher>> refreshMatchers;
-
-	@Getter
 	private Map<VerificationStatus, Map<String, List<RequestMatcher>>> verificationMatchers;
 
 	@PostConstruct
@@ -42,8 +37,6 @@ public class CompiledSecurityPathMatcher {
 		this.permitAllMatchers       = compile(props.getPermitAll());
 		this.authenticatedMatchers   = compile(props.getAuthenticated());
 		this.anonymousMatchers       = compile(props.getAnonymous());
-		this.pendingUserMatchers     = compile(props.getPendingUser());
-		this.refreshMatchers         = compile(props.getRefresh());
 		this.verificationMatchers    = compileVerification(props.getVerificationStatusBased());
 	}
 
