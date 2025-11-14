@@ -1,12 +1,10 @@
 package JJinBBang.app.global.security;
 
-import static JJinBBang.app.global.security.SecurityPathProperties.*;
+import static JJinBBang.app.global.security.properties.SecurityPathProperties.*;
 
 import java.util.List;
 import java.util.Map;
 
-import JJinBBang.app.global.security.filter.PendingUserFilter;
-import JJinBBang.app.global.security.filter.VerificationStatusFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -24,6 +23,13 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import JJinBBang.app.global.jwt.JwtAuthenticationFilter;
+import JJinBBang.app.global.security.filter.LoginShortcutFilter;
+import JJinBBang.app.global.security.filter.VerificationStatusFilter;
+import JJinBBang.app.global.security.handler.OAuth2AuthenticationFailureHandler;
+import JJinBBang.app.global.security.handler.OAuth2AuthenticationSuccessHandler;
+import JJinBBang.app.global.security.properties.SecurityPathProperties;
+import JJinBBang.app.global.security.repository.HttpCookieOAuth2AuthorizationRequestRepository;
+import JJinBBang.app.global.security.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -35,26 +41,33 @@ public class SecurityConfig {
 	private final SecurityPathProperties securityPathProperties;
 	private final AuthenticationEntryPoint authenticationEntryPoint;
 	private final AccessDeniedHandler accessDeniedHandler;
-	private final PendingUserFilter pendingUserFilter;
 	private final VerificationStatusFilter verificationStatusFilter;
+
+	private final HttpCookieOAuth2AuthorizationRequestRepository authRequestRepository;
+	private final CustomOAuth2UserService customOAuth2UserService;
+	private final OAuth2AuthenticationSuccessHandler authenticationSuccessHandler;
+	private final OAuth2AuthenticationFailureHandler authenticationFailureHandler;
+
+	private final LoginShortcutFilter loginShortcutFilter;
 
 	// CORS 설정
 	CorsConfigurationSource corsConfigurationSource() {
 
 		CorsConfiguration globalConfig = new CorsConfiguration();
-		// globalConfig.setAllowedOrigins(List.of("http://localhost:3000"));
-//		globalConfig.setAllowedOrigins(List.of("*")); // 테스트용 TODO: 위에 패턴으로 변경해야 함
-		globalConfig.setAllowedOriginPatterns(List.of("*")); // 모든 도메인 허용
-		globalConfig.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE"));
-		globalConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-		// globalConfig.setAllowedHeaders(List.of("*"));
+		globalConfig.setAllowedOrigins(List.of(
+			"http://localhost:3000",
+			"http://localhost:5173",
+			"https://www.jjinbbang.kr"
+		));
+		globalConfig.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
+		globalConfig.setAllowedHeaders(List.of("*"));
 		globalConfig.setAllowCredentials(true);
 
 		CorsConfiguration swaggerConfig = new CorsConfiguration();
-		swaggerConfig.addAllowedOriginPattern("*");
-		swaggerConfig.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+		swaggerConfig.addAllowedOriginPattern("http://localhost:*");
+		swaggerConfig.setAllowedMethods(List.of("GET", "OPTIONS"));
 		swaggerConfig.setAllowedHeaders(List.of("*"));
-		swaggerConfig.setAllowCredentials(true);
+		swaggerConfig.setAllowCredentials(false);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", globalConfig);                  // 기본 API 설정
@@ -75,9 +88,26 @@ public class SecurityConfig {
 				.accessDeniedHandler(accessDeniedHandler)
 			)
 			.authorizeHttpRequests(this::authorizeSetting)
+
+			.oauth2Login(o -> o
+				.authorizationEndpoint(au -> au
+					.baseUri("/api/v1/auth/signIn")
+					.authorizationRequestRepository(authRequestRepository)
+				)
+				.redirectionEndpoint(re -> re
+					.baseUri("/login/oauth2/code/*")
+				)
+				.userInfoEndpoint(ui -> ui
+					.userService(customOAuth2UserService)
+				)
+				.successHandler(authenticationSuccessHandler)
+				.failureHandler(authenticationFailureHandler)
+			)
 			.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
-			.addFilterBefore(pendingUserFilter, VerificationStatusFilter.class)
-			.addFilterBefore(jwtAuthenticationFilter, PendingUserFilter.class);
+			.addFilterBefore(jwtAuthenticationFilter, VerificationStatusFilter.class)
+
+			.addFilterBefore(loginShortcutFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+		;
 
 		return http.build();
 	}
@@ -119,18 +149,6 @@ public class SecurityConfig {
 			});
 		if (anon.containsKey(METHOD_ALL)) {
 			anon.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).anonymous());
-		}
-
-		// 4) refresh 등록된 경로 권한 설정 (리프레시 토큰)
-		Map<String, List<String>> ref = securityPathProperties.getRefresh();
-		ref.entrySet().stream()
-			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
-			.forEach(e -> {
-				HttpMethod m = HttpMethod.valueOf(e.getKey());
-				e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
-			});
-		if (ref.containsKey(METHOD_ALL)) {
-			ref.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).authenticated());
 		}
 
 		// anyRequest

@@ -16,4 +16,8 @@ public class UserAuthException extends AuthGroupException {
     public static UserAuthException deletedUser() {
         return new UserAuthException("탈퇴한 유저입니다.");
     }
+
+    public static UserAuthException loginSessionExpired() {
+        return new UserAuthException("로그인 세션이 만료되었습니다.");
+    }
 }
