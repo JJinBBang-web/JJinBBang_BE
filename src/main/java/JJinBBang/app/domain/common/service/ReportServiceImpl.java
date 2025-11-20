@@ -1,10 +1,13 @@
 package JJinBBang.app.domain.common.service;
 
+import JJinBBang.app.domain.common.dto.response.ReportInfoResponse;
 import JJinBBang.app.domain.common.dto.response.ReportListResponse;
 import JJinBBang.app.domain.common.entity.Reports;
 import JJinBBang.app.domain.common.enums.ReportCategory;
 import JJinBBang.app.domain.common.exception.ReportInvalidException;
+import JJinBBang.app.domain.common.exception.ReportNotFoundGroupException;
 import JJinBBang.app.domain.common.repository.ReportRepository;
+import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.CursorPaginationInfo;
 import JJinBBang.app.global.common.dto.ReportInfo;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
@@ -22,6 +26,7 @@ import java.util.List;
 public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
+    private final ReportLikesRepository reportLikesRepository;
 
     /**
      * 리포트 데이터 목록 조회
@@ -76,5 +81,40 @@ public class ReportServiceImpl implements ReportService {
         CursorPaginationInfo cursorInfo = new CursorPaginationInfo(nextCursor, page.hasNext());
 
         return new ReportListResponse(reports, cursorInfo);
+    }
+
+
+    /**
+     * 리포트 상세 내용 조회
+     *
+     * @param user 좋아요 여부 조회를 위함
+     * @param reportId 조회하고자 하는 리포트 id
+     * @return
+     */
+    @Transactional
+    @Override
+    public ReportInfoResponse getReportDetail(Users user, Long reportId) {
+
+        // 리포트 조회
+        Reports report = reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundGroupException::reportNotFound);
+
+        // 조회수 증가
+        report.increaseViewCount();
+
+        // 좋아요 여부 확인
+        boolean isLiked = user != null && reportLikesRepository.existsByReportAndUser(report, user);
+
+        return new ReportInfoResponse(
+                report.getId(),
+                report.getCategory(),
+                report.getTitle(),
+                report.getContent(),
+                report.getCreatedAt(),
+                report.getLikeCount(),
+                report.getViewCount(), // 증가한 조회수 반환
+                report.getShareCount(),
+                isLiked
+        );
     }
 }

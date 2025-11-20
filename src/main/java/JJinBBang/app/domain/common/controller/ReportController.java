@@ -36,7 +36,8 @@ public class ReportController {
             @AuthenticationPrincipal Users user,
             @PathVariable Long reportId
     ) {
-        return new ResTemplate<>(HttpStatus.OK, "리포트 조회 성공", null);
+        ReportInfoResponse data = reportService.getReportDetail(user, reportId);
+        return new ResTemplate<>(HttpStatus.OK, "리포트 조회 성공", data);
     }
 
     @PostMapping("/like/{reportId}")

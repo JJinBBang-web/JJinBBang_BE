@@ -44,4 +44,20 @@ public class Reports extends BaseEntity {
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL)
     private List<ReportLikes> reportLikes = new ArrayList<>();
+
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
+
+    public void increaseShareCount() {
+        this.shareCount++;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
 }
