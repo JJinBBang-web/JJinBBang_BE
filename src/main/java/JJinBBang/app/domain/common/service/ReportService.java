@@ -10,4 +10,10 @@ public interface ReportService {
 
     @Transactional
     ReportInfoResponse getReportDetail(Users user, Long reportId);
+
+    @Transactional
+    void addLike(Users user, Long reportId);
+
+    @Transactional
+    void deleteLike(Users user, Long reportId);
 }

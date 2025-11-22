@@ -45,6 +45,7 @@ public class ReportController {
             @AuthenticationPrincipal Users user,
             @PathVariable Long reportId
     ) {
+        reportService.addLike(user, reportId);
         return new ResTemplate<>(HttpStatus.OK, "리포트 좋아요 추가 성공", null);
     }
 
@@ -53,6 +54,7 @@ public class ReportController {
             @AuthenticationPrincipal Users user,
             @PathVariable Long reportId
     ) {
+        reportService.deleteLike(user, reportId);
         return new ResTemplate<>(HttpStatus.OK, "리포트 좋아요 삭제 성공", null);
     }
 }

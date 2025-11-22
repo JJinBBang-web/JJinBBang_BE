@@ -33,8 +33,6 @@ public class ReportLikes {
         reportLikes.report = report;
         reportLikes.user = user;
 
-        report.getReportLikes().add(reportLikes);
-
         return reportLikes;
     }
 }

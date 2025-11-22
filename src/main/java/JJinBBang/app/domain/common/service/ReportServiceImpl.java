@@ -2,10 +2,13 @@ package JJinBBang.app.domain.common.service;
 
 import JJinBBang.app.domain.common.dto.response.ReportInfoResponse;
 import JJinBBang.app.domain.common.dto.response.ReportListResponse;
+import JJinBBang.app.domain.common.entity.ReportLikeId;
+import JJinBBang.app.domain.common.entity.ReportLikes;
 import JJinBBang.app.domain.common.entity.Reports;
 import JJinBBang.app.domain.common.enums.ReportCategory;
 import JJinBBang.app.domain.common.exception.ReportInvalidException;
 import JJinBBang.app.domain.common.exception.ReportNotFoundGroupException;
+import JJinBBang.app.domain.common.repository.ReportLikesRepository;
 import JJinBBang.app.domain.common.repository.ReportRepository;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.CursorPaginationInfo;
@@ -116,5 +119,57 @@ public class ReportServiceImpl implements ReportService {
                 report.getShareCount(),
                 isLiked
         );
+    }
+
+    /**
+     * 리포트 좋아요 추가
+     *
+     * @param user
+     * @param reportId
+     */
+    @Transactional
+    @Override
+    public void addLike(Users user, Long reportId) {
+
+        // 리포트 조회
+        Reports report = reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundGroupException::reportNotFound);
+
+        // 좋아요 어부 확인
+        boolean isLiked = reportLikesRepository.existsByReportAndUser(report, user);
+        if (isLiked) throw new IllegalArgumentException("이미 좋아요 누름");
+
+        // 좋아요 추가
+        ReportLikes reportLikes = ReportLikes.create(report, user);
+        reportLikesRepository.save(reportLikes);
+
+        // 좋아요 수 +1
+        report.increaseLikeCount();
+    }
+
+
+    /**
+     * 리포트 좋아요 제거
+     *
+     * @param user
+     * @param reportId
+     */
+    @Transactional
+    @Override
+    public void deleteLike(Users user, Long reportId) {
+
+        // 좋아요 ID 조회
+        ReportLikeId reportLikeId = ReportLikeId.of(reportId, user.getUserId());
+
+        // 좋아요 여부 확인
+        ReportLikes reportLikes = reportLikesRepository.findById(reportLikeId)
+                .orElseThrow(ReportNotFoundGroupException::reportNotFound);
+
+        // 좋아요 삭제
+        reportLikesRepository.delete(reportLikes);
+
+        // 좋아요 수 -1
+        Reports report = reportLikes.getReport();
+        report.decreaseLikeCount();
     }
 }
