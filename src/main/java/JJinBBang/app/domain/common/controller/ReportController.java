@@ -57,4 +57,12 @@ public class ReportController {
         reportService.deleteLike(user, reportId);
         return new ResTemplate<>(HttpStatus.OK, "리포트 좋아요 삭제 성공", null);
     }
+
+    @PatchMapping("/share/{reportId}")
+    public ResTemplate<?> addReportShareCount(
+            @PathVariable Long reportId
+    ) {
+        reportService.addShareCount(reportId);
+        return new ResTemplate<>(HttpStatus.OK, "공유수 추가 성공", null);
+    }
 }

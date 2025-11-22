@@ -172,4 +172,19 @@ public class ReportServiceImpl implements ReportService {
         Reports report = reportLikes.getReport();
         report.decreaseLikeCount();
     }
+
+
+    /**
+     * 공유수 추가
+     *
+     * @param reportId
+     */
+    @Transactional
+    @Override
+    public void addShareCount(Long reportId) {
+        Reports report = reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundGroupException::reportNotFound);
+
+        report.increaseShareCount();
+    }
 }

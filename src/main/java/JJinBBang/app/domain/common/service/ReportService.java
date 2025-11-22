@@ -16,4 +16,7 @@ public interface ReportService {
 
     @Transactional
     void deleteLike(Users user, Long reportId);
+
+    @Transactional
+    void addShareCount(Long reportId);
 }
