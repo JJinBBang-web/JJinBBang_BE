@@ -20,13 +20,14 @@ public class ReportController {
     @GetMapping("")
     public ResTemplate<ReportListResponse> getReportList(
             @RequestParam(name = "category") String category,
-            @RequestParam(name = "cursor", required = false) Integer cursor,
+            @RequestParam(name = "cursor", required = false) Long cursor,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        int currentCursor = (cursor != null) ? cursor : 0;
-        int pageSize = (size != null) ? size : 10;
-
-        ReportListResponse data = reportService.getReportList(category.toUpperCase(), currentCursor, pageSize);
+        ReportListResponse data = reportService.getReportList(
+                category != null ?category.toUpperCase() : null,
+                cursor,
+                (size != null && size > 0) ? size : 10
+        );
 
         return new ResTemplate<>(HttpStatus.OK, "리포트 목록 조회 성공", data);
     }

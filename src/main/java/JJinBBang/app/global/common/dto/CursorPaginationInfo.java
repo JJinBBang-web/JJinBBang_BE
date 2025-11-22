@@ -1,7 +1,7 @@
 package JJinBBang.app.global.common.dto;
 
 public record CursorPaginationInfo(
-        Integer nextCursor,
+        Long nextCursor,
         boolean hasNext
 ) {
 }

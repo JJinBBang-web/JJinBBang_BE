@@ -6,7 +6,7 @@ import JJinBBang.app.domain.user.entity.Users;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface ReportService {
-    ReportListResponse getReportList(String category, int cursor, int size);
+    ReportListResponse getReportList(String category, Long cursor, int size);
 
     @Transactional
     ReportInfoResponse getReportDetail(Users user, Long reportId);

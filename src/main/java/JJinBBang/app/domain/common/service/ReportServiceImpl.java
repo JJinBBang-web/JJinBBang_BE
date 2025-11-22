@@ -40,34 +40,52 @@ public class ReportServiceImpl implements ReportService {
      * @return
      */
     @Override
-    public ReportListResponse getReportList(String category, int cursor, int size) {
+    public ReportListResponse getReportList(String category, Long cursor, int size) {
 
-        if (cursor < 0) throw ReportInvalidException.invalidCursor();
-        if (size < 0) throw ReportInvalidException.invalidSize();
+        if (size <= 0) throw ReportInvalidException.invalidSize();
 
         Pageable pageable = PageRequest.of(
-                cursor, size, Sort.by(Sort.Direction.DESC, "createdAt")
+                0, size + 1, Sort.by(Sort.Direction.DESC, "id")
         );
 
-        // category 기반 리포트 데이터 조회
-        Page<Reports> page;
-
+        // category 검증
+        final ReportCategory reportCategory;
         if (category == null || category.isBlank()) {
-            page = reportRepository.findAll(pageable);
+            reportCategory = null;
         } else {
-            final ReportCategory reportCategory;
-
             try {
                 reportCategory = ReportCategory.valueOf(category);
             } catch (IllegalArgumentException e) {
                 throw ReportInvalidException.invalidCategory();
             }
-
-            page = reportRepository.findByCategory(reportCategory, pageable);
         }
 
+        List<Reports> resultList;
+
+        // 첫 페이지
+        if (cursor == null) {
+            if (reportCategory == null) {
+                Page<Reports> page = reportRepository.findAll(pageable);
+                resultList = page.getContent();
+            }  else {
+                Page<Reports> page = reportRepository.findByCategory(reportCategory, pageable);
+                resultList = page.getContent();
+            }
+        // 다음 페이지
+        } else {
+            if (reportCategory == null) {
+                resultList = reportRepository.findByIdLessThanOrderByIdDesc(cursor, pageable);
+            } else {
+                resultList = reportRepository.findByCategoryAndIdLessThanOrderByIdDesc(reportCategory, cursor, pageable);
+            }
+        }
+
+        // hasNext 판별
+        boolean hasNext = resultList.size() > size;
+        if (hasNext) resultList = resultList.subList(0, size);
+
         // 리포트 데이터 매핑
-        List<ReportInfo> reports = page.getContent().stream()
+        List<ReportInfo> reports = resultList.stream()
                 .map(report -> new ReportInfo(
                         report.getId(),
                         report.getCoverImage(),
@@ -79,9 +97,9 @@ public class ReportServiceImpl implements ReportService {
                 ))
                 .toList();
 
-        // pagination 데이터 업데이트
-        Integer nextCursor = page.hasNext() ? cursor + 1 : null;
-        CursorPaginationInfo cursorInfo = new CursorPaginationInfo(nextCursor, page.hasNext());
+        // pagination 데이터 업데이트 (마지막 요소 id 조회)
+        Long nextCursor = hasNext && !resultList.isEmpty() ? resultList.getLast().getId() : null;
+        CursorPaginationInfo cursorInfo = new CursorPaginationInfo(nextCursor, hasNext);
 
         return new ReportListResponse(reports, cursorInfo);
     }
