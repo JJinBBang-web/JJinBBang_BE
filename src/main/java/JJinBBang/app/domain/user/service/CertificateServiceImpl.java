@@ -4,7 +4,7 @@ import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.*;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import JJinBBang.app.global.config.GoogleProperties;
+import JJinBBang.app.global.sheets.properties.GoogleProperties;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.drive.Drive;
@@ -182,9 +182,9 @@ public class CertificateServiceImpl implements CertificateService {
             String fileName,
             String fileLink
     ) {
-        String spreadsheetId = googleProps.getSpreadsheet().getId(); // 스프레드시트
-        String sheetName = googleProps.getSpreadsheet().getSheets().get(type); // 스프레드시트의 탭
-        String range = String.format(googleProps.getSpreadsheet().getRangeTemplate(), sheetName); // 시트 범위 포맷팅
+        String spreadsheetId = googleProps.getSpreadsheetCertificate().getId(); // 스프레드시트
+        String sheetName = googleProps.getSpreadsheetCertificate().getSheets().get(type); // 스프레드시트의 탭
+        String range = String.format(googleProps.getSpreadsheetCertificate().getRangeTemplate(), sheetName); // 시트 범위 포맷팅
         String hyperlinkFormula = String.format("=HYPERLINK(\"%s\",\"%s\")", fileLink, fileName); // url 포뮬러
 
         List<Object> row = List.of(

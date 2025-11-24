@@ -24,6 +24,17 @@ public record BuildingRequest (
     @NotNull
     Double longitude
 ){
+	public BuildingRequest updateBuildingCode(String buildingCode) {
+		return new BuildingRequest(
+			buildingCode,
+			this.name,
+			this.type,
+			this.address,
+			this.latitude,
+			this.longitude
+		);
+	}
+
     public Buildings toBuildingEntity(Campuses campus) {
         return Buildings.builder()
             .buildingCode(buildingCode)

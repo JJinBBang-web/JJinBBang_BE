@@ -34,4 +34,8 @@ public class ReviewDetails {
 	private Integer imageCount;
 
 	private Keywords keywords;
+
+	public boolean hasImages() {
+		return images != null && !images.isEmpty();
+	}
 }
