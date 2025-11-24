@@ -154,9 +154,14 @@ user:
     grace-days: 30 # 사용자가 탈퇴한 후, 해당 사용자의 데이터가 삭제되기까지의 기간 (일 단위)
 
 vworld:
-  base-url: https://api.vworld.kr/req/data
+  base-url: https://api.vworld.kr
   api-key: ${vworld.api-key}
   buffer-meter: 5 # 버퍼 영역 (단위: m)
+  domain: https://jjinbbang.kr
+  geocode:
+    core-pool-size: 4
+    max-pool-size: 4
+    queue-capacity: 100
 
 google:
   credentials:
