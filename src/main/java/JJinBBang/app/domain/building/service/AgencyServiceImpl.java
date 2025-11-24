@@ -48,7 +48,7 @@ public class AgencyServiceImpl implements AgencyService{
 
         // 2) 좋아요 여부 계산
         Boolean liked = agency.getAgencyLikes().stream()
-                .anyMatch(like -> like.getUser().equals(user));
+                .anyMatch(like -> like.getUser().getUserId().equals(user.getUserId()));
 
         // 3) 키워드 조회 - 없으면 새 엔티티
         BuildingKeywordCounts buildingKeywordCounts = buildingKeywordCountRepository
