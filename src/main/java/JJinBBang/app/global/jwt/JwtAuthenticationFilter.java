@@ -39,16 +39,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-		FilterChain filterChain) throws ServletException, IOException {
+			FilterChain filterChain) throws ServletException, IOException {
 
 		String authorization = request.getHeader("Authorization");
-		if(authorization != null && authorization.startsWith("Bearer ")) {
+		if (authorization != null && authorization.startsWith("Bearer ")) {
 			String token = jwtService.extractBearerTokenFromHeader(authorization);
 			try {
 				Claims claims = jwtService.parseClaims(token);
 
-				String tokenType = claims.get("tokenType", String.class);
-				if(ACCESS != TokenType.valueOf(tokenType)) {
+				String tokenType = claims.get("type", String.class);
+				if (ACCESS != TokenType.valueOf(tokenType)) {
 					throw InvalidTokenException.invalidToken();
 				}
 
@@ -59,14 +59,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					throw InvalidTokenException.deletedUser();
 				}
 
-				List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+				List<GrantedAuthority> authorities = List.of(
+						new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 
 				var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
-			}  catch (InvalidTokenException e){
-				authenticationEntryPoint.commence(request , response, e);
+			} catch (InvalidTokenException e) {
+				authenticationEntryPoint.commence(request, response, e);
 			} catch (NotFoundGroupException e) {
-				authenticationEntryPoint.commence(request , response, InvalidTokenException.userNotFound());
+				authenticationEntryPoint.commence(request, response, InvalidTokenException.userNotFound());
 			}
 		}
 		filterChain.doFilter(request, response);
