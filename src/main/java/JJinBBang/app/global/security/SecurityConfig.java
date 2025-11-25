@@ -13,7 +13,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -29,6 +31,7 @@ import JJinBBang.app.global.security.handler.OAuth2AuthenticationFailureHandler;
 import JJinBBang.app.global.security.handler.OAuth2AuthenticationSuccessHandler;
 import JJinBBang.app.global.security.properties.SecurityPathProperties;
 import JJinBBang.app.global.security.repository.HttpCookieOAuth2AuthorizationRequestRepository;
+import JJinBBang.app.global.security.resolver.CustomOAuth2AuthorizationRequestResolver;
 import JJinBBang.app.global.security.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +52,9 @@ public class SecurityConfig {
 	private final OAuth2AuthenticationFailureHandler authenticationFailureHandler;
 
 	private final LoginShortcutFilter loginShortcutFilter;
+	private final ClientRegistrationRepository clientRegistrationRepository;
+
+	private static final String OAUTH2_AUTHORIZATION_BASE_URI = "/api/v1/auth/signIn";
 
 	// CORS 설정
 	CorsConfigurationSource corsConfigurationSource() {
@@ -76,53 +82,53 @@ public class SecurityConfig {
 		return source;
 	}
 
+	@Bean
+	public OAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver() {
+		return new CustomOAuth2AuthorizationRequestResolver(clientRegistrationRepository,
+				OAUTH2_AUTHORIZATION_BASE_URI);
+	}
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			.httpBasic(HttpBasicConfigurer::disable)
-			.cors(c -> c.configurationSource(corsConfigurationSource()))
-			.csrf(AbstractHttpConfigurer::disable)
-			.exceptionHandling(e -> e
-				.authenticationEntryPoint(authenticationEntryPoint)
-				.accessDeniedHandler(accessDeniedHandler)
-			)
-			.authorizeHttpRequests(this::authorizeSetting)
+				.httpBasic(HttpBasicConfigurer::disable)
+				.cors(c -> c.configurationSource(corsConfigurationSource()))
+				.csrf(AbstractHttpConfigurer::disable)
+				.exceptionHandling(e -> e
+						.authenticationEntryPoint(authenticationEntryPoint)
+						.accessDeniedHandler(accessDeniedHandler))
+				.authorizeHttpRequests(this::authorizeSetting)
 
-			.oauth2Login(o -> o
-				.authorizationEndpoint(au -> au
-					.baseUri("/api/v1/auth/signIn")
-					.authorizationRequestRepository(authRequestRepository)
-				)
-				.redirectionEndpoint(re -> re
-					.baseUri("/login/oauth2/code/*")
-				)
-				.userInfoEndpoint(ui -> ui
-					.userService(customOAuth2UserService)
-				)
-				.successHandler(authenticationSuccessHandler)
-				.failureHandler(authenticationFailureHandler)
-			)
-			.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
-			.addFilterBefore(jwtAuthenticationFilter, VerificationStatusFilter.class)
+				.oauth2Login(o -> o
+						.authorizationEndpoint(au -> au
+								.baseUri(OAUTH2_AUTHORIZATION_BASE_URI)
+								.authorizationRequestRepository(authRequestRepository)
+								.authorizationRequestResolver(customOAuth2AuthorizationRequestResolver()))
+						.redirectionEndpoint(re -> re
+								.baseUri("/login/oauth2/code/*"))
+						.userInfoEndpoint(ui -> ui
+								.userService(customOAuth2UserService))
+						.successHandler(authenticationSuccessHandler)
+						.failureHandler(authenticationFailureHandler))
+				.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(jwtAuthenticationFilter, VerificationStatusFilter.class)
 
-			.addFilterBefore(loginShortcutFilter, OAuth2AuthorizationRequestRedirectFilter.class)
-		;
+				.addFilterBefore(loginShortcutFilter, OAuth2AuthorizationRequestRedirectFilter.class);
 
 		return http.build();
 	}
 
 	private void authorizeSetting(
-		AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorize) {
+			AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorize) {
 		// 특정 메서드 우선 → ALL
 		// 1) permitAll 등록된 경로 권한 설정
 		Map<String, List<String>> permit = securityPathProperties.getPermitAll();
 		permit.entrySet().stream()
-			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
-			.forEach(e -> {
-				HttpMethod m = HttpMethod.valueOf(e.getKey());
-				e.getValue().forEach(p -> authorize.requestMatchers(m, p).permitAll());
-			});
+				.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+				.forEach(e -> {
+					HttpMethod m = HttpMethod.valueOf(e.getKey());
+					e.getValue().forEach(p -> authorize.requestMatchers(m, p).permitAll());
+				});
 		if (permit.containsKey(METHOD_ALL)) {
 			permit.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).permitAll());
 		}
@@ -130,11 +136,11 @@ public class SecurityConfig {
 		// 2) authenticated 등록된 경로 권한 설정
 		Map<String, List<String>> auth = securityPathProperties.getAuthenticated();
 		auth.entrySet().stream()
-			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
-			.forEach(e -> {
-				HttpMethod m = HttpMethod.valueOf(e.getKey());
-				e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
-			});
+				.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+				.forEach(e -> {
+					HttpMethod m = HttpMethod.valueOf(e.getKey());
+					e.getValue().forEach(p -> authorize.requestMatchers(m, p).authenticated());
+				});
 		if (auth.containsKey(METHOD_ALL)) {
 			auth.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).authenticated());
 		}
@@ -142,20 +148,20 @@ public class SecurityConfig {
 		// 3) anonymous 등록된 경로 권한 설정
 		Map<String, List<String>> anon = securityPathProperties.getAnonymous();
 		anon.entrySet().stream()
-			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
-			.forEach(e -> {
-				HttpMethod m = HttpMethod.valueOf(e.getKey());
-				e.getValue().forEach(p -> authorize.requestMatchers(m, p).anonymous());
-			});
+				.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))
+				.forEach(e -> {
+					HttpMethod m = HttpMethod.valueOf(e.getKey());
+					e.getValue().forEach(p -> authorize.requestMatchers(m, p).anonymous());
+				});
 		if (anon.containsKey(METHOD_ALL)) {
 			anon.get(METHOD_ALL).forEach(p -> authorize.requestMatchers(p).anonymous());
 		}
 
 		// anyRequest
 		switch (securityPathProperties.getAnyRequest()) {
-			case "permit-all"  -> authorize.anyRequest().permitAll();
-			case "anonymous"   -> authorize.anyRequest().anonymous();
-			default            -> authorize.anyRequest().authenticated();
+			case "permit-all" -> authorize.anyRequest().permitAll();
+			case "anonymous" -> authorize.anyRequest().anonymous();
+			default -> authorize.anyRequest().authenticated();
 		}
 	}
 }
