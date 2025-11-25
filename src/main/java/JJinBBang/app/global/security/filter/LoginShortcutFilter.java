@@ -14,7 +14,7 @@ import JJinBBang.app.global.cookie.CookieUtils;
 import JJinBBang.app.global.jwt.service.JwtService;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
 import JJinBBang.app.global.security.exception.SecurityErrorResponder;
-import JJinBBang.app.global.security.redirect.OAuthRedirectCookieManager;
+import JJinBBang.app.global.security.service.OAuthRedirectCookieService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +31,7 @@ public class LoginShortcutFilter extends OncePerRequestFilter {
 	private final UsersService usersService;
 	private final CookieUtils cookieUtils;
 	private final SecurityErrorResponder responder;
-	private final OAuthRedirectCookieManager redirectCookieManager;
+	private final OAuthRedirectCookieService redirectCookieManager;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
