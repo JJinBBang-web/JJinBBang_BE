@@ -31,7 +31,7 @@ public class BuildingServiceImpl implements BuildingService {
 
 		// 2) 좋아요 여부
 		Boolean liked = building.getBuildingLikes().stream()
-				.anyMatch(like -> like.getUser().equals(user));
+				.anyMatch(like -> like.getUser().getUserId().equals(user.getUserId()));
 
 		// 3) 키워드 조회 - 없으면 새 엔티티
 		BuildingKeywordCounts buildingKeywordCounts = buildingKeywordCountRepository
