@@ -3,7 +3,6 @@ package JJinBBang.app.global.security.filter;
 import static JJinBBang.app.global.cookie.CookieType.*;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,7 @@ import JJinBBang.app.global.cookie.CookieUtils;
 import JJinBBang.app.global.jwt.service.JwtService;
 import JJinBBang.app.global.security.exception.SecurityAuthException;
 import JJinBBang.app.global.security.exception.SecurityErrorResponder;
-import JJinBBang.app.global.security.properties.WhitelistDomain;
+import JJinBBang.app.global.security.redirect.OAuthRedirectCookieManager;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,12 +30,12 @@ public class LoginShortcutFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
 	private final UsersService usersService;
 	private final CookieUtils cookieUtils;
-	private final WhitelistDomain whitelistDomain;
 	private final SecurityErrorResponder responder;
+	private final OAuthRedirectCookieManager redirectCookieManager;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-		throws IOException, ServletException {
+			throws IOException, ServletException {
 
 		String uri = req.getRequestURI();
 		// OAuth2 시작 엔드포인트로 가는 요청만 개입
@@ -45,11 +44,12 @@ public class LoginShortcutFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		// 안전한 리다이렉트 목적지 계산 (화이트리스트 검증)
-		String frontendRedirect = req.getParameter("redirect");
-		if (!isWhitelisted(frontendRedirect)) {
-			log.warn("허용되지 않은 redirect uri: {}", frontendRedirect);
-			responder.write(res, SecurityAuthException.notAllowedOAuthRedirectUri(), HttpStatus.BAD_REQUEST);
+		String frontendRedirect;
+		try {
+			frontendRedirect = redirectCookieManager.resolveAndStore(req, res);
+		} catch (SecurityAuthException e) {
+			log.warn("redirect 파라미터 검증 실패", e);
+			responder.write(res, e, HttpStatus.BAD_REQUEST);
 			return;
 		}
 
@@ -81,24 +81,16 @@ public class LoginShortcutFilter extends OncePerRequestFilter {
 	}
 
 	private static String getCookie(HttpServletRequest req, String name) {
-		if (req.getCookies() == null) return null;
-		for (var c : req.getCookies()) if (name.equals(c.getName())) return c.getValue();
+		if (req.getCookies() == null)
+			return null;
+		for (var c : req.getCookies())
+			if (name.equals(c.getName()))
+				return c.getValue();
 		return null;
 	}
 
-	private boolean isWhitelisted(String redirect) {
-		if (redirect == null || redirect.isBlank()) return false;
-		List<String> allowed = whitelistDomain.getDomains();
-		if (allowed == null || allowed.isEmpty()) return false;
-		for (String prefix : allowed) {
-			log.info("redirect uri whitelist check: {} ~ {}", prefix, redirect);
-			if (redirect.startsWith(prefix)) return true;
-		}
-		return false;
-	}
-
 	private static void redirectWith(HttpServletResponse res, String frontend, String status)
-		throws IOException {
+			throws IOException {
 		var b = UriComponentsBuilder.fromUriString(frontend).queryParam("status", status);
 		res.sendRedirect(b.build().toUriString());
 	}
