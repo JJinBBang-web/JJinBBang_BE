@@ -1,22 +1,26 @@
 package JJinBBang.app.domain.user.entity.oauth;
 
+import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("unchecked")
 public class NaverUserInfo implements OAuth2UserInfo {
 	private final Map<String, Object> attrs;
-	private final Map<String, Object> response;
+	private static final String PROVIDER_ID_KEY = "id";
 
 	public NaverUserInfo(Map<String, Object> attrs) {
-		this.attrs = attrs;
 		// 네이버 응답 구조상 "response" 키 아래에 실제 유저 정보가 있음
-		this.response = (Map<String, Object>) attrs.get("response");
+		Object attr = attrs.get("response");
+		if(attr instanceof Map) {
+			this.attrs = new HashMap<>((Map<String, Object>) attr);
+		} else {
+			this.attrs = new HashMap<>();
+		}
 	}
 
 	@Override
 	public String getProviderId() {
 		// 네이버의 고유 사용자 ID
-		return String.valueOf(response.get("id"));
+		return (String) attrs.get(PROVIDER_ID_KEY);
 	}
 
 	@Override
@@ -25,14 +29,14 @@ public class NaverUserInfo implements OAuth2UserInfo {
 	}
 
 	public String getEmail() {
-		return (String) response.get("email");
+		return (String) attrs.get("email");
 	}
 
 	public String getName() {
-		return (String) response.get("name");
+		return (String) attrs.get("name");
 	}
 
 	public String getProfileImage() {
-		return (String) response.get("profile_image");
+		return (String) attrs.get("profile_image");
 	}
 }
