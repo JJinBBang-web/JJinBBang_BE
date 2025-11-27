@@ -1,4 +1,4 @@
-package JJinBBang.app.global.security.exception;
+package JJinBBang.app.global.security.handler;
 
 import java.io.IOException;
 
@@ -8,6 +8,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import JJinBBang.app.global.jwt.exception.InvalidTokenException;
+import JJinBBang.app.global.security.exception.SecurityAuthException;
+import JJinBBang.app.global.security.exception.SecurityErrorResponder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
