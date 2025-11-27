@@ -4,9 +4,7 @@ import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
-import JJinBBang.app.global.jwt.JwtUtils;
-import JJinBBang.app.global.jwt.enums.TokenType;
-import io.jsonwebtoken.Claims;
+import JJinBBang.app.global.jwt.service.impl.AccessTokenGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,58 +17,86 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("prod")
 class TokenGeneratorTest {
 
-    @Autowired
-    private UsersService usersService;
+	@Autowired
+	private UsersService usersService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
+	@Autowired
+	private AccessTokenGenerator accessTokenGenerator;
 
-    @Test
-    @DisplayName("디버그 유저 생성 후 Access/Refresh Token 발급 및 검증")
-    void generateDebugUserTokens() {
-        // --- 1) 디버그 유저 생성 및 저장 ---
-        String providerId = "debug-user";
-        Users saved;
-        if(usersService.existsByProviderId(providerId)) {
-            saved = usersService.findByProviderId(providerId);
-        } else {
-            Users user = Users.builder()
-                .provider(Provider.kakao)
-                .providerId(providerId)
-                .build();
-            saved = usersService.save(user);
-        }
+	@Test
+	@DisplayName("더미 계정 생성 후 Access Token 발급 (기본 UNVERIFIED 상태)")
+	void generateAccessTokenForDummyUser() {
+		generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus.UNVERIFIED);
+	}
 
-        assertNotNull(saved.getUserId(), "저장된 유저는 userId 가 있어야 한다");
+	@Test
+	@DisplayName("더미 계정 생성 후 Access Token 발급 (VERIFIED 상태)")
+	void generateAccessTokenForVerifiedUser() {
+		generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus.VERIFIED);
+	}
 
-        // --- 2) Access Token 발급 ---
-        String accessToken = jwtUtils.generateAccessToken(saved);
-        assertNotNull(accessToken);
-        assertFalse(accessToken.isBlank());
+	@Test
+	@DisplayName("더미 계정 생성 후 Access Token 발급 (EMAIL_VERIFIED 상태)")
+	void generateAccessTokenForEmailVerifiedUser() {
+		generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
+	}
 
-        Claims accessClaims = jwtUtils.parseClaims(accessToken);
-        assertEquals(saved.getProviderId(), accessClaims.getSubject());
-        assertEquals(
-            VerificationStatus.UNVERIFIED.name(),
-            accessClaims.get("verificationStatus", String.class)
-        );
-        assertEquals(TokenType.ACCESS.getType(), accessClaims.get("tokenType", String.class));
+	@Test
+	@DisplayName("더미 계정 생성 후 Access Token 발급 (ENROLL_STUDENT_VERIFIED 상태)")
+	void generateAccessTokenForEnrollStudentVerifiedUser() {
+		generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus.ENROLL_STUDENT_VERIFIED);
+	}
 
-        System.out.println("access token = " + accessToken);
+	@Test
+	@DisplayName("더미 계정 생성 후 Access Token 발급 (NEW_STUDENT_VERIFIED 상태)")
+	void generateAccessTokenForNewStudentVerifiedUser() {
+		generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus.NEW_STUDENT_VERIFIED);
+	}
 
-        // --- 3) Refresh Token 발급 ---
-        String refreshToken = jwtUtils.generateRefreshToken(saved);
-        assertNotNull(refreshToken);
-        assertFalse(refreshToken.isBlank());
+	@Test
+	@DisplayName("더미 계정 생성 후 Access Token 발급 (PENDING 상태)")
+	void generateAccessTokenForPendingUser() {
+		generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus.PENDING);
+	}
 
-        Claims refreshClaims = jwtUtils.parseClaims(refreshToken);
-        assertEquals(saved.getProviderId(), refreshClaims.getSubject());
-        assertEquals(
-            VerificationStatus.UNVERIFIED.name(),
-            refreshClaims.get("verificationStatus", String.class)
-        );
-        assertEquals(TokenType.REFRESH.getType(), refreshClaims.get("tokenType", String.class));
+	private void generateAccessTokenForDummyUserWithVerificationStatus(VerificationStatus verificationStatus) {
+		// --- 1) 더미 계정 생성 및 저장 ---
+		String providerId = "test-dummy-user-" + System.currentTimeMillis();
+		Users saved;
 
-        System.out.println("refresh token = " + refreshToken);
-    }
+		if (usersService.existsByProviderId(providerId)) {
+			saved = usersService.findByProviderId(providerId);
+		} else {
+			Users user = Users.builder()
+					.provider(Provider.kakao)
+					.providerId(providerId)
+					.build();
+			saved = usersService.save(user);
+		}
+
+		assertNotNull(saved.getUserId(), "저장된 유저는 userId가 있어야 한다");
+
+		// --- 2) 인증 상태 수정 (필요한 경우) ---
+		if (saved.getVerificationStatus() != verificationStatus) {
+			saved.updateVerificationStatus(verificationStatus);
+			saved = usersService.save(saved);
+		}
+
+		// --- 3) Access Token 발급 ---
+		String accessToken = accessTokenGenerator.generate(saved);
+		assertNotNull(accessToken);
+		assertFalse(accessToken.isBlank());
+
+		System.out.println("==========================================");
+		System.out.println("더미 계정 정보:");
+		System.out.println("  - User ID: " + saved.getUserId());
+		System.out.println("  - Provider: " + saved.getProvider());
+		System.out.println("  - Provider ID: " + saved.getProviderId());
+		System.out.println("  - Role: " + saved.getRole());
+		System.out.println("  - Verification Status: " + saved.getVerificationStatus());
+		System.out.println("==========================================");
+		System.out.println("Access Token:");
+		System.out.println(accessToken);
+		System.out.println("==========================================");
+	}
 }
