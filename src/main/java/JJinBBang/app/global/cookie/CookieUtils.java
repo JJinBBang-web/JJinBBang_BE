@@ -39,8 +39,6 @@ public class CookieUtils {
 		}
 		cookie.setMaxAge(maxAgeSeconds);
 
-		res.addCookie(cookie);
-
 		// SameSite 지원 (Servlet Cookie API엔 없음 → 직접 헤더 추가)
 		String header = String.format("%s=%s; Path=/; Max-Age=%d%s%s; SameSite=%s",
 				name,
