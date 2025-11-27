@@ -45,7 +45,6 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
 			clearAuthCookies(response);
 			response.sendRedirect(target);
 		} catch (SecurityAuthException e) {
-			log.warn("Invalid redirect cookie on OAuth failure", e);
 			clearAuthCookies(response);
 			responder.write(response, e, HttpStatus.BAD_REQUEST);
 		}

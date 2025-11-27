@@ -14,7 +14,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,7 +24,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import JJinBBang.app.global.jwt.JwtAuthenticationFilter;
-import JJinBBang.app.global.security.filter.LoginShortcutFilter;
 import JJinBBang.app.global.security.filter.VerificationStatusFilter;
 import JJinBBang.app.global.security.handler.OAuth2AuthenticationFailureHandler;
 import JJinBBang.app.global.security.handler.OAuth2AuthenticationSuccessHandler;
@@ -51,7 +49,6 @@ public class SecurityConfig {
 	private final OAuth2AuthenticationSuccessHandler authenticationSuccessHandler;
 	private final OAuth2AuthenticationFailureHandler authenticationFailureHandler;
 
-	private final LoginShortcutFilter loginShortcutFilter;
 	private final ClientRegistrationRepository clientRegistrationRepository;
 
 	private static final String OAUTH2_AUTHORIZATION_BASE_URI = "/api/v1/auth/signIn";
@@ -61,10 +58,9 @@ public class SecurityConfig {
 
 		CorsConfiguration globalConfig = new CorsConfiguration();
 		globalConfig.setAllowedOrigins(List.of(
-			"http://localhost:3000",
-			"http://localhost:5173",
-			"https://www.jjinbbang.kr"
-		));
+				"http://localhost:3000",
+				"http://localhost:5173",
+				"https://www.jjinbbang.kr"));
 		globalConfig.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
 		globalConfig.setAllowedHeaders(List.of("*"));
 		globalConfig.setAllowCredentials(true);
@@ -76,15 +72,16 @@ public class SecurityConfig {
 		swaggerConfig.setAllowCredentials(false);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", globalConfig);                  // 기본 API 설정
-		source.registerCorsConfiguration("/swagger-ui/**", swaggerConfig);       // Swagger UI 전용 설정
-		source.registerCorsConfiguration("/v3/api-docs/**", swaggerConfig);      // OpenAPI docs 설정
+		source.registerCorsConfiguration("/**", globalConfig); // 기본 API 설정
+		source.registerCorsConfiguration("/swagger-ui/**", swaggerConfig); // Swagger UI 전용 설정
+		source.registerCorsConfiguration("/v3/api-docs/**", swaggerConfig); // OpenAPI docs 설정
 		return source;
 	}
 
 	@Bean
 	public OAuth2AuthorizationRequestResolver customOAuth2AuthorizationRequestResolver() {
-		return new CustomOAuth2AuthorizationRequestResolver(clientRegistrationRepository,
+		return new CustomOAuth2AuthorizationRequestResolver(
+				clientRegistrationRepository,
 				OAUTH2_AUTHORIZATION_BASE_URI);
 	}
 
@@ -111,9 +108,7 @@ public class SecurityConfig {
 						.successHandler(authenticationSuccessHandler)
 						.failureHandler(authenticationFailureHandler))
 				.addFilterBefore(verificationStatusFilter, UsernamePasswordAuthenticationFilter.class)
-				.addFilterBefore(jwtAuthenticationFilter, VerificationStatusFilter.class)
-
-				.addFilterBefore(loginShortcutFilter, OAuth2AuthorizationRequestRedirectFilter.class);
+				.addFilterBefore(jwtAuthenticationFilter, VerificationStatusFilter.class);
 
 		return http.build();
 	}
