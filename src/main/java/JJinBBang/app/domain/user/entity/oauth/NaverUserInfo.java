@@ -10,7 +10,7 @@ public class NaverUserInfo implements OAuth2UserInfo {
 	public NaverUserInfo(Map<String, Object> attrs) {
 		// 네이버 응답 구조상 "response" 키 아래에 실제 유저 정보가 있음
 		Object attr = attrs.get("response");
-		if(attr instanceof Map) {
+		if (attr instanceof Map) {
 			this.attrs = new HashMap<>((Map<String, Object>) attr);
 		} else {
 			this.attrs = new HashMap<>();
@@ -20,7 +20,7 @@ public class NaverUserInfo implements OAuth2UserInfo {
 	@Override
 	public String getProviderId() {
 		// 네이버의 고유 사용자 ID
-		return (String) attrs.get(PROVIDER_ID_KEY);
+		return String.valueOf(attrs.get(PROVIDER_ID_KEY));
 	}
 
 	@Override
