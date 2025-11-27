@@ -63,17 +63,6 @@ public record ReviewRequest (
 		return true;
 	}
 
-	@AssertTrue(message = "리뷰 유형에 따라 이미지 개수를 올바르게 설정해주세요. 일반/기숙사 리뷰는 2~20장, 중개사 리뷰는 최대 20장입니다.")
-	private boolean isImageCountValid() {
-		int size = imageUrls.size();
-		if (agencyReview != null) {
-			return size <= 20;
-		}
-
-		return size >= 1 && size <= 20;
-	}
-
-
 	// 정확히 하나의 리뷰 섹션만 전송됐는지 검증
 	@AssertTrue(message = "generalReview, dormitoryReview, agencyReview 중 하나만 전송해야 합니다.")
 	private boolean isExactlyOneReview() {
@@ -111,7 +100,7 @@ public record ReviewRequest (
 		return GeneralReviews.builder()
 			.dtype(ReviewType.GENERAL)
 			.likesCount(0)
-			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+			.thumbnailImage(getFirstImageUrl())
 			.content(generalReview.getContent())
 			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(generalReview.getRating())
@@ -132,7 +121,7 @@ public record ReviewRequest (
 				.id(oldReview.getId())
 				.dtype(oldReview.getDtype())
 				.likesCount(oldReview.getLikesCount())
-				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+				.thumbnailImage(getFirstImageUrl())
 				.content(generalReview.getContent())
 				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(generalReview.getRating())
@@ -152,7 +141,7 @@ public record ReviewRequest (
 		return DormReviews.builder()
 			.dtype(ReviewType.DORM)
 			.likesCount(0)
-			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+			.thumbnailImage(getFirstImageUrl())
 			.content(dormitoryReview.getContent())
 			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(dormitoryReview.getRating())
@@ -172,7 +161,7 @@ public record ReviewRequest (
 				.id(oldReview.getId())
 				.dtype(oldReview.getDtype())
 				.likesCount(oldReview.getLikesCount())
-				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+				.thumbnailImage(getFirstImageUrl())
 				.content(dormitoryReview.getContent())
 				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(dormitoryReview.getRating())
@@ -191,7 +180,7 @@ public record ReviewRequest (
 		return AgencyReviews.builder()
 			.dtype(ReviewType.AGENCY)
 			.likesCount(0)
-			.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+			.thumbnailImage(getFirstImageUrl())
 			.content(agencyReview.getContent())
 			.tags(keywords.positive().stream().limit(5).toList())
 			.rating(agencyReview.getRating())
@@ -206,7 +195,7 @@ public record ReviewRequest (
 				.id(oldReview.getId())
 				.dtype(oldReview.getDtype())
 				.likesCount(oldReview.getLikesCount())
-				.thumbnailImage(imageUrls.isEmpty() ? null : imageUrls.getFirst())
+				.thumbnailImage(getFirstImageUrl())
 				.content(agencyReview.getContent())
 				.tags(keywords.positive().stream().limit(5).toList())
 				.rating(agencyReview.getRating())
@@ -217,21 +206,37 @@ public record ReviewRequest (
 	}
 
 	public ReviewDetails toReviewDetails(Long reviewId, Long buildingId) {
+		List<String> imgs = safeImageUrls();
+
 		return ReviewDetails.builder()
 				.reviewId(reviewId)
 				.buildingId(buildingId)
-				.images(imageUrls)
-				.imageCount(imageUrls.size())
+				.images(imgs)
+				.imageCount(imgs.size())
 				.keywords(keywords)
 				.build();
 	}
 
 	public ReviewDetails toUpdatedReviewDetails(ReviewDetails oldDetails, Long buildingId) {
+		List<String> imgs = safeImageUrls();
+
 		return oldDetails.toBuilder()
 				.buildingId(buildingId)
-				.images(imageUrls)
-				.imageCount(imageUrls.size())
+				.images(imgs)
+				.imageCount(imgs.size())
 				.keywords(keywords)
 				.build();
+	}
+
+	private List<String> safeImageUrls() {
+		if (imageUrls == null) return List.of();
+		return imageUrls.stream().filter(s -> !s.isBlank()).toList();
+	}
+
+	private String getFirstImageUrl() {
+		List<String> imgs = safeImageUrls();
+		if (imgs.isEmpty())
+			return null;
+		return imgs.getFirst();
 	}
 }
