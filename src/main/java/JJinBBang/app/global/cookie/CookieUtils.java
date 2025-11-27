@@ -1,13 +1,13 @@
 package JJinBBang.app.global.cookie;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +19,10 @@ import lombok.RequiredArgsConstructor;
 public class CookieUtils {
 
 	private final CookieProperties props;
+	private final ObjectMapper objectMapper;
 
 	@Value("${jwt.expiration-time.refresh-token}")
 	private int refreshTtlMilli;
-
 
 	public void addCookie(HttpServletResponse res, String name, String value, Integer customMaxAgeMilli) {
 		int maxAge = customMaxAgeMilli != null ? customMaxAgeMilli : (refreshTtlMilli / 1000);
@@ -40,13 +40,12 @@ public class CookieUtils {
 
 		// SameSite 지원 (Servlet Cookie API엔 없음 → 직접 헤더 추가)
 		String header = String.format("%s=%s; Path=/; Max-Age=%d%s%s; SameSite=%s",
-			name,
-			value,
-			maxAge,
-			props.isSecure() ? "; Secure" : "",
-			props.isHttpOnly() ? "; HttpOnly" : "",
-			props.getSameSite()
-		);
+				name,
+				value,
+				maxAge,
+				props.isSecure() ? "; Secure" : "",
+				props.isHttpOnly() ? "; HttpOnly" : "",
+				props.getSameSite());
 		if (props.getDomain() != null && !props.getDomain().isBlank()) {
 			header += "; Domain=" + props.getDomain();
 		}
@@ -57,33 +56,31 @@ public class CookieUtils {
 		addCookie(res, name, "", 0);
 	}
 
-	/** 객체 → Base64URL (JDK 직렬화) */
+	/** 객체 → Base64URL (JSON 직렬화) */
 	public <T> String serialize(T obj) {
-		if (obj == null) return "";
-		try (var baos = new ByteArrayOutputStream();
-			 var oos  = new ObjectOutputStream(baos)) {
-			oos.writeObject(obj);
-			oos.flush();
-			return java.util.Base64.getUrlEncoder().encodeToString(baos.toByteArray());
-		} catch (IOException e) {
+		if (obj == null)
+			return "";
+		try {
+			String json = objectMapper.writeValueAsString(obj);
+			return java.util.Base64.getUrlEncoder()
+					.encodeToString(json.getBytes(StandardCharsets.UTF_8));
+		} catch (JsonProcessingException e) {
 			throw new IllegalStateException("Cookie serialize failed", e);
 		}
 	}
 
-	/** Base64URL → 객체 (JDK 역직렬화) */
-	@SuppressWarnings("unchecked")
+	/** Base64URL → 객체 (JSON 역직렬화) */
 	public <T> T deserialize(HttpServletRequest req, String name, Class<T> type) {
-		if (req.getCookies() == null) return null;
+		if (req.getCookies() == null)
+			return null;
 		for (Cookie c : req.getCookies()) {
-			if (!name.equals(c.getName())) continue;
+			if (!name.equals(c.getName()))
+				continue;
 			try {
 				byte[] bytes = java.util.Base64.getUrlDecoder().decode(c.getValue());
-				try (var bais = new ByteArrayInputStream(bytes);
-					 var ois  = new ObjectInputStream(bais)) {
-					Object obj = ois.readObject();
-					return (obj == null) ? null : (T) obj;
-				}
-			} catch (IOException | ClassNotFoundException | ClassCastException ex) {
+				String json = new String(bytes, StandardCharsets.UTF_8);
+				return objectMapper.readValue(json, type);
+			} catch (IOException | IllegalArgumentException ex) {
 				// 실패 시 null 반환 → auth flow에서 "not found" 로 처리
 				return null;
 			}
