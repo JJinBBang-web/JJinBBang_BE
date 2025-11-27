@@ -29,14 +29,18 @@ public class JwtServiceImpl implements JwtService {
 	private final RefreshTokenGenerator refreshTokenGenerator;
 	private final AccessTokenGenerator accessTokenGenerator;
 
-	@Value("${jwt.refresh-ttl-minutes:43200}")
-	private long refreshTtlMinutes;
+	/** Refresh Token 저장소 TTL (밀리초). refreshTokenGenerator와 동일한 값 사용 권장 */
+	@Value("${jwt.expiration-time.refresh-token}")
+	private long refreshTtlMillis;
 
 	/** 재사용 탐지 시 모든 세션 폐기 여부(운영 정책) */
 	@Value("${jwt.revoke-all-on-reuse:false}")
 	private boolean revokeAllOnReuse;
 
-	private Duration refreshTtl() { return Duration.ofMinutes(refreshTtlMinutes); }
+	/** Refresh Token 저장소 TTL을 Duration으로 변환 */
+	private Duration refreshTtl() {
+		return Duration.ofMillis(refreshTtlMillis);
+	}
 
 	// -----------------------
 	// 발급/재발급/로그아웃
@@ -99,14 +103,13 @@ public class JwtServiceImpl implements JwtService {
 
 		// 로그인 세션 단위 원자 회전 시도
 		RotationResult rotationResult = refreshTokenRepository.tryRotate(
-			user.getUserId(),
-			sessionId,
-			presentedRefreshTokenId,
-			newRefreshTokenId,
-			presentedTokenTtl,
-			refreshTtl(),
-			revokeAllOnReuse
-		);
+				user.getUserId(),
+				sessionId,
+				presentedRefreshTokenId,
+				newRefreshTokenId,
+				presentedTokenTtl,
+				refreshTtl(),
+				revokeAllOnReuse);
 
 		if (rotationResult != RotationResult.SUCCESS) {
 			// 등록 안 됨
@@ -139,10 +142,13 @@ public class JwtServiceImpl implements JwtService {
 
 	@Override
 	public String extractBearerTokenFromHeader(String authorizationHeader) {
-		if (authorizationHeader == null) return null;
+		if (authorizationHeader == null)
+			return null;
 		String trimmedHeader = authorizationHeader.trim();
-		if (trimmedHeader.length() < 8) return null;
-		if (!trimmedHeader.regionMatches(true, 0, "Bearer ", 0, 7)) return null;
+		if (trimmedHeader.length() < 8)
+			return null;
+		if (!trimmedHeader.regionMatches(true, 0, "Bearer ", 0, 7))
+			return null;
 		return trimmedHeader.substring(7).trim();
 	}
 
@@ -152,8 +158,7 @@ public class JwtServiceImpl implements JwtService {
 	}
 
 	private Duration ttlRemaining(Claims claims) {
-		long remainingSeconds =
-			claims.getExpiration().toInstant().getEpochSecond() - Instant.now().getEpochSecond();
+		long remainingSeconds = claims.getExpiration().toInstant().getEpochSecond() - Instant.now().getEpochSecond();
 		return Duration.ofSeconds(Math.max(0, remainingSeconds));
 	}
 }

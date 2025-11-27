@@ -21,11 +21,14 @@ public class CookieUtils {
 	private final CookieProperties props;
 	private final ObjectMapper objectMapper;
 
+	/** Refresh Token 쿠키 기본 만료 시간 (밀리초) */
 	@Value("${jwt.expiration-time.refresh-token}")
-	private int refreshTtlMilli;
+	private long refreshTtlMillis;
 
-	public void addCookie(HttpServletResponse res, String name, String value, Integer customMaxAgeMilli) {
-		int maxAge = customMaxAgeMilli != null ? customMaxAgeMilli : (refreshTtlMilli / 1000);
+	public void addCookie(HttpServletResponse res, String name, String value, Long customMaxAgeMillis) {
+		// 밀리초를 초로 변환 (Cookie.setMaxAge()는 초 단위)
+		long maxAgeMillis = customMaxAgeMillis != null ? customMaxAgeMillis : refreshTtlMillis;
+		int maxAgeSeconds = (int) (maxAgeMillis / 1000L); // long으로 나눈 후 int로 캐스팅하여 오버플로우 방지
 
 		Cookie cookie = new Cookie(name, value);
 		cookie.setPath("/");
@@ -34,7 +37,7 @@ public class CookieUtils {
 		if (props.getDomain() != null && !props.getDomain().isBlank()) {
 			cookie.setDomain(props.getDomain());
 		}
-		cookie.setMaxAge(maxAge);
+		cookie.setMaxAge(maxAgeSeconds);
 
 		res.addCookie(cookie);
 
@@ -42,7 +45,7 @@ public class CookieUtils {
 		String header = String.format("%s=%s; Path=/; Max-Age=%d%s%s; SameSite=%s",
 				name,
 				value,
-				maxAge,
+				maxAgeSeconds,
 				props.isSecure() ? "; Secure" : "",
 				props.isHttpOnly() ? "; HttpOnly" : "",
 				props.getSameSite());
@@ -53,7 +56,7 @@ public class CookieUtils {
 	}
 
 	public void deleteCookie(HttpServletResponse res, String name) {
-		addCookie(res, name, "", 0);
+		addCookie(res, name, "", 0L);
 	}
 
 	/** 객체 → Base64URL (JSON 직렬화) */

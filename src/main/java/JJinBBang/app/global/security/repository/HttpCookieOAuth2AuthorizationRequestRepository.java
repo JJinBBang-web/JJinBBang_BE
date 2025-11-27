@@ -39,8 +39,10 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
 		redirectCookieService.resolveAndStore(request, response);
 
+		// OAuth2 인증 요청 쿠키 만료 시간: 5분 (300,000 밀리초)
+		long oauth2RequestCookieTtlMillis = 300_000L;
 		cookieUtils.addCookie(response, OAUTH2_AUTH_REQUEST_COOKIE,
-				cookieUtils.serialize(authorizationRequest), 300);
+				cookieUtils.serialize(authorizationRequest), oauth2RequestCookieTtlMillis);
 	}
 
 	@Override

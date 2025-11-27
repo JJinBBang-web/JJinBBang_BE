@@ -22,35 +22,35 @@ public class AccessTokenGenerator implements JwtTokenGenerator {
 	private final SecretKey signingKey;
 	private final String tokenIssuer;
 	private final String tokenAudience;
-	private final long accessTokenTtlMinutes;
+	/** Access Token 유효기간 (밀리초) */
+	private final long accessTokenTtlMillis;
 
 	public AccessTokenGenerator(
-		@Value("${jwt.secret}") String base64Secret,
-		@Value("${jwt.issuer}") String issuer,
-		@Value("${jwt.audience}") String audience,
-		@Value("${jwt.expiration-time.access-token:3600000}") long accessTokenTtl
-	) {
+			@Value("${jwt.secret}") String base64Secret,
+			@Value("${jwt.issuer}") String issuer,
+			@Value("${jwt.audience}") String audience,
+			@Value("${jwt.expiration-time.access-token:3600000}") long accessTokenTtlMillis) {
 		this.signingKey = Keys.hmacShaKeyFor(io.jsonwebtoken.io.Decoders.BASE64.decode(base64Secret));
 		this.tokenIssuer = issuer;
 		this.tokenAudience = audience;
-		this.accessTokenTtlMinutes = accessTokenTtl;
+		this.accessTokenTtlMillis = accessTokenTtlMillis;
 	}
 
 	@Override
 	public String generate(Users user) {
 		Instant issuedAt = Instant.now();
-		Instant expiresAt = issuedAt.plus(accessTokenTtlMinutes, ChronoUnit.MILLIS);
+		Instant expiresAt = issuedAt.plus(accessTokenTtlMillis, ChronoUnit.MILLIS);
 
 		return Jwts.builder()
-			.header().add("typ", "JWT").and()
-			.issuer(tokenIssuer)
-			.audience().add(tokenAudience).and()
-			.subject(String.valueOf(user.getUserId()))
-			.issuedAt(Date.from(issuedAt))
-			.expiration(Date.from(expiresAt))
-			.claim("type", ACCESS)
-			.claim("role", user.getRole().toString())
-			.signWith(signingKey, Jwts.SIG.HS256)
-			.compact();
+				.header().add("typ", "JWT").and()
+				.issuer(tokenIssuer)
+				.audience().add(tokenAudience).and()
+				.subject(String.valueOf(user.getUserId()))
+				.issuedAt(Date.from(issuedAt))
+				.expiration(Date.from(expiresAt))
+				.claim("type", ACCESS)
+				.claim("role", user.getRole().toString())
+				.signWith(signingKey, Jwts.SIG.HS256)
+				.compact();
 	}
 }

@@ -5,6 +5,7 @@ import static JJinBBang.app.global.cookie.CookieType.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import JJinBBang.app.global.cookie.CookieUtils;
@@ -22,6 +23,9 @@ public class OAuthRedirectCookieService {
 	private final CookieUtils cookieUtils;
 	private final WhitelistDomain whitelistDomain;
 
+	@Value("${jwt.expiration-time.redirect-uri-param}")
+	private long redirectUriParamTtlMillis;
+
 	public String resolveAndStore(HttpServletRequest req, HttpServletResponse res) {
 		String encoded = req.getParameter("redirect");
 		if (encoded == null || encoded.isBlank()) {
@@ -32,7 +36,7 @@ public class OAuthRedirectCookieService {
 		validateWhitelist(decoded);
 
 		String normalized = Base64.getUrlEncoder().encodeToString(decoded.getBytes(StandardCharsets.UTF_8));
-		cookieUtils.addCookie(res, REDIRECT_URI_PARAM_COOKIE, normalized, 300);
+		cookieUtils.addCookie(res, REDIRECT_URI_PARAM_COOKIE, normalized, redirectUriParamTtlMillis);
 		return decoded;
 	}
 

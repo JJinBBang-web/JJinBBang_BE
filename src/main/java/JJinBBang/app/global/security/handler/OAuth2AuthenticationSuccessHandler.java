@@ -40,11 +40,13 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 	private final CookieUtils cookieUtils;
 	private final OAuthRedirectCookieService redirectCookieManager;
 
+	/** Refresh Token 쿠키 만료 시간 (밀리초) */
 	@Value("${jwt.expiration-time.refresh-token}")
-	private int refreshTTLMilli;
+	private long refreshTtlMillis;
 
+	/** Pending User 쿠키 만료 시간 (밀리초) */
 	@Value("${jwt.expiration-time.signup-token}")
-	private int pendingTTLMilli;
+	private long pendingTtlMillis;
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -63,9 +65,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 		if (userOpt.isEmpty()) {
 			// 최초 로그인 (약관동의 미완료 회원): DB 생성 금지 → Pending 발급
 			PendingUser pending = new PendingUser(
-					UUID.randomUUID().toString(), provider, providerId, Instant.now().plusMillis(pendingTTLMilli));
+					UUID.randomUUID().toString(), provider, providerId, Instant.now().plusMillis(pendingTtlMillis));
 			pendingRepo.save(pending);
-			cookieUtils.addCookie(response, PENDING_TOKEN_COOKIE, pending.pendingId(), pendingTTLMilli);
+			cookieUtils.addCookie(response, PENDING_TOKEN_COOKIE, pending.pendingId(), pendingTtlMillis);
 
 			String target = UriComponentsBuilder.fromUriString(frontendRedirect)
 					.queryParam("status", "terms_pending")
@@ -76,7 +78,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 		} else {
 			Users user = userOpt.get();
 			TokenPair pair = jwtService.generateTokenPair(user);
-			cookieUtils.addCookie(response, REFRESH_TOKEN_COOKIE, pair.refreshToken(), refreshTTLMilli);
+			cookieUtils.addCookie(response, REFRESH_TOKEN_COOKIE, pair.refreshToken(), refreshTtlMillis);
 
 			String target = UriComponentsBuilder.fromUriString(frontendRedirect)
 					.queryParam("status", "success")
