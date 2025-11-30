@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.building.controller;
 
 import JJinBBang.app.domain.building.service.AgencyService;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/building")
 @RequiredArgsConstructor
+@Timed(value = "jjinbbang.api.building", extraTags = {"module", "building"})
 public class BuildingController {
 	private final BuildingService buildingService;
 	private final AgencyService agencyService;

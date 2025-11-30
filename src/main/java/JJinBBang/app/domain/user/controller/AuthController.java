@@ -14,6 +14,7 @@ import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.jwt.JwtUtils;
 import JJinBBang.app.global.mail.service.MailAuthService;
 import JJinBBang.app.global.template.ResTemplate;
+import io.micrometer.core.annotation.Timed;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Timed(value = "jjinbbang.api.auth", extraTags = {"module", "auth"})
 public class AuthController {
 
     private final UsersService usersService;

@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.controller;
 
+import io.micrometer.core.annotation.Timed;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1/review")
 @RequiredArgsConstructor
+@Timed(value = "jjinbbang.api.review", extraTags = {"module", "review"})
 public class ReviewController {
     private final ReviewService reviewService;
 

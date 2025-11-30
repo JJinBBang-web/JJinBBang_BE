@@ -8,6 +8,7 @@ import JJinBBang.app.domain.map.dto.request.SearchMarkerRequest;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.dto.InfoDto;
 import JJinBBang.app.global.common.dto.SearchInfoDto;
+import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1/map")
 @RequiredArgsConstructor
+@Timed(value = "jjinbbang.api.map", extraTags = {"module", "map"})
 public class MapController {
 	private final MapService mapService;
 

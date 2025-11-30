@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="jjinbbang-be"/>
+    <springProperty scope="context" name="ENV" source="spring.profiles.active" defaultValue="local"/>
+    <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp timeZone="UTC"/>
+                <version/>
+                <logLevel/>
+                <loggerName/>
+                <threadName/>
+                <message/>
+                <arguments/>
+                <mdc/>
+                <context/>
+                <stackTrace>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>50</maxDepthPerThrowable>
+                        <maxLength>8192</maxLength>
+                        <shortenedClassNameLength>20</shortenedClassNameLength>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+            <customFields>{"service":"${APP_NAME}","environment":"${ENV}","pipeline":"plg"}</customFields>
+        </encoder>
+    </appender>
+
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/application.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp timeZone="UTC"/>
+                <version/>
+                <logLevel/>
+                <loggerName/>
+                <threadName/>
+                <message/>
+                <arguments/>
+                <mdc/>
+                <context/>
+                <stackTrace>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>50</maxDepthPerThrowable>
+                        <maxLength>8192</maxLength>
+                        <shortenedClassNameLength>20</shortenedClassNameLength>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+            <customFields>{"service":"${APP_NAME}","environment":"${ENV}","pipeline":"plg"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+        <appender-ref ref="JSON_FILE"/>
+    </root>
+
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+</configuration>

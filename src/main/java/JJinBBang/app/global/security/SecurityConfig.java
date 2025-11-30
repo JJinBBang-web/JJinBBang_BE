@@ -84,8 +84,12 @@ public class SecurityConfig {
 
 	private void authorizeSetting(
 		AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorize) {
-		// 특정 메서드 우선 → ALL
-		// 1) permitAll 등록된 경로 권한 설정
+        // 밑 주석 코드는 테스트 서버에서만 활성화 할 예정
+//        authorize.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll();
+//        authorize.requestMatchers("/actuator/prometheus", "/actuator/metrics/**").permitAll();
+
+        // 특정 메서드 우선 → ALL
+        // 1) permitAll 등록된 경로 권한 설정
 		Map<String, List<String>> permit = securityPathProperties.getPermitAll();
 		permit.entrySet().stream()
 			.filter(e -> !METHOD_ALL.equalsIgnoreCase(e.getKey()))

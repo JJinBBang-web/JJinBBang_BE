@@ -3,6 +3,8 @@ package JJinBBang.app.domain.building.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import io.micrometer.core.annotation.Timed;
 import org.locationtech.jts.geom.*;
 
 import org.springframework.data.domain.Page;
@@ -139,6 +141,7 @@ public class ReviewServiceImpl implements ReviewService {
      */
     @Override
     @Transactional
+    @Timed(value = "jjinbbang.service.review.create", extraTags = {"operation", "create"})
     public CreateReviewResponse createReview(
             ReviewRequest reviewRequest,
             Users user,
@@ -408,6 +411,7 @@ public class ReviewServiceImpl implements ReviewService {
 	 */
 	@Override
 	@Transactional
+    @Timed(value = "jjinbbang.service.review.update", extraTags = {"operation", "update"})
 	public void updateReview(ReviewRequest dto, Users user, Long reviewId) {
 		// 1) 리뷰 로드 및 존재 확인
 		Reviews review = reviewsRepository.findById(reviewId)
@@ -645,13 +649,14 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
     /**
-     * 리뷰 수정 진입점
+     * 리뷰 삭제 진입점
      *
      * @param user     삭제 요청 사용자
      * @param reviewId 삭제 대상 리뷰 ID
      */
     @Override
     @Transactional
+    @Timed(value = "jjinbbang.service.review.delete", extraTags = {"operation", "delete"})
     public void deleteReview(Users user, Long reviewId) {
         // 1) 리뷰 로드 및 존재 확인
         Reviews review = reviewsRepository.findById(reviewId)

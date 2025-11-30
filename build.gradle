@@ -24,7 +24,9 @@ configurations {
 
 repositories {
 	mavenCentral()
+    // 현재 snapshot 버전이라 추가해뒀는데 버전 변경 이슈 작성 후에 삭제예정
 	maven { url 'https://repo.spring.io/snapshot' }
+    maven { url 'https://repo.spring.io/release' }
 }
 
 dependencies {
@@ -74,12 +76,14 @@ dependencies {
 	// AWS S3
 	implementation 'software.amazon.awssdk:s3:2.32.31'
 
-  // JTS Topology Suite
-  implementation 'org.locationtech.jts:jts-core:1.19.0'
-  implementation 'org.locationtech.jts.io:jts-io-common:1.19.0'
+    // JTS Topology Suite
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
+    implementation 'org.locationtech.jts.io:jts-io-common:1.19.0'
 
-  // Actuator
-  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.13.11'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 }
 
 // Q 클래스 경로 지정
