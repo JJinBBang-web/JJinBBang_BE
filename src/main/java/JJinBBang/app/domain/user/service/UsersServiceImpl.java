@@ -203,7 +203,13 @@ public class UsersServiceImpl implements UsersService {
 		// 3-4) 리포트 좋아요
 		List<ReportLikes> reportLikes = reportLikesRepository.findAllByUser_UserId(targetUserId);
 		reportLikes.forEach(rl -> rl.getReport().decreaseLikeCount());
-		reportLikesRepository.deleteAll(reportLikes);
+		reportLikesRepository.deleteAllInBatch(reportLikes);
+
+		// 3-x) Users 엔티티 컬렉션 정리 (양방향 연관관계 재-persist 방지)
+		user.getBuildingLikes().clear();
+		user.getReviewLikes().clear();
+		user.getAgencyLikes().clear();
+		user.getReportLikes().clear();
 
 		// 4) 유저 탈퇴일 기록 (스케줄러가 N일 뒤 영구 삭제)
 		user.delete(); // 내부에서 disabledAt = now 등
