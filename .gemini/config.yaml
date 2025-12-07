@@ -1,0 +1,27 @@
+# Gemini Code Assist Repository Configuration
+# https://developers.google.com/gemini-code-assist/docs/customize-gemini-behavior-github?hl=ko#config.yaml-schema
+# 수정하실떄 상단 공식문서 참조하시면 더 좋은 결과 낼 수 있슴돠
+have_fun: false
+# Gemini가 무시해야 할 파일 패턴 목록
+ignore_patterns:
+  - "**/*.env"
+  - "**/application-prod.yml"
+  - "**/security-path.yml"
+# 코드 리뷰 설정
+code_review:
+  # PR에 대한 Gemini 동작 활성화
+  disable: false
+  # 리뷰 코멘트의 최소 심각도 (MEDIUM 이상만 표시)
+  comment_severity_threshold: "MEDIUM"
+  # 최대 리뷰 코멘트 수 (-1: 제한 없음)
+  max_review_comments: -1
+  # PR 생성 시 동작 설정
+  pull_request_opened:
+    # 도움말 메시지 표시 안 함
+    help: false
+    # PR 요약 자동 생성
+    summary: true
+    # 코드 리뷰 자동 수행
+    code_review: true
+    # 초안(Draft) PR에서도 동작 활성화
+    include_drafts: true
