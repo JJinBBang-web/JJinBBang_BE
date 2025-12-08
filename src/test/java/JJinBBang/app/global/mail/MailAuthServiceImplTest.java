@@ -27,94 +27,93 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class MailAuthServiceImplTest {
 
-    @Mock
-    MailAuthProperties props;
-    @Mock
-    EmailAuthCodeRepository repo;
-    @Mock
-    MailSendService mailSender;
+	@Mock
+	MailAuthProperties props;
+	@Mock
+	EmailAuthCodeRepository repo;
+	@Mock
+	MailSendService mailSender;
 
-    @InjectMocks
-    MailAuthServiceImpl service;
+	@InjectMocks
+	MailAuthServiceImpl service;
 
-    @BeforeEach
-    void setUp() {
-        // 공통 스텁: 도메인 검사, 코드 길이, 제목·본문 포맷
-        when(props.getAllowedDomain()).thenReturn(List.of("gnu.ac.kr"));
-        when(props.getAuthCodeLength()).thenReturn(4);
-        when(props.getSubjectText()).thenReturn("[찐빵] 인증코드");
-        when(props.getBodyText()).thenReturn("코드: %s (유효:%s분)");
-        when(props.getExpirationTime()).thenReturn(5L);
-    }
+	@BeforeEach
+	void setUp() {
+		// 공통 스텁: 도메인 검사, 코드 길이, 제목·본문 포맷
+		when(props.getAllowedDomain()).thenReturn(List.of("gnu.ac.kr"));
+		when(props.getAuthCodeLength()).thenReturn(4);
+		when(props.getSubjectText()).thenReturn("[찐빵] 인증코드");
+		when(props.getBodyText()).thenReturn("코드: %s (유효:%s분)");
+		// 5분 = 300,000 밀리초
+		when(props.getExpirationTime()).thenReturn(300_000L);
+	}
 
-    @Test
-    void sendAuthCode_성공() {
-        Long userId = 1L;
-        String email = "user@gnu.ac.kr";
+	@Test
+	void sendAuthCode_성공() {
+		Long userId = 1L;
+		String email = "user@gnu.ac.kr";
 
-        // isExistByEmail 기본 false → save, sendMail 호출 검증
-        service.sendAuthCode(userId, email);
+		// isExistByEmail 기본 false → save, sendMail 호출 검증
+		service.sendAuthCode(userId, email);
 
-        verify(repo).save(eq(userId), eq(email), anyString());
-        verify(mailSender).sendMail(
-                eq(email),
-                eq("[찐빵] 인증코드"),
-                contains("코드:")  // 본문에 코드가 포함되어야 함
-        );
-    }
+		verify(repo).save(eq(userId), eq(email), anyString());
+		verify(mailSender).sendMail(
+				eq(email),
+				eq("[찐빵] 인증코드"),
+				contains("코드:") // 본문에 코드가 포함되어야 함
+		);
+	}
 
-    @Test
-    void sendAuthCode_도메인불일치_예외() {
-        // 허용된 도메인이 아니면
-        Long userId = 1L;
-        String badEmail = "user@naver.com";
+	@Test
+	void sendAuthCode_도메인불일치_예외() {
+		// 허용된 도메인이 아니면
+		Long userId = 1L;
+		String badEmail = "user@naver.com";
 
-        // MailInvalidException 발생해야 함
-        assertThrows(MailInvalidException.class,
-                () -> service.sendAuthCode(userId, badEmail));
-    }
+		// MailInvalidException 발생해야 함
+		assertThrows(MailInvalidException.class,
+				() -> service.sendAuthCode(userId, badEmail));
+	}
 
-    @Test
-    void verifyAuthCode_일치() {
-        // u@gnu.ac.kr 로 발급된 인증코드가 1234일 때
-        Long userId = 1L;
-        EmailAuthInfo info = new EmailAuthInfo(
-                "u@gnu.ac.kr",
-                "1234",
-                System.currentTimeMillis()
-        );
-        when(repo.findEmailAndAuthCodeByUserId(userId))
-                .thenReturn(Optional.of(info));
+	@Test
+	void verifyAuthCode_일치() {
+		// u@gnu.ac.kr 로 발급된 인증코드가 1234일 때
+		Long userId = 1L;
+		EmailAuthInfo info = new EmailAuthInfo(
+				"u@gnu.ac.kr",
+				"1234",
+				System.currentTimeMillis());
+		when(repo.findEmailAndAuthCodeByUserId(userId))
+				.thenReturn(Optional.of(info));
 
-        // 검증할 인증코드가 1234이면 true 리턴
-        assertTrue(service.verifyAuthCode(userId, "u@gnu.ac.kr", "1234"));
-    }
+		// 검증할 인증코드가 1234이면 true 리턴
+		assertTrue(service.verifyAuthCode(userId, "u@gnu.ac.kr", "1234"));
+	}
 
-    @Test
-    void verifyAuthCode_불일치() {
-        // u@gnu.ac.kr 로 발급된 인증코드가 9999일 때
-        Long userId = 1L;
-        EmailAuthInfo info = new EmailAuthInfo(
-                "u@gnu.ac.kr",
-                "9999",
-                System.currentTimeMillis()
-        );
-        when(repo.findEmailAndAuthCodeByUserId(userId))
-                .thenReturn(Optional.of(info));
+	@Test
+	void verifyAuthCode_불일치() {
+		// u@gnu.ac.kr 로 발급된 인증코드가 9999일 때
+		Long userId = 1L;
+		EmailAuthInfo info = new EmailAuthInfo(
+				"u@gnu.ac.kr",
+				"9999",
+				System.currentTimeMillis());
+		when(repo.findEmailAndAuthCodeByUserId(userId))
+				.thenReturn(Optional.of(info));
 
-        // 검증할 인증코드가 1234이면 false 리턴
-        assertFalse(service.verifyAuthCode(userId, "u@gnu.ac.kr", "1234"));
-    }
+		// 검증할 인증코드가 1234이면 false 리턴
+		assertFalse(service.verifyAuthCode(userId, "u@gnu.ac.kr", "1234"));
+	}
 
-    @Test
-    void verifyAuthCode_미발급_예외() {
-        // x@gnu.ac.kr 으로 조회 시 Optional.empty 가 리턴되면
-        Long userId = 1L;
-        when(repo.findEmailAndAuthCodeByUserId(userId))
-                .thenReturn(Optional.empty());
+	@Test
+	void verifyAuthCode_미발급_예외() {
+		// x@gnu.ac.kr 으로 조회 시 Optional.empty 가 리턴되면
+		Long userId = 1L;
+		when(repo.findEmailAndAuthCodeByUserId(userId))
+				.thenReturn(Optional.empty());
 
-        // x@gnu.ac.kr 으로 인증코드 검사 수행 시 MailInvalidException 발생해야 함
-        assertThrows(MailInvalidException.class,
-                () -> service.verifyAuthCode(userId, "x@gnu.ac.kr", "0000"));
-    }
+		// x@gnu.ac.kr 으로 인증코드 검사 수행 시 MailInvalidException 발생해야 함
+		assertThrows(MailInvalidException.class,
+				() -> service.verifyAuthCode(userId, "x@gnu.ac.kr", "0000"));
+	}
 }

@@ -18,77 +18,81 @@ import java.util.Random;
 @Service
 @RequiredArgsConstructor
 public class MailAuthServiceImpl implements MailAuthService {
-    private final MailAuthProperties properties;
-    private final Random random = new Random();
-    private final MailSendService mailSendService;
-    private final EmailAuthCodeRepository emailAuthCodeRepository;
-    private final UniversityRepository universityRepository;
+	private final MailAuthProperties properties;
+	private final Random random = new Random();
+	private final MailSendService mailSendService;
+	private final EmailAuthCodeRepository emailAuthCodeRepository;
+	private final UniversityRepository universityRepository;
 
-    @Override
-    public void sendAuthCode(Long userId, String toEmail) {
-        validateEmail(toEmail);
+	@Override
+	public void sendAuthCode(Long userId, String toEmail) {
+		validateEmail(toEmail);
 
-        String authCode = generateAuthCode();
-        saveAuthCode(userId, toEmail, authCode);
+		String authCode = generateAuthCode();
+		saveAuthCode(userId, toEmail, authCode);
 
-        mailSendService.sendMail(toEmail, properties.getSubjectText(), buildEmailBody(authCode));
-    }
+		mailSendService.sendMail(toEmail, properties.getSubjectText(), buildEmailBody(authCode));
+	}
 
-    @Override
-    public boolean verifyAuthCode(Long userId, String email, String authCode) {
-        EmailAuthInfo savedAuthCode = emailAuthCodeRepository.findEmailAndAuthCodeByUserId(userId)
-                .orElseThrow(MailNotFoundException::notFoundAuthCode);
-        return savedAuthCode.email().equals(email) && savedAuthCode.code().equals(authCode);
-    }
+	@Override
+	public boolean verifyAuthCode(Long userId, String email, String authCode) {
+		EmailAuthInfo savedAuthCode = emailAuthCodeRepository.findEmailAndAuthCodeByUserId(userId)
+				.orElseThrow(MailNotFoundException::notFoundAuthCode);
+		return savedAuthCode.email().equals(email) && savedAuthCode.code().equals(authCode);
+	}
 
-    @Override
-    public void deleteAuthCode(Long userId) {
-        emailAuthCodeRepository.deleteByUserId(userId);
-    }
+	@Override
+	public void deleteAuthCode(Long userId) {
+		emailAuthCodeRepository.deleteByUserId(userId);
+	}
 
-    // utility --------------------------------------------------------------------------------------------------------
-    private String generateAuthCode() {
-        // emailAuthCodeLength 자리 숫자로 구성된 인증 코드 생성
-        // 앞자리 0이 있어도 텍스트로 생성
-        StringBuilder code = new StringBuilder();
-        for (int i = 0; i < properties.getAuthCodeLength(); i++) {
-            code.append(random.nextInt(10));
-        }
-        return code.toString();
-    }
+	// utility
+	// --------------------------------------------------------------------------------------------------------
+	private String generateAuthCode() {
+		// emailAuthCodeLength 자리 숫자로 구성된 인증 코드 생성
+		// 앞자리 0이 있어도 텍스트로 생성
+		StringBuilder code = new StringBuilder();
+		for (int i = 0; i < properties.getAuthCodeLength(); i++) {
+			code.append(random.nextInt(10));
+		}
+		return code.toString();
+	}
 
-    private void saveAuthCode(Long userId, String email, String authCode) {
-        emailAuthCodeRepository.save(userId, email, authCode);
-    }
+	private void saveAuthCode(Long userId, String email, String authCode) {
+		emailAuthCodeRepository.save(userId, email, authCode);
+	}
 
-    private String buildEmailBody(String code) {
-        return String.format(properties.getBodyText(), code, properties.getExpirationTime());
-    }
-    // ----------------------------------------------------------------------------------------------------------------
+	private String buildEmailBody(String code) {
+		// 이메일 본문에는 분 단위로 표시 (밀리초를 분으로 변환)
+		long expirationMinutes = properties.getExpirationTime() / 60_000L;
+		return String.format(properties.getBodyText(), code, expirationMinutes);
+	}
+	// ----------------------------------------------------------------------------------------------------------------
 
-    // validator ------------------------------------------------------------------------------------------------------
-    private void validateEmail(String email) {
-        if (!isValidFormat(email)) {
-            throw MailInvalidException.invalidEmailFormat();
-        }
+	// validator
+	// ------------------------------------------------------------------------------------------------------
+	private void validateEmail(String email) {
+		if (!isValidFormat(email)) {
+			throw MailInvalidException.invalidEmailFormat();
+		}
 
-        // 이메일 도메인 검증
-        // DB에 저장되어있는 이메일 도메인인지 or 환경변수에 설정된 도메인인지 검사
-        if (!universityRepository.existsByUniversityDomain(extractDomain(email)) &&
-                !properties.getAllowedDomain().contains(extractDomain(email))) {
-            throw MailInvalidException.invalidEmailDomain();
-        }
-    }
+		// 이메일 도메인 검증
+		// DB에 저장되어있는 이메일 도메인인지 or 환경변수에 설정된 도메인인지 검사
+		if (!universityRepository.existsByUniversityDomain(extractDomain(email)) &&
+				!properties.getAllowedDomain().contains(extractDomain(email))) {
+			throw MailInvalidException.invalidEmailDomain();
+		}
+	}
 
-    private boolean isValidFormat(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-    }
+	private boolean isValidFormat(String email) {
+		return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+	}
 
-    private String extractDomain(String email) {
-        int atIdx = email.lastIndexOf("@");
-        return (atIdx != -1 && atIdx < email.length() - 1)
-                ? email.substring(atIdx + 1)
-                : "";
-    }
-    // ----------------------------------------------------------------------------------------------------------------
+	private String extractDomain(String email) {
+		int atIdx = email.lastIndexOf("@");
+		return (atIdx != -1 && atIdx < email.length() - 1)
+				? email.substring(atIdx + 1)
+				: "";
+	}
+	// ----------------------------------------------------------------------------------------------------------------
 }

@@ -46,6 +46,10 @@ public class UsersServiceImpl implements UsersService {
 	private final BuildingLikesRepository buildingLikesRepository;
 	private final AgencyLikesRepository agencyLikesRepository;
 
+	@Override
+	public Users findById(Long id) {
+		return usersRepository.findById(id).orElseThrow(UserNotFoundException::notFound);
+	}
 
 	@Override
 	public boolean existsByProviderId(String providerId) {
