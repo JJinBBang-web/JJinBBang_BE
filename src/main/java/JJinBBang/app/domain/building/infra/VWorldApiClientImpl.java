@@ -57,7 +57,6 @@ public class VWorldApiClientImpl implements VWorldApiClient {
 	}
 
 	private VWorld2DDataResponse search(VWorld2DDataRequest request) {
-		RestTemplate restTemplate = new RestTemplate();
 
 		URI uri = UriComponentsBuilder.fromUriString(this.baseUrl+"/req/data")
 			.queryParams(request.toQueryParams())
