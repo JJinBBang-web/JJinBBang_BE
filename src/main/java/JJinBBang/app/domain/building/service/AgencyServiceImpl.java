@@ -81,6 +81,7 @@ public class AgencyServiceImpl implements AgencyService{
 		}
 
 		List<AgencySearchItem> items = fc.features().stream()
+			.filter(f -> f.geometry() != null && f.geometry().coordinates() != null && f.geometry().coordinates().size() >= 2 && f.properties() != null)
 			.map(f -> {
 				var p = f.properties();
 				double lon = f.geometry().coordinates().get(0); // [lon, lat]
