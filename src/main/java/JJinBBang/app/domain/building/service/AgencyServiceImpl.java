@@ -66,6 +66,7 @@ public class AgencyServiceImpl implements AgencyService{
     }
 
 	@Override
+	@Transactional(readOnly = true)
 	public AgencySearchResponse getAgencyList(AgencySearchRequest request) {
 
 		int num = request.num();
