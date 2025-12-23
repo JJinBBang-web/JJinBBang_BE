@@ -8,7 +8,7 @@ import org.springframework.util.MultiValueMap;
 import lombok.Builder;
 
 @Builder
-public record VWorldWfsRequest(
+public record VWorld2DDataRequest(
 	String request,     // 요청 서비스 오퍼레이션 (GetFeature, GetFeatureType)
 	String key,			// 발급받은 api key
 	Integer size,      	// 한 페이지에 출력될 응답결과 건수	(숫자, default(10), min(1), max(1000))
@@ -19,12 +19,12 @@ public record VWorldWfsRequest(
 ) {
 
 	/** 기본값을 채운 빌더성 팩토리 */
-	public static VWorldWfsRequest of(
+	public static VWorld2DDataRequest of(
 		String apiKey,
 		String geomFilter,
 		Integer buffer
 	) {
-		return new VWorldWfsRequest(
+		return new VWorld2DDataRequest(
 			"GetFeature",
 			Objects.requireNonNull(apiKey),
 			1000,
@@ -36,7 +36,7 @@ public record VWorldWfsRequest(
 	}
 
 	/** 포인트 + 버퍼(m)로 조회 (경위도 순서: lon, lat) */
-	public static VWorldWfsRequest byPoint(String apiKey, double lon, double lat, int bufferMeters) {
+	public static VWorld2DDataRequest byPoint(String apiKey, double lon, double lat, int bufferMeters) {
 		String gf = "POINT(" + lon + " " + lat + ")";
 		return of(apiKey, gf, bufferMeters);
 	}
