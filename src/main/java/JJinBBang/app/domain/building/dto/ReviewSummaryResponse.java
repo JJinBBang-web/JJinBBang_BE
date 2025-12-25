@@ -28,8 +28,9 @@ public class ReviewSummaryResponse {
 
 		private final ReviewInfo reviewInfo;
 		private final String image;
+		private final Integer imageCount;
 
-		public static ReviewSummaryResponse of(Reviews review, Boolean like) {
+		public static ReviewSummaryResponse of(Reviews review, Boolean like, Integer imageCount) {
 			GeneralReviewInfo generalReviewInfo = null;
 			DormitoryReviewInfo dormitoryReviewInfo = null;
 			AgencyReviewInfo agencyReviewInfo = null;
@@ -50,6 +51,7 @@ public class ReviewSummaryResponse {
 				.agencyReviewInfo(agencyReviewInfo)
 				.reviewInfo(ReviewInfo.of(review))
 				.image(review.getThumbnailImage())
+				.imageCount(imageCount)
 				.build();
 		}
 }
