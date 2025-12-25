@@ -86,8 +86,13 @@ public class ReviewServiceImpl implements ReviewService {
 							&& user != null
 							&& like.getUser().getUserId().equals(user.getUserId()));
 
+					// 3.2) 이미지 개수 조회
+					ReviewDetails details = reviewDetailsRepository.findByReviewId(review.getId())
+							.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
+					Integer imageCount = details.getImageCount();
+
                     // 3.3) 요약 응답 생성
-                    return ReviewSummaryResponse.of(review, liked);
+                    return ReviewSummaryResponse.of(review, liked, imageCount);
                 }
         );
     }
