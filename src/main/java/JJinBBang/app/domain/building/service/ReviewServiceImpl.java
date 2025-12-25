@@ -3,6 +3,9 @@ package JJinBBang.app.domain.building.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.locationtech.jts.geom.*;
 
 import org.springframework.data.domain.Page;
@@ -76,25 +79,28 @@ public class ReviewServiceImpl implements ReviewService {
             reviewPage = reviewsRepository.findAllByBuilding(building, pageRequest);
         }
 
-        // 3) 각 리뷰를 ReviewSummaryResponse로 변환하여 반환
-        return PaginatedResponse.of(
-                reviewPage,
-                review -> {
-                    // 3.1) 좋아요 여부 확인
-					boolean liked = review.getReviewLikes().stream()
-						.anyMatch(like -> like.getUser() != null
-							&& user != null
-							&& like.getUser().getUserId().equals(user.getUserId()));
+		// 3-1. 리뷰 ID 목록 추출
+		List<Long> reviewIds = reviewPage.getContent().stream()
+			.map(Reviews::getId)
+			.toList();
 
-					// 3.2) 이미지 개수 조회
-					ReviewDetails details = reviewDetailsRepository.findByReviewId(review.getId())
-							.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
-					Integer imageCount = details.getImageCount();
+		// 3-2. 한 번의 쿼리로 모든 ReviewDetails 조회 후 Map으로 변환
+		Map<Long, Integer> imageCountMap = reviewDetailsRepository.findAllByReviewIdIn(reviewIds).stream()
+			.collect(Collectors.toMap(ReviewDetails::getReviewId, ReviewDetails::getImageCount));
 
-                    // 3.3) 요약 응답 생성
-                    return ReviewSummaryResponse.of(review, liked, imageCount);
-                }
-        );
+		// 3-3. PaginatedResponse 생성 시 Map 사용
+		return PaginatedResponse.of(
+			reviewPage,
+			review -> {
+				boolean liked = review.getReviewLikes().stream()
+					.anyMatch(like -> like.getUser() != null
+						&& user != null
+						&& like.getUser().getUserId().equals(user.getUserId()));
+
+				Integer imageCount = imageCountMap.getOrDefault(review.getId(), 0);
+				return ReviewSummaryResponse.of(review, liked, imageCount);
+			}
+		);
     }
 
     /**
