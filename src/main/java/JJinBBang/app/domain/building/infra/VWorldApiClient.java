@@ -1,15 +1,11 @@
 package JJinBBang.app.domain.building.infra;
 
-import JJinBBang.app.domain.building.dto.VWorldAddressToCoordRequest;
-import JJinBBang.app.domain.building.dto.VWorldAddressToCoordResponse;
-import JJinBBang.app.domain.building.dto.VWorldEBOfficeRequest;
-import JJinBBang.app.domain.building.dto.VWorldEBOfficeResponse;
-import JJinBBang.app.domain.building.dto.VWorldWfsResponse;
+import JJinBBang.app.domain.building.dto.VWorldWfsGetFeatureRequest;
+import JJinBBang.app.domain.building.dto.VWorldFeatureCollection;
+import JJinBBang.app.domain.building.dto.VWorld2DDataResponse;
 
 public interface VWorldApiClient {
-	VWorldWfsResponse searchBuildingByPoint(Double longitude, Double latitude);
+	VWorld2DDataResponse searchBuildingByPoint(Double longitude, Double latitude);
 
-	VWorldEBOfficeResponse searchAgencies(VWorldEBOfficeRequest vWorldRequest);
-
-	VWorldAddressToCoordResponse geocode(VWorldAddressToCoordRequest request);
+	VWorldFeatureCollection searchAgencies(VWorldWfsGetFeatureRequest vWorldRequest);
 }
