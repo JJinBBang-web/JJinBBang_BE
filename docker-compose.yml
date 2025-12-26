@@ -99,7 +99,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 90s
 
 
   db-init:
