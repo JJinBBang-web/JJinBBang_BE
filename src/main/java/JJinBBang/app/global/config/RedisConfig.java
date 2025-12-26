@@ -23,7 +23,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, EmailAuthInfo> redisTemplate(RedisConnectionFactory factory) {
+    public RedisTemplate<String, EmailAuthInfo> emailAuthRedisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, EmailAuthInfo> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
@@ -44,6 +44,27 @@ public class RedisConfig {
         return template;
     }
 
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        // key: String serializer
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // value: JSON serializer for Object (PendingUser 등 일반 객체용)
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        Jackson2JsonRedisSerializer<Object> serializer =
+                new Jackson2JsonRedisSerializer<>(om, Object.class);
+
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
+        template.afterPropertiesSet();
+        return template;
+    }
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory factory) {

@@ -2,8 +2,8 @@ package JJinBBang.app.global.mail.repository;
 
 import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,13 +15,19 @@ import java.util.concurrent.TimeUnit;
 @Repository
 @ConditionalOnProperty( // 조건부 빈 등록 (application.yml의 app.storage.mode 속성에 따라 redis 모드일 때만 활성화)
 		prefix = "app.repository", name = "mode", havingValue = "redis")
-@RequiredArgsConstructor
 public class RedisEmailAuthCodeRepository implements EmailAuthCodeRepository {
 
 	private static final String KEY_PREFIX = "emailAuth:";
 
 	private final RedisTemplate<String, EmailAuthInfo> redisTemplate;
 	private final MailAuthProperties props;
+
+	public RedisEmailAuthCodeRepository(
+			@Qualifier("emailAuthRedisTemplate") RedisTemplate<String, EmailAuthInfo> redisTemplate,
+			MailAuthProperties props) {
+		this.redisTemplate = redisTemplate;
+		this.props = props;
+	}
 
 	private String makeKey(Long userId) {
 		return KEY_PREFIX + userId;
