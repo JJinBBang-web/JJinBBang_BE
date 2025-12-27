@@ -27,22 +27,18 @@ public class SearchInfo {
     private final DormReviewsRepository dormReviewsRepository;
     private final ReviewDetailsRepository reviewDetailRepository;
 
-    public InfoDto reviewSearch(Long reviewId, Boolean liked) {
+    public InfoDto reviewSearch(Long reviewId, Boolean liked){
         Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));
-        switch (item.getDtype()) {
+        switch (item.getDtype()){
             case ReviewType.GENERAL:
-                GeneralReviews generalReviews = generalReviewsRepository.findById(reviewId)
-                        .orElseThrow(() -> new BookmarkNotFoundException("GeneralReview"));
-                if (generalReviews.getContractType() == null || generalReviews.getFloor() == null
-                        || generalReviews.getArea() == null) {
+                GeneralReviews generalReviews = generalReviewsRepository.findById(reviewId).orElseThrow(()-> new BookmarkNotFoundException("GeneralReview"));
+                if(generalReviews.getContractType()==null || generalReviews.getFloor()==null||generalReviews.getArea()==null){
                     throw new BookmarkNotFoundException("GeneralReview");
                 }
                 return InfoDto.ofGeneralReviewInfo(generalReviews, liked, getImageCount(item));
             case ReviewType.DORM:
-                DormReviews dormReviews = dormReviewsRepository.findById(reviewId)
-                        .orElseThrow(() -> new BookmarkNotFoundException("DormReview"));
-                if (dormReviews.getDormFee() == null || dormReviews.getDormFee() == null
-                        || dormReviews.getCapacity() == null) {
+                DormReviews dormReviews =dormReviewsRepository.findById(reviewId).orElseThrow(()-> new BookmarkNotFoundException("DormReview"));
+                if(dormReviews.getDormFee()==null||dormReviews.getDormFee()==null||dormReviews.getCapacity()==null){
                     throw new BookmarkNotFoundException("DormReview");
                 }
 
@@ -60,10 +56,9 @@ public class SearchInfo {
         }
     }
 
-    public InfoDto buildingSearch(Long itemId, Boolean liked) {
-        Buildings building = buildingsRepository.findById(itemId)
-                .orElseThrow(() -> new BookmarkNotFoundException("Building"));
-        Reviews reviews = reviewsRepository.findFirstByBuildingOrderByCreatedAtDesc(building);
+    public InfoDto buildingSearch(Long itemId, Boolean liked){
+        Buildings building = buildingsRepository.findById(itemId).orElseThrow(() -> new BookmarkNotFoundException("Building"));
+        Reviews reviews= reviewsRepository.findFirstByBuildingOrderByCreatedAtDesc(building);
         List<BuildingType> typeList = building.getBuildingType();
 
         if (typeList.equals(List.of(BuildingType.DORMITORY))) {
@@ -83,22 +78,18 @@ public class SearchInfo {
         return InfoDto.ofAgencyBuildingInfo(reviews, agencies, liked, getImageCount(reviews));
     }
 
-    public SearchInfoDto reviewSearchWithBound(Long reviewId, Boolean liked) {
+    public SearchInfoDto reviewSearchWithBound(Long reviewId, Boolean liked){
         Reviews item = reviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("Review"));
-        switch (item.getDtype()) {
+        switch (item.getDtype()){
             case ReviewType.GENERAL:
-                GeneralReviews generalReviews = generalReviewsRepository.findById(reviewId)
-                        .orElseThrow(() -> new BookmarkNotFoundException("GeneralReview"));
-                if (generalReviews.getContractType() == null || generalReviews.getFloor() == null
-                        || generalReviews.getArea() == null) {
+                GeneralReviews generalReviews = generalReviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("GeneralReview"));
+                if(generalReviews.getContractType()==null || generalReviews.getFloor()==null||generalReviews.getArea()==null){
                     throw new BookmarkNotFoundException("GeneralReview");
                 }
-                return SearchInfoDto.ofSearchGeneralReviewInfo(generalReviews, liked);
+                return SearchInfoDto.ofSearchGeneralReviewInfo(generalReviews,liked);
             case ReviewType.DORM:
-                DormReviews dormReviews = dormReviewsRepository.findById(reviewId)
-                        .orElseThrow(() -> new BookmarkNotFoundException("DormReview"));
-                if (dormReviews.getDormFee() == null || dormReviews.getDormFee() == null
-                        || dormReviews.getCapacity() == null) {
+                DormReviews dormReviews = dormReviewsRepository.findById(reviewId).orElseThrow(() -> new BookmarkNotFoundException("DormReview"));
+                if(dormReviews.getDormFee()==null||dormReviews.getDormFee()==null||dormReviews.getCapacity()==null){
                     throw new BookmarkNotFoundException("DormReview");
                 }
                 Buildings building = item.getBuilding();
@@ -108,13 +99,13 @@ public class SearchInfo {
                 return SearchInfoDto.ofSearchDormitoryReviewInfo(dormReviews, building, universityName, liked);
             case ReviewType.AGENCY:
                 Agencies agencies = item.getAgency();
-                return SearchInfoDto.ofSearchAgencyReviewInfo(item, agencies, liked);
+                return SearchInfoDto.ofSearchAgencyReviewInfo(item,agencies,liked);
             default:
                 throw new UnprocessableGroupException("후기 유형 dtype에 이상있습니다.");
         }
     }
 
-    public SearchInfoDto buildingSearchWithBound(Long itemId, Boolean liked) {
+    public SearchInfoDto buildingSearchWithBound(Long itemId, Boolean liked){
         Buildings building = buildingsRepository.findById(itemId)
                 .orElseThrow(() -> new BookmarkNotFoundException("Building"));
 
@@ -144,7 +135,7 @@ public class SearchInfo {
         }
     }
 
-    public SearchInfoDto agencySearchWithBound(Long itemId, Boolean liked, ViewType viewType) {
+    public SearchInfoDto agencySearchWithBound(Long itemId, Boolean liked, ViewType viewType){
         Agencies agencies = agenciesRepository.findById(itemId)
                 .orElseThrow(() -> new BookmarkNotFoundException("Agencies"));
         Reviews reviews = reviewsRepository
