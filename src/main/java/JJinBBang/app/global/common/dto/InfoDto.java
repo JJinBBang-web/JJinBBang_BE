@@ -25,53 +25,61 @@ public record InfoDto(
         AgencyBuildingInfo agencyBuildingInfo,
 
         ReviewInfo reviewInfo,
-        String image
-) {
-    public static InfoDto ofGeneralReviewInfo(GeneralReviews generalReview, Boolean liked) {
+        String image,
+        Integer imageCount) {
+    public static InfoDto ofGeneralReviewInfo(GeneralReviews generalReview, Boolean liked, Integer imageCount) {
         return InfoDto.builder()
                 .generalReviewInfo(GeneralReviewInfo.of(generalReview, liked))
                 .reviewInfo(ReviewInfo.of(generalReview))
                 .image(generalReview.getThumbnailImage())
+                .imageCount(imageCount)
                 .build();
     }
 
-    public static InfoDto ofGeneralBuildingInfo(Reviews review, Buildings building, Boolean liked) {
+    public static InfoDto ofGeneralBuildingInfo(Reviews review, Buildings building, Boolean liked, Integer imageCount) {
         return InfoDto.builder()
                 .generalBuildingInfo(GeneralBuildingInfo.of(building,liked))
                 .reviewInfo(ReviewInfo.ofBuilding(review,building))
                 .image(review != null ? review.getThumbnailImage() : null)
+                .imageCount(imageCount)
                 .build();
     }
 
-    public static InfoDto ofDormitoryReviewInfo(DormReviews dormReview, Buildings building, String universityName, Boolean liked) {
+    public static InfoDto ofDormitoryReviewInfo(DormReviews dormReview, Buildings building, String universityName,
+            Boolean liked, Integer imageCount) {
         return InfoDto.builder()
                 .dormitoryReviewInfo(DormitoryReviewInfo.of(dormReview,building,universityName,liked))
                 .reviewInfo(ReviewInfo.of(dormReview))
                 .image(dormReview.getThumbnailImage())
+                .imageCount(imageCount)
                 .build();
     }
 
-    public static InfoDto ofDormitoryBuildingInfo(Reviews review, Buildings building, String universityName, Boolean liked) {
+    public static InfoDto ofDormitoryBuildingInfo(Reviews review, Buildings building, String universityName,
+            Boolean liked, Integer imageCount) {
         return InfoDto.builder()
                 .dormitoryBuildingInfo(DormitoryBuildingInfo.of(building,universityName,liked))
                 .reviewInfo(ReviewInfo.ofBuilding(review,building))
                 .image(review != null ? review.getThumbnailImage() : null)
+                .imageCount(imageCount)
                 .build();
     }
 
-    public static InfoDto ofAgencyReviewInfo(Reviews review, Agencies agency, Boolean liked) {
+    public static InfoDto ofAgencyReviewInfo(Reviews review, Agencies agency, Boolean liked, Integer imageCount) {
         return InfoDto.builder()
                 .agencyReviewInfo(AgencyReviewInfo.of(review,agency,liked))
                 .reviewInfo(ReviewInfo.of(review))
                 .image(review.getThumbnailImage())
+                .imageCount(imageCount)
                 .build();
     }
 
-    public static InfoDto ofAgencyBuildingInfo(Reviews review, Agencies agency, Boolean liked) {
+    public static InfoDto ofAgencyBuildingInfo(Reviews review, Agencies agency, Boolean liked, Integer imageCount) {
         return InfoDto.builder()
                 .agencyBuildingInfo(AgencyBuildingInfo.of(agency,liked))
                 .reviewInfo(ReviewInfo.ofAgency(review,agency))
                 .image(review != null ? review.getThumbnailImage() : null)
+                .imageCount(imageCount)
                 .build();
     }
 }

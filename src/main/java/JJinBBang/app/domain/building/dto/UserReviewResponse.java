@@ -10,64 +10,77 @@ import JJinBBang.app.global.common.dto.AgencyReviewInfo;
 import JJinBBang.app.global.common.dto.DormitoryReviewInfo;
 import JJinBBang.app.global.common.dto.GeneralReviewInfo;
 import JJinBBang.app.global.common.dto.ReviewInfo;
+import JJinBBang.app.domain.building.exception.ReviewInternalServerErrorException;
 import lombok.Builder;
 
 @Builder
 public record UserReviewResponse(
-        GeneralReviewInfo generalReviewInfo,
-        DormitoryReviewInfo dormitoryReviewInfo,
-        AgencyReviewInfo agencyReviewInfo,
-        ReviewInfo reviewInfo,
-        String image
-) {
-    public static UserReviewResponse fromGeneral(
-            GeneralReviews generalReviews,
-            Users user,
-            String image,
-            ReviewLikesRepository likesRepository,
-            ReviewDetailsRepository reviewDetailsRepository
-    ){
-        boolean liked = likesRepository.findByReviewAndUser(generalReviews, user).isPresent();
+                GeneralReviewInfo generalReviewInfo,
+                DormitoryReviewInfo dormitoryReviewInfo,
+                AgencyReviewInfo agencyReviewInfo,
+                ReviewInfo reviewInfo,
+                String image,
+                Integer imageCount) {
+        public static UserReviewResponse fromGeneral(
+                        GeneralReviews generalReviews,
+                        Users user,
+                        String image,
+                        ReviewLikesRepository likesRepository,
+                        ReviewDetailsRepository reviewDetailsRepository) {
+                boolean liked = likesRepository.findByReviewAndUser(generalReviews, user).isPresent();
+                Integer imageCount = getImageCount(reviewDetailsRepository, generalReviews.getId());
 
-        return UserReviewResponse.builder()
-                .generalReviewInfo(GeneralReviewInfo.of(generalReviews, liked))
-                .reviewInfo(ReviewInfo.of(generalReviews))
-                .image(image)
-                .build();
-    }
+                return UserReviewResponse.builder()
+                                .generalReviewInfo(GeneralReviewInfo.of(generalReviews, liked))
+                                .reviewInfo(ReviewInfo.of(generalReviews))
+                                .image(image)
+                                .imageCount(imageCount)
+                                .build();
+        }
 
-    public static UserReviewResponse fromDormitory(
-            DormReviews dormitoryReviews,
-            Users user,
-            String image,
-            ReviewLikesRepository likesRepository
-    ){
-        boolean liked = likesRepository.findByReviewAndUser(dormitoryReviews, user).isPresent();
+        public static UserReviewResponse fromDormitory(
+                        DormReviews dormitoryReviews,
+                        Users user,
+                        String image,
+                        ReviewLikesRepository likesRepository,
+                        ReviewDetailsRepository reviewDetailsRepository) {
+                boolean liked = likesRepository.findByReviewAndUser(dormitoryReviews, user).isPresent();
+                Integer imageCount = getImageCount(reviewDetailsRepository, dormitoryReviews.getId());
 
-        String campusName = dormitoryReviews
-                .getBuilding()
-                .getCampus()
-                .getCampusName();
+                String campusName = dormitoryReviews
+                                .getBuilding()
+                                .getCampus()
+                                .getCampusName();
 
-        return UserReviewResponse.builder()
-                .dormitoryReviewInfo(DormitoryReviewInfo.of(dormitoryReviews, dormitoryReviews.getBuilding(), campusName, liked))
-                .reviewInfo(ReviewInfo.of(dormitoryReviews))
-                .image(image)
-                .build();
-    }
+                return UserReviewResponse.builder()
+                                .dormitoryReviewInfo(DormitoryReviewInfo.of(dormitoryReviews,
+                                                dormitoryReviews.getBuilding(), campusName, liked))
+                                .reviewInfo(ReviewInfo.of(dormitoryReviews))
+                                .image(image)
+                                .imageCount(imageCount)
+                                .build();
+        }
 
-    public static UserReviewResponse fromAgency(
-            AgencyReviews agencyReviews,
-            Users user,
-            String image,
-            ReviewLikesRepository likesRepository
-    ){
-        boolean liked = likesRepository.findByReviewAndUser(agencyReviews, user).isPresent();
+        public static UserReviewResponse fromAgency(
+                        AgencyReviews agencyReviews,
+                        Users user,
+                        String image,
+                        ReviewLikesRepository likesRepository,
+                        ReviewDetailsRepository reviewDetailsRepository) {
+                boolean liked = likesRepository.findByReviewAndUser(agencyReviews, user).isPresent();
+                Integer imageCount = getImageCount(reviewDetailsRepository, agencyReviews.getId());
 
-        return UserReviewResponse.builder()
-                .agencyReviewInfo(AgencyReviewInfo.of(agencyReviews, agencyReviews.getAgency(), liked))
-                .reviewInfo(ReviewInfo.of(agencyReviews))
-                .image(image)
-                .build();
-    }
+                return UserReviewResponse.builder()
+                                .agencyReviewInfo(AgencyReviewInfo.of(agencyReviews, agencyReviews.getAgency(), liked))
+                                .reviewInfo(ReviewInfo.of(agencyReviews))
+                                .image(image)
+                                .imageCount(imageCount)
+                                .build();
+        }
+
+        private static Integer getImageCount(ReviewDetailsRepository repository, Long reviewId) {
+                return repository.findByReviewId(reviewId)
+                                .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException)
+                                .getImageCount();
+        }
 }

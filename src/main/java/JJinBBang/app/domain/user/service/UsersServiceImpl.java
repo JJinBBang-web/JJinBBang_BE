@@ -50,8 +50,8 @@ public class UsersServiceImpl implements UsersService {
 
 	@Override
 	public boolean existsByProviderId(String providerId) {
-        return usersRepository.findByProviderId(providerId).isPresent();
-    }
+		return usersRepository.findByProviderId(providerId).isPresent();
+	}
 
 	@Override
 	public Users findByProviderId(String providerId) {
@@ -105,18 +105,16 @@ public class UsersServiceImpl implements UsersService {
 						dormReviews,
 						user,
 						buildImageUrl(dormReviews.getId()),
-						reviewLikesRepository
-				)
-		);
+						reviewLikesRepository,
+						reviewDetailsRepository));
 
 		Stream<UserReviewResponse> agencyStream = agencyReviewsPage.stream().map(
 				agencyReviews -> UserReviewResponse.fromAgency(
 						agencyReviews,
 						user,
 						buildImageUrl(agencyReviews.getId()),
-						reviewLikesRepository
-				)
-		);
+						reviewLikesRepository,
+						reviewDetailsRepository));
 
 		Comparator<UserReviewResponse> comparator = Comparator.comparing(r -> r.reviewInfo().updateAt());
 		if ("latest".equalsIgnoreCase(order)) {
@@ -176,7 +174,7 @@ public class UsersServiceImpl implements UsersService {
 		ensureSystemUserExists(user);
 
 		Users systemUser = usersRepository.findByProviderId(SYSTEM_DELETE_ID)
-			.orElseThrow(UserNotFoundException::systemError);
+				.orElseThrow(UserNotFoundException::systemError);
 
 		Long targetUserId = user.getUserId();
 
