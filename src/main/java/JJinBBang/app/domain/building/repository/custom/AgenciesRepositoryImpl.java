@@ -5,8 +5,11 @@ import JJinBBang.app.domain.building.entity.QAgencies;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import JJinBBang.app.global.common.enums.KeywordType;
+import JJinBBang.app.domain.building.entity.QReviews;
 
 import java.util.List;
+
 @RequiredArgsConstructor
 public class AgenciesRepositoryImpl implements AgenciesRepositoryCustom {
 
@@ -19,28 +22,37 @@ public class AgenciesRepositoryImpl implements AgenciesRepositoryCustom {
 		BooleanBuilder builder = new BooleanBuilder();
 		if (keyword != null && !keyword.isEmpty()) {
 			builder.and(a.name.containsIgnoreCase(keyword)
-				.or(a.address.containsIgnoreCase(keyword)));
+					.or(a.address.containsIgnoreCase(keyword)));
 		}
 
 		return queryFactory.selectFrom(a)
-			.where(builder)
-			.fetch();
+				.where(builder)
+				.fetch();
 	}
 
 	@Override
 	public List<Agencies> findMarkersWithinBounds(
-		Double neLat, Double neLng,
-		Double swLat, Double swLng
-	) {
+			Double neLat, Double neLng,
+			Double swLat, Double swLng,
+			List<KeywordType> reviewKeywords) {
 		QAgencies a = QAgencies.agencies;
+		QReviews r = QReviews.reviews;
 
 		BooleanBuilder builder = new BooleanBuilder();
 		builder.and(a.agencyLat.between(swLat, neLat));
 		builder.and(a.agencyLot.between(swLng, neLng));
 
+		if (reviewKeywords != null && !reviewKeywords.isEmpty()) {
+			BooleanBuilder keywordBuilder = new BooleanBuilder();
+			for (KeywordType kw : reviewKeywords) {
+				keywordBuilder.and(r.tags.contains(kw.name()));
+			}
+			builder.and(keywordBuilder);
+		}
+
 		return queryFactory.selectFrom(a)
-			.leftJoin(a.reviews).fetchJoin()
-			.where(builder)
-			.fetch();
+				.leftJoin(a.reviews, r).fetchJoin()
+				.where(builder)
+				.fetch();
 	}
 }

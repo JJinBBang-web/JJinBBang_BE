@@ -3,10 +3,6 @@ package JJinBBang.app.domain.building.service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +13,9 @@ import JJinBBang.app.domain.building.dto.AgencySearchRequest;
 import JJinBBang.app.domain.building.dto.AgencySearchResponse;
 import JJinBBang.app.domain.building.dto.BuildingDetailResponse;
 import JJinBBang.app.domain.building.dto.KeywordCount;
-import JJinBBang.app.domain.building.dto.VWorldAddressToCoordRequest;
-import JJinBBang.app.domain.building.dto.VWorldAddressToCoordResponse;
-import JJinBBang.app.domain.building.dto.VWorldEBOfficeRequest;
-import JJinBBang.app.domain.building.dto.VWorldEBOfficeResponse;
+import JJinBBang.app.domain.building.dto.VWorldWfsGetFeatureRequest;
+import JJinBBang.app.domain.building.dto.VWorldFeatureCollection;
 import JJinBBang.app.domain.building.entity.Agencies;
-import JJinBBang.app.domain.building.exception.AgencyInternalServerErrorException;
-import JJinBBang.app.domain.building.exception.AgencyServiceUnavailableException;
 import JJinBBang.app.domain.building.exception.BuildingNullException;
 import JJinBBang.app.domain.building.infra.VWorldApiClient;
 import JJinBBang.app.domain.building.repository.AgenciesRepository;
@@ -37,7 +29,6 @@ public class AgencyServiceImpl implements AgencyService{
     private final AgenciesRepository agenciesRepository;
     private final BuildingKeywordCountsRepository buildingKeywordCountRepository;
 	private final VWorldApiClient vWorldApiClient;
-	private final Executor geocodeExecutor;
 
     @Override
     @Transactional(readOnly = true)
@@ -75,62 +66,45 @@ public class AgencyServiceImpl implements AgencyService{
     }
 
 	@Override
+	@Transactional(readOnly = true)
 	public AgencySearchResponse getAgencyList(AgencySearchRequest request) {
-		// VWorld API 에서 중개사무소 정보 조회
-		VWorldEBOfficeRequest vWorldRequest = VWorldEBOfficeRequest.of(request.agencyName(), request.num(),
-			request.page());
-		VWorldEBOfficeResponse vWorldResponse = vWorldApiClient.searchAgencies(vWorldRequest);
 
-		VWorldEBOfficeResponse.EDOffices edOffices = vWorldResponse.edOffices();
-		// 중개사무소 정보가 없으면 빈 리스트 반환
-		if (edOffices == null) {
-			return AgencySearchResponse.of(new ArrayList<>(), request.num(), request.page(), 0);
-		}
-		// 각 중개사무소의 주소를 좌표로 변환하고 AgencySearchItem 생성
-		List<AgencySearchItem> items = getAgencySearchItems(edOffices);
+		int num = request.num();
+		String cursor = request.cursor();
 
-		return AgencySearchResponse.of(items, edOffices.numOfRows(), edOffices.pageNo(), edOffices.totalCount());
-	}
+		VWorldWfsGetFeatureRequest vWorldReq =
+			VWorldWfsGetFeatureRequest.of(request.agencyName(), num, cursor);
 
-	private List<AgencySearchItem> getAgencySearchItems(VWorldEBOfficeResponse.EDOffices edOffices) {
-		// 비동기 작업을 사용하여 각 중개사무소의 주소를 좌표로 변환
-		List<CompletableFuture<AgencySearchItem>> futures;
-		try {
-			futures = edOffices.field().stream()
-				.map(field -> CompletableFuture.supplyAsync(() -> {
-					// 지번주소를 좌표로 변환하는 VWorld API 호출
-					VWorldAddressToCoordRequest addressToCoordRequest = VWorldAddressToCoordRequest.parcel(
-						field.mnnmadr());
-					VWorldAddressToCoordResponse addressToCoordResponse = vWorldApiClient.geocode(
-						addressToCoordRequest);
+		VWorldFeatureCollection fc = vWorldApiClient.searchAgencies(vWorldReq);
 
-					// AgencySearchItem 생성
-					return AgencySearchItem.of(
-						field.jurirno(),
-						field.bsnmCmpnm(),
-						field.brkrNm(),
-						field.rdnmadr(),
-						field.mnnmadr(),
-						addressToCoordResponse.response().result().point().x(),
-						addressToCoordResponse.response().result().point().y()
-					);
-				}, geocodeExecutor))
-				.toList();
-		} catch (RejectedExecutionException e) {
-			// Executor가 작업을 수락하지 못하는 경우 처리
-			throw AgencyServiceUnavailableException.getAgencyServiceOverloaded();
+		if (fc == null || fc.features() == null) {
+			return AgencySearchResponse.of(List.of(), num, null, false);
 		}
 
-		List<AgencySearchItem> items;
-		try {
-			// 모든 비동기 작업이 완료될 때까지 대기하고 결과 수집
-			items = futures.stream()
-				.map(CompletableFuture::join)
-				.toList();
-		} catch (CompletionException e) {
-			// 비동기 작업 중 예외가 발생한 경우 처리
-			throw AgencyInternalServerErrorException.getAgencyInternalServerError();
-		}
-		return items;
+		List<AgencySearchItem> items = fc.features().stream()
+			.filter(f -> f.geometry() != null && f.geometry().coordinates() != null && f.geometry().coordinates().size() >= 2 && f.properties() != null)
+			.map(f -> {
+				var p = f.properties();
+				double lon = f.geometry().coordinates().get(0); // [lon, lat]
+				double lat = f.geometry().coordinates().get(1);
+
+				return AgencySearchItem.of(
+					p.registNo(),
+					p.agencyName(),
+					p.rdnmadr(),
+					p.mnnmadr(),
+					lat,
+					lon
+				);
+			})
+			.toList();
+
+		// nextCursor = 마지막 아이템의 등록번호
+		String nextCursor = items.isEmpty() ? null : items.get(items.size() - 1).registerNumber();
+
+		// hasMore는 “일단 num만큼 꽉 찼으면 다음이 있을 가능성” 정도로 판단
+		boolean hasMore = items.size() == num && nextCursor != null;
+
+		return AgencySearchResponse.of(items, num, nextCursor, hasMore);
 	}
 }
