@@ -41,4 +41,13 @@ public class ReportAdminServiceImpl implements ReportAdminService {
                 req.content()
         );
     }
+
+    @Transactional
+    @Override
+    public void deleteReport(Long reportId) {
+        Reports report = reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundGroupException::reportNotFound);
+
+        reportRepository.delete(report);
+    }
 }

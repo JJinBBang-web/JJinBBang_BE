@@ -10,4 +10,7 @@ public interface ReportAdminService {
 
     @Transactional
     void updateReport(Long reportId, ReportRequest req);
+
+    @Transactional
+    void deleteReport(Long reportId);
 }

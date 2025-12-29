@@ -48,4 +48,17 @@ public class ReportAdminController {
         return new ResTemplate<>(HttpStatus.OK, "콘텐츠 수정 성공", null);
     }
 
+    @DeleteMapping("{reportId}")
+    public ResTemplate<?> deleteReport(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal Users user
+    ) {
+        if (user == null) throw InvalidTokenException.unauthorized();
+
+        // 일반 사용자 접근 시 예외처리
+        if (user.getRole() != UserRole.ADMIN) throw AdminAccessException.accessDenied();
+
+        reportAdminService.deleteReport(reportId);
+        return new ResTemplate<>(HttpStatus.OK, "콘텐츠 삭제 성공", null);
+    }
 }
