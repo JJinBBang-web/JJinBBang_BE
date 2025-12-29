@@ -60,4 +60,13 @@ public class Reports extends BaseEntity {
     public void decreaseLikeCount() {
         if (this.likeCount > 0) this.likeCount--;
     }
+
+    public static Reports create(String coverImage, ReportCategory category, String title, String content) {
+        Reports report = new Reports();
+        report.coverImage = coverImage;
+        report.category = category;
+        report.title = title;
+        report.content = content;
+        return report;
+    }
 }
