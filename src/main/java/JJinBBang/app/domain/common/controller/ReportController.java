@@ -4,6 +4,7 @@ import JJinBBang.app.domain.common.dto.response.ReportInfoResponse;
 import JJinBBang.app.domain.common.dto.response.ReportListResponse;
 import JJinBBang.app.domain.common.service.ReportService;
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.InvalidTokenException;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class ReportController {
 
     @GetMapping("{reportId}")
     public ResTemplate<ReportInfoResponse> getReportDetail(
-            @AuthenticationPrincipal Users user,
+            @AuthenticationPrincipal Users user, // nullable
             @PathVariable Long reportId
     ) {
         ReportInfoResponse data = reportService.getReportDetail(user, reportId);
@@ -46,6 +47,9 @@ public class ReportController {
             @AuthenticationPrincipal Users user,
             @PathVariable Long reportId
     ) {
+        // 콘텐츠 조회 시 인증 필요 x -> 전역 예외처리 적용 시 제거
+        if (user == null) throw InvalidTokenException.unauthorized();
+
         reportService.addLike(user, reportId);
         return new ResTemplate<>(HttpStatus.OK, "리포트 좋아요 추가 성공", null);
     }
@@ -55,6 +59,9 @@ public class ReportController {
             @AuthenticationPrincipal Users user,
             @PathVariable Long reportId
     ) {
+        // 콘텐츠 조회 시 인증 필요 x -> 전역 예외처리 적용 시 제거
+        if (user == null) throw InvalidTokenException.unauthorized();
+
         reportService.deleteLike(user, reportId);
         return new ResTemplate<>(HttpStatus.OK, "리포트 좋아요 삭제 성공", null);
     }
