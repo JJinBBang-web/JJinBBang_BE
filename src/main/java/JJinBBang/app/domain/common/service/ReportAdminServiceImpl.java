@@ -3,8 +3,8 @@ package JJinBBang.app.domain.common.service;
 import JJinBBang.app.domain.common.dto.request.ReportRequest;
 import JJinBBang.app.domain.common.entity.Reports;
 import JJinBBang.app.domain.common.enums.ReportCategory;
+import JJinBBang.app.domain.common.exception.ReportNotFoundGroupException;
 import JJinBBang.app.domain.common.repository.ReportRepository;
-import JJinBBang.app.domain.user.entity.Users;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class ReportAdminServiceImpl implements ReportAdminService {
 
     @Transactional
     @Override
-    public void creatReport(Users users, ReportRequest req) {
+    public void creatReport(ReportRequest req) {
         Reports report = Reports.create(
                 req.coverImage(),
                 ReportCategory.from(req.category()),
@@ -26,5 +26,19 @@ public class ReportAdminServiceImpl implements ReportAdminService {
         );
 
         reportRepository.save(report);
+    }
+
+    @Transactional
+    @Override
+    public void updateReport(Long reportId, ReportRequest req) {
+        Reports report = reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundGroupException::reportNotFound);
+
+        report.update(
+                ReportCategory.from(req.category()),
+                req.coverImage(),
+                req.title(),
+                req.content()
+        );
     }
 }

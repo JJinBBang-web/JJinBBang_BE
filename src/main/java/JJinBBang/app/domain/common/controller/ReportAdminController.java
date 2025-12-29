@@ -29,8 +29,23 @@ public class ReportAdminController {
         // 일반 사용자 접근 시 예외처리
         if (user.getRole() != UserRole.ADMIN) throw AdminAccessException.accessDenied();
 
-        reportAdminService.creatReport(user, req);
+        reportAdminService.creatReport(req);
         return new ResTemplate<>(HttpStatus.CREATED, "콘텐츠 작성 성공", null);
+    }
+
+    @PutMapping("{reportId}")
+    public ResTemplate<?> updateReport(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal Users user,
+            @RequestBody ReportRequest req
+    ) {
+        if (user == null) throw InvalidTokenException.unauthorized();
+
+        // 일반 사용자 접근 시 예외처리
+        if (user.getRole() != UserRole.ADMIN) throw AdminAccessException.accessDenied();
+
+        reportAdminService.updateReport(reportId, req);
+        return new ResTemplate<>(HttpStatus.OK, "콘텐츠 수정 성공", null);
     }
 
 }

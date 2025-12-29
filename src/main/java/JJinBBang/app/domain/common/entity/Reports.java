@@ -69,4 +69,16 @@ public class Reports extends BaseEntity {
         report.content = content;
         return report;
     }
+
+    public void update(
+            ReportCategory category,
+            String coverImage,
+            String title,
+            String content
+    ) {
+        this.category = category;
+        this.coverImage = coverImage;
+        this.title = title;
+        this.content = content;
+    }
 }
