@@ -21,13 +21,8 @@ public enum ReportCategory {
 
     public static ReportCategory from(String value) {
         String v = value.trim();
-
-        try {
-            return ReportCategory.valueOf(v.toUpperCase());
-        } catch (Exception ignore) {}
-
         return Arrays.stream(values())
-                .filter(category -> category.label.equals(v))
+                .filter(category -> category.name().equalsIgnoreCase(v) || category.label.equals(v))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Category: " + v));
     }

@@ -29,7 +29,7 @@ public class ReportAdminController {
         // 일반 사용자 접근 시 예외처리
         if (user.getRole() != UserRole.ADMIN) throw AdminAccessException.accessDenied();
 
-        reportAdminService.creatReport(req);
+        reportAdminService.createReport(req);
         return new ResTemplate<>(HttpStatus.CREATED, "콘텐츠 작성 성공", null);
     }
 

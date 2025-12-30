@@ -5,19 +5,20 @@ import JJinBBang.app.domain.common.entity.Reports;
 import JJinBBang.app.domain.common.enums.ReportCategory;
 import JJinBBang.app.domain.common.exception.ReportNotFoundGroupException;
 import JJinBBang.app.domain.common.repository.ReportRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReportAdminServiceImpl implements ReportAdminService {
 
     private final ReportRepository reportRepository;
 
     @Transactional
     @Override
-    public void creatReport(ReportRequest req) {
+    public void createReport(ReportRequest req) {
         Reports report = Reports.create(
                 req.coverImage(),
                 ReportCategory.from(req.category()),
