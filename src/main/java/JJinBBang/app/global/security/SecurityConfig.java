@@ -58,6 +58,7 @@ public class SecurityConfig {
 
 		CorsConfiguration globalConfig = new CorsConfiguration();
 		globalConfig.setAllowedOrigins(List.of(
+				"https://localhost:3000",
 				"http://localhost:3000",
 				"http://localhost:5173",
 				"https://www.jjinbbang.kr"));
