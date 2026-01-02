@@ -1,5 +1,6 @@
 package JJinBBang.app.global.config;
 
+import JJinBBang.app.domain.user.entity.PendingUser;
 import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -38,6 +39,28 @@ public class RedisConfig {
         // 생성자 인자로 ObjectMapper와 target Class를 함께 넘김
         Jackson2JsonRedisSerializer<EmailAuthInfo> ser =
                 new Jackson2JsonRedisSerializer<>(om, EmailAuthInfo.class);
+
+        template.setValueSerializer(ser);
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    @Bean
+    public RedisTemplate<String, PendingUser> pendingUserRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, PendingUser> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        // key: String serializer
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // value: JSON serializer for PendingUser
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // 생성자 인자로 ObjectMapper와 target Class를 함께 넘김
+        Jackson2JsonRedisSerializer<PendingUser> ser =
+                new Jackson2JsonRedisSerializer<>(om, PendingUser.class);
 
         template.setValueSerializer(ser);
         template.afterPropertiesSet();

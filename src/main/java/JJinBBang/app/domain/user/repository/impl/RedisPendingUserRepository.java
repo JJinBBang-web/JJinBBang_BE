@@ -5,13 +5,13 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import JJinBBang.app.domain.user.entity.PendingUser;
 import JJinBBang.app.domain.user.repository.PendingUserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,10 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 	name = "mode",
 	havingValue = "redis"
 )
-@RequiredArgsConstructor
 public class RedisPendingUserRepository implements PendingUserRepository {
 
-	private final RedisTemplate<String, Object> redisTemplate;
+	private final RedisTemplate<String, PendingUser> redisTemplate;
+
+	public RedisPendingUserRepository(
+			@Qualifier("pendingUserRedisTemplate") RedisTemplate<String, PendingUser> redisTemplate) {
+		this.redisTemplate = redisTemplate;
+	}
 
 	private static final String PREFIX = "pending:user:";
 
@@ -45,7 +49,7 @@ public class RedisPendingUserRepository implements PendingUserRepository {
 	@Override
 	public Optional<PendingUser> findById(String pendingId) {
 		String key = key(pendingId);
-		PendingUser user = (PendingUser) redisTemplate.opsForValue().get(key);
+		PendingUser user = redisTemplate.opsForValue().get(key);
 		return Optional.ofNullable(user);
 	}
 
