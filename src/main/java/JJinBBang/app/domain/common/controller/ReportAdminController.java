@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/admin/report")
+@RequestMapping("/api/admin/report")
 public class ReportAdminController {
 
     private final ReportAdminService reportAdminService;
