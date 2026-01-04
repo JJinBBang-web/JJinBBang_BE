@@ -66,8 +66,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			} catch (InvalidTokenException e) {
 				authenticationEntryPoint.commence(request, response, e);
+				return;
 			} catch (NotFoundGroupException e) {
 				authenticationEntryPoint.commence(request, response, InvalidTokenException.userNotFound());
+				return;
 			}
 		}
 		filterChain.doFilter(request, response);
