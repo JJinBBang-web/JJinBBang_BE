@@ -57,14 +57,18 @@ public class SecurityConfig {
 	CorsConfigurationSource corsConfigurationSource() {
 
 		CorsConfiguration globalConfig = new CorsConfiguration();
-		globalConfig.setAllowedOrigins(List.of(
+		// setAllowCredentials(true)와 함께 사용할 때는 setAllowedOriginPatterns 사용
+		globalConfig.setAllowedOriginPatterns(List.of(
 				"https://localhost:3000",
 				"http://localhost:3000",
 				"http://localhost:5173",
-				"https://www.jjinbbang.kr"));
+				"https://www.jjinbbang.kr",
+				"https://*.jjinbbang.kr",  // 서브도메인 포함 (test.jjinbbang.kr 등)
+				"https://www.test.jjinbbang.kr"));
 		globalConfig.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
 		globalConfig.setAllowedHeaders(List.of("*"));
 		globalConfig.setAllowCredentials(true);
+		globalConfig.setExposedHeaders(List.of("*"));  // 클라이언트에서 접근 가능한 헤더
 
 		CorsConfiguration swaggerConfig = new CorsConfiguration();
 		swaggerConfig.addAllowedOriginPattern("http://localhost:*");
