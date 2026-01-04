@@ -148,9 +148,13 @@ public class UsersServiceImpl implements UsersService {
 		user.updateVerificationStatus(VerificationStatus.EMAIL_VERIFIED);
 
 		// 유저의 학교 정보 업데이트
-		String domain = extractDomain(universityEmail);
-		Universities authenticatedUniversity = universityRepository.findUniversitiesByUniversityDomain(domain)
-				.orElseThrow(() -> UniversityNotFoundException.universityNotFound(domain));
+		String inputDomain = extractDomain(universityEmail);
+		
+		// SQL 쿼리로 도메인 매칭 (정확한 매칭 + 와일드카드 패턴 + 서브도메인 매칭)
+		Universities authenticatedUniversity = universityRepository
+				.findFirstByDomainMatching(inputDomain)
+				.orElseThrow(() -> UniversityNotFoundException.universityNotFound(inputDomain));
+
 		user.updateUniversity(authenticatedUniversity);
 
 		return usersRepository.save(user);
