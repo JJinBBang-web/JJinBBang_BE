@@ -46,7 +46,8 @@ public class RedisEmailAuthCodeRepository implements EmailAuthCodeRepository {
 	@Override
 	public boolean isExistByUserId(Long userId) {
 		String key = makeKey(userId);
-		return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+		Boolean exists = redisTemplate.hasKey(key);
+		return Boolean.TRUE.equals(exists);
 		// TTL이 지나면 키 자동 삭제
 	}
 

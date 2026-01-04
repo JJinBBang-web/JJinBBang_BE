@@ -30,6 +30,7 @@ public class RedisConfig {
 
         // key: String serializer
         template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
 
         // value: JSON serializer for EmailAuthInfo
         ObjectMapper om = new ObjectMapper();
@@ -41,6 +42,7 @@ public class RedisConfig {
                 new Jackson2JsonRedisSerializer<>(om, EmailAuthInfo.class);
 
         template.setValueSerializer(ser);
+        template.setHashValueSerializer(ser);
         template.afterPropertiesSet();
         return template;
     }
