@@ -166,3 +166,9 @@ vworld:
 google:
   credentials:
     path: "classpath:gcp_iam_key.json"
+
+slack:
+  webhook:
+    url: ${slack.webhook.url}
+  security:
+    signing-secret: ${slack.security.signing-secret}
