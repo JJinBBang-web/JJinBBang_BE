@@ -76,13 +76,16 @@ public class MailAuthServiceImpl implements MailAuthService {
 			throw MailInvalidException.invalidEmailFormat();
 		}
 
-		// 이메일 도메인 검증
-		// DB에 저장되어있는 이메일 도메인인지 or 환경변수에 설정된 도메인인지 검사
-		if (!universityRepository.existsByUniversityDomain(extractDomain(email)) &&
-				!properties.getAllowedDomain().contains(extractDomain(email))) {
-			throw MailInvalidException.invalidEmailDomain();
-		}
-	}
+        String inputDomain = extractDomain(email);
+
+        // DB에서 도메인 매칭 확인 (정확한 매칭 + 와일드카드 패턴 + 서브도메인 매칭)
+        if (universityRepository.existsByDomainMatching(inputDomain)) {
+            return;
+        }
+
+        // 모든 검증 실패
+        throw MailInvalidException.invalidEmailDomain();
+    }
 
 	private boolean isValidFormat(String email) {
 		return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");

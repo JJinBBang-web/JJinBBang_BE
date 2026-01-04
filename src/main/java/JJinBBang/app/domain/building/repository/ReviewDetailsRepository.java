@@ -1,5 +1,7 @@
 package JJinBBang.app.domain.building.repository;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.bson.types.ObjectId;
@@ -14,4 +16,6 @@ public interface ReviewDetailsRepository extends MongoRepository<ReviewDetails, 
 	Optional<ReviewDetails> findByReviewId(Long reviewId);
 
     void deleteByReviewId(Long reviewId);
+
+	List<ReviewDetails> findAllByReviewIdIn(List<Long> reviewIds);
 }

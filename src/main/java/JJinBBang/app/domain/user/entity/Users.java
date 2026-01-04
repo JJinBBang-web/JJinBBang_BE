@@ -11,6 +11,7 @@ import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.common.entity.Universities;
+import JJinBBang.app.domain.common.entity.ReportLikes;
 import JJinBBang.app.domain.user.enums.UserRole;
 import JJinBBang.app.global.common.enums.Provider;
 import JJinBBang.app.global.common.enums.VerificationStatus;
@@ -88,6 +89,10 @@ public class Users extends BaseEntity {
 	// 유저 -> 공인중개사-좋아요
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private List<AgencyLikes> agencyLikes = new ArrayList<>();
+
+	// 유저 -> 리포트-좋아요
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private List<ReportLikes> reportLikes = new ArrayList<>();
 
 	@Builder
 	private Users(
