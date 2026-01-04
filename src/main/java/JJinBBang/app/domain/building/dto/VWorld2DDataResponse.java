@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** vworld 2D Data API - 도로명주소 건물(spbd) 응답 DTO */
-public record VWorldResponse(
+public record VWorld2DDataResponse(
 	@JsonProperty("response") Response response
 ) {
 

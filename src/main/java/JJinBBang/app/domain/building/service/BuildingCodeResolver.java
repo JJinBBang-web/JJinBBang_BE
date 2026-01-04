@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import JJinBBang.app.domain.building.dto.VWorldResponse;
+import JJinBBang.app.domain.building.dto.VWorld2DDataResponse;
 import JJinBBang.app.domain.building.entity.PlaceBuildingMap;
 import JJinBBang.app.domain.building.infra.VWorldApiClient;
 import JJinBBang.app.domain.building.repository.PlaceBuildingMapRepository;
@@ -95,7 +95,7 @@ public class BuildingCodeResolver {
 	 * VWorld API를 호출하여 건물 관리 번호를 조회합니다.
 	 * */
 	private String fetchBuildingCodeFromApi(Double longitude, Double latitude) {
-		VWorldResponse.Response response = vWorldApiClient.searchByPoint(longitude, latitude).response();
+		VWorld2DDataResponse.Response response = vWorldApiClient.searchBuildingByPoint(longitude, latitude).response();
 
 		// API 호출 결과가 없으면, null 반환
 		if ("NOT_FOUND".equals(response.status())) {
@@ -109,8 +109,8 @@ public class BuildingCodeResolver {
 		}
 
 		// 가장 가까운 피처 선택
-		List<VWorldResponse.Feature> features = response.result().featureCollection().features();
-		VWorldResponse.Feature best = getClosestFeature(longitude, latitude, features);
+		List<VWorld2DDataResponse.Feature> features = response.result().featureCollection().features();
+		VWorld2DDataResponse.Feature best = getClosestFeature(longitude, latitude, features);
 
 		return best != null && best.properties() != null ? best.properties().bd_mgt_sn() : null;
 	}
@@ -119,9 +119,9 @@ public class BuildingCodeResolver {
 	 * 주어진 좌표(경도, 위도)에서 가장 가까운 피처를 선택합니다.
 	 * 피처가 좌표를 포함하면 즉시 반환하고, 포함하는 피처가 없으면 가장 가까운 피처를 반환합니다.
 	 * */
-	private VWorldResponse.Feature getClosestFeature(
+	private VWorld2DDataResponse.Feature getClosestFeature(
 		Double longitude, Double latitude,
-		List<VWorldResponse.Feature> features) {
+		List<VWorld2DDataResponse.Feature> features) {
 
 		// 피처 목록이 없으면 null 반환
 		if (features == null || features.isEmpty()) {
@@ -132,11 +132,11 @@ public class BuildingCodeResolver {
 		Point point = GF.createPoint(new Coordinate(longitude, latitude));
 
 		double minDistance = Double.MAX_VALUE;
-		VWorldResponse.Feature closestFeature = null;
+		VWorld2DDataResponse.Feature closestFeature = null;
 
 		// 각 피처의 지오메트리를 확인하여 포함 여부 및 거리 계산
-		for (VWorldResponse.Feature feature : features) {
-			VWorldResponse.GeoJsonGeometry geo = feature.geometry();
+		for (VWorld2DDataResponse.Feature feature : features) {
+			VWorld2DDataResponse.GeoJsonGeometry geo = feature.geometry();
 			if (geo == null || geo.type() == null || geo.coordinates() == null) continue;
 
 			// GeoJSON 문자열을 Geometry 객체로 변환

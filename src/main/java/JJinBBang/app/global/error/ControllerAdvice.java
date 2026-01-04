@@ -83,6 +83,12 @@ public class ControllerAdvice {
 		return createErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
+	// 503, ServiceUnavailableGroupException
+	@ExceptionHandler({ServiceUnavailableGroupException.class})
+	public ResponseEntity<ErrorResponse> handleServiceUnavailable(RuntimeException e) {
+		return createErrorResponse(e, HttpStatus.SERVICE_UNAVAILABLE);
+	}
+
 	// 메서드 인자 문제 생겼을 때
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(

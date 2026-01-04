@@ -8,8 +8,9 @@ import JJinBBang.app.domain.building.entity.BuildingLikes;
 import JJinBBang.app.domain.building.entity.ReviewLikes;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.entity.Universities;
+import JJinBBang.app.domain.common.entity.ReportLikes;
+import JJinBBang.app.domain.common.repository.ReportLikesRepository;
 import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
-import JJinBBang.app.domain.user.exception.OpinionException;
 import JJinBBang.app.domain.user.exception.UniversityNotFoundException;
 import JJinBBang.app.domain.user.repository.UniversityRepository;
 import JJinBBang.app.global.common.enums.UnregisterReason;
@@ -26,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -45,6 +45,7 @@ public class UsersServiceImpl implements UsersService {
 	private final UniversityRepository universityRepository;
 	private final BuildingLikesRepository buildingLikesRepository;
 	private final AgencyLikesRepository agencyLikesRepository;
+	private final ReportLikesRepository reportLikesRepository;
 
 	@Override
 	public Users findById(Long id) {
@@ -53,8 +54,8 @@ public class UsersServiceImpl implements UsersService {
 
 	@Override
 	public boolean existsByProviderId(String providerId) {
-        return usersRepository.findByProviderId(providerId).isPresent();
-    }
+		return usersRepository.findByProviderId(providerId).isPresent();
+	}
 
 	@Override
 	public Users findByProviderId(String providerId) {
@@ -108,18 +109,16 @@ public class UsersServiceImpl implements UsersService {
 						dormReviews,
 						user,
 						buildImageUrl(dormReviews.getId()),
-						reviewLikesRepository
-				)
-		);
+						reviewLikesRepository,
+						reviewDetailsRepository));
 
 		Stream<UserReviewResponse> agencyStream = agencyReviewsPage.stream().map(
 				agencyReviews -> UserReviewResponse.fromAgency(
 						agencyReviews,
 						user,
 						buildImageUrl(agencyReviews.getId()),
-						reviewLikesRepository
-				)
-		);
+						reviewLikesRepository,
+						reviewDetailsRepository));
 
 		Comparator<UserReviewResponse> comparator = Comparator.comparing(r -> r.reviewInfo().updateAt());
 		if ("latest".equalsIgnoreCase(order)) {
@@ -179,7 +178,7 @@ public class UsersServiceImpl implements UsersService {
 		ensureSystemUserExists(user);
 
 		Users systemUser = usersRepository.findByProviderId(SYSTEM_DELETE_ID)
-			.orElseThrow(UserNotFoundException::systemError);
+				.orElseThrow(UserNotFoundException::systemError);
 
 		Long targetUserId = user.getUserId();
 
@@ -202,6 +201,17 @@ public class UsersServiceImpl implements UsersService {
 		List<AgencyLikes> agencyLikes = agencyLikesRepository.findAllByUser_UserId(targetUserId);
 		agencyLikes.forEach(al -> al.getAgency().decrementLikeCount());
 		agencyLikesRepository.deleteAll(agencyLikes);
+
+		// 3-4) 리포트 좋아요
+		List<ReportLikes> reportLikes = reportLikesRepository.findAllByUser_UserId(targetUserId);
+		reportLikes.forEach(rl -> rl.getReport().decreaseLikeCount());
+		reportLikesRepository.deleteAllInBatch(reportLikes);
+
+		// 3-x) Users 엔티티 컬렉션 정리 (양방향 연관관계 재-persist 방지)
+		user.getBuildingLikes().clear();
+		user.getReviewLikes().clear();
+		user.getAgencyLikes().clear();
+		user.getReportLikes().clear();
 
 		// 4) 유저 탈퇴일 기록 (스케줄러가 N일 뒤 영구 삭제)
 		user.delete(); // 내부에서 disabledAt = now 등

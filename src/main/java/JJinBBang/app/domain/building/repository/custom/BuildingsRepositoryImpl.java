@@ -28,15 +28,14 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 
 	@Override
 	public List<Buildings> findMarkersWithinBounds(
-		Double neLat, Double neLng,
-		Double swLat, Double swLng,
-		List<BuildingType> buildTypes,
-		ContractType contractType,
-		Integer depositMin, Integer depositMax,
-		Integer monthlyRentMin, Integer monthlyRentMax,
-		Boolean inMaintenanceCost,
-		List<KeywordType> reviewKeywords
-	) {
+			Double neLat, Double neLng,
+			Double swLat, Double swLng,
+			List<BuildingType> buildTypes,
+			ContractType contractType,
+			Integer depositMin, Integer depositMax,
+			Integer monthlyRentMin, Integer monthlyRentMax,
+			Boolean inMaintenanceCost,
+			List<KeywordType> reviewKeywords) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
 		QReviews r = QReviews.reviews;
@@ -63,11 +62,11 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		QGeneralReviews treated = new QGeneralReviews(grPath);
 
 		JPAQuery<Buildings> query = queryFactory.selectDistinct(b)
-			.from(b)
-			.leftJoin(b.reviews, r).fetchJoin()
-			.leftJoin(treated).on(r.id.eq(treated.id))
-			.leftJoin(b.campus, c).fetchJoin()
-			.where(builder);
+				.from(b)
+				.leftJoin(b.reviews, r).fetchJoin()
+				.leftJoin(treated).on(r.id.eq(treated.id))
+				.leftJoin(b.campus, c).fetchJoin()
+				.where(builder);
 
 		// 4. 계약 조건 필터
 		if (contractType != null) {
@@ -85,8 +84,17 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		if (monthlyRentMax != null) {
 			query.where(treated.price.loe(monthlyRentMax));
 		}
+
 		if (inMaintenanceCost != null && inMaintenanceCost) {
 			query.where(treated.maintenanceCost.isNotNull());
+		}
+
+		if (reviewKeywords != null && !reviewKeywords.isEmpty()) {
+			BooleanBuilder keywordBuilder = new BooleanBuilder();
+			for (KeywordType kw : reviewKeywords) {
+				keywordBuilder.and(r.tags.contains(kw.name()));
+			}
+			query.where(keywordBuilder);
 		}
 
 		return query.fetch();
@@ -94,14 +102,13 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 
 	@Override
 	public List<Buildings> searchBuildings(
-		String keyword,
-		List<BuildingType> buildTypes,
-		ContractType contractType,
-		Integer depositMin, Integer depositMax,
-		Integer monthlyRentMin, Integer monthlyRentMax,
-		Boolean inMaintenanceCost,
-		List<KeywordType> reviewKeywords
-	) {
+			String keyword,
+			List<BuildingType> buildTypes,
+			ContractType contractType,
+			Integer depositMin, Integer depositMax,
+			Integer monthlyRentMin, Integer monthlyRentMax,
+			Boolean inMaintenanceCost,
+			List<KeywordType> reviewKeywords) {
 		QBuildings b = QBuildings.buildings;
 		QCampuses c = QCampuses.campuses;
 		QReviews r = QReviews.reviews;
@@ -112,9 +119,9 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 
 		if (keyword != null && !keyword.isEmpty()) {
 			builder.and(b.buildingName.containsIgnoreCase(keyword)
-				.or(b.buildingAddress.containsIgnoreCase(keyword))
-				.or(a.name.containsIgnoreCase(keyword))
-				.or(a.address.containsIgnoreCase(keyword)));
+					.or(b.buildingAddress.containsIgnoreCase(keyword))
+					.or(a.name.containsIgnoreCase(keyword))
+					.or(a.address.containsIgnoreCase(keyword)));
 		}
 
 		if (buildTypes != null && !buildTypes.contains(BuildingType.ALL)) {
@@ -129,12 +136,12 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		QGeneralReviews treated = new QGeneralReviews(grPath);
 
 		JPAQuery<Buildings> query = queryFactory.selectDistinct(b)
-			.from(b)
-			.leftJoin(b.reviews, r).fetchJoin()
-			.leftJoin(treated).on(r.id.eq(treated.id))
-			.leftJoin(b.campus, c).fetchJoin()
-			.leftJoin(a).on(b.buildingCode.stringValue().eq(a.agencySerial))
-			.where(builder);
+				.from(b)
+				.leftJoin(b.reviews, r).fetchJoin()
+				.leftJoin(treated).on(r.id.eq(treated.id))
+				.leftJoin(b.campus, c).fetchJoin()
+				.leftJoin(a).on(b.buildingCode.stringValue().eq(a.agencySerial))
+				.where(builder);
 
 		if (contractType != null) {
 			query.where(treated.contractType.eq(contractType));
@@ -151,8 +158,17 @@ public class BuildingsRepositoryImpl implements BuildingsRepositoryCustom {
 		if (monthlyRentMax != null) {
 			query.where(treated.price.loe(monthlyRentMax));
 		}
+
 		if (inMaintenanceCost != null && inMaintenanceCost) {
 			query.where(treated.maintenanceCost.isNotNull());
+		}
+
+		if (reviewKeywords != null && !reviewKeywords.isEmpty()) {
+			BooleanBuilder keywordBuilder = new BooleanBuilder();
+			for (KeywordType kw : reviewKeywords) {
+				keywordBuilder.and(r.tags.contains(kw.name()));
+			}
+			query.where(keywordBuilder);
 		}
 
 		return query.fetch();
