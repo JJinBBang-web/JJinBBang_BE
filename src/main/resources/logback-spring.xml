@@ -62,9 +62,36 @@
         </encoder>
     </appender>
 
+    <!-- Docker Loki로 로그 전송 (Container to Container) -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>http://loki:3100/loki/api/v1/push</url>
+        </http>
+        <format>
+            <label>
+                <pattern>service=${APP_NAME},host=${HOSTNAME},level=%level</pattern>
+            </label>
+            <message>
+                <pattern>
+                    {
+                    "timestamp": "%d{ISO8601}",
+                    "level": "%level",
+                    "logger": "%logger{36}",
+                    "thread": "%thread",
+                    "message": "%msg",
+                    "traceId": "%X{traceId}",
+                    "spanId": "%X{spanId}"
+                    }
+                </pattern>
+            </message>
+            <sortByTime>true</sortByTime>
+        </format>
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="JSON_CONSOLE"/>
         <appender-ref ref="JSON_FILE"/>
+        <appender-ref ref="LOKI"/>
     </root>
 
     <logger name="org.springframework" level="INFO"/>
