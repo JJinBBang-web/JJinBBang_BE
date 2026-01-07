@@ -1,13 +1,19 @@
 package JJinBBang.app.global.slack.service.impl;
 
+import JJinBBang.app.domain.user.service.CertificateService;
+import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.slack.properties.SlackProperties;
 import JJinBBang.app.global.slack.service.SlackService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -22,6 +28,8 @@ public class SlackServiceImpl implements SlackService {
 
     private final SlackProperties slackProperties;
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final CertificateService certificateService;
 
     /**
      * Slack #합격증명서-인증 채널에 찐빵 봇을 통한 미승인 합격증명서 인증 메시지 전송
@@ -54,6 +62,43 @@ public class SlackServiceImpl implements SlackService {
         } catch (Exception e) {
             log.error("Slack 메시지 전송 실패: ", e);
         }
+    }
+
+    @Transactional
+    @Override
+    public String handleInteractivity(String payload) throws JsonProcessingException {
+
+        // 1) Slack이 보낸 JSON 파싱
+        JsonNode root = objectMapper.readTree(payload);
+
+        // 2) 사용자 정보, action 추출
+        JsonNode actionsNode = root.path("actions").get(0);
+        String actionId = actionsNode.path("action_id").asText();
+        String value = actionsNode.path("value").asText();
+        Long userId = Long.parseLong(value);
+
+        String message = "";
+
+        if ("approve_student_verification".equals(actionId)) {
+            certificateService.updateVerificationStatusByCertificate(
+                    userId,
+                    String.valueOf(VerificationStatus.NEW_STUDENT_VERIFIED),
+                    null
+            );
+
+            message = "✅ 관리자에 의해 승인 처리되었습니다.";
+            log.info("Slack에서 승인 처리 완료: userId - {}", userId);
+        } else if ("reject_student_verification".equals(actionId)) {
+            certificateService.updateVerificationStatusByCertificate(
+                    userId,
+                    String.valueOf(VerificationStatus.UNVERIFIED),
+                    null
+            );
+            message = "❌ 관리자에 의해 반려 처리되었습니다.";
+            log.info("Slack에서 반려 처리 완료: userId - {}", userId);
+        }
+
+        return createResponseJson(message);
     }
 
     // 텍스트 섹션 생성하기
@@ -94,5 +139,10 @@ public class SlackServiceImpl implements SlackService {
         button.put("value", value);
 
         return button;
+    }
+
+    // Slack 응답 메시지 포맷
+    private String createResponseJson(String text) {
+        return String.format("{\"replace_original\": \"true\", \"text\": \"%s\"}", text);
     }
 }

@@ -3,7 +3,9 @@ package JJinBBang.app.domain.user.controller;
 import JJinBBang.app.domain.user.dto.request.UpdateVerificationStatusDto;
 import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.domain.user.service.UsersService;
+import JJinBBang.app.global.slack.service.SlackService;
 import JJinBBang.app.global.template.ResTemplate;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ public class AdminUserController {
 
     private final CertificateService certificateService;
     private final UsersService usersService;
+    private final SlackService slackService;
 
     /**
      * Admin Controller
@@ -27,7 +30,8 @@ public class AdminUserController {
 
         certificateService.updateVerificationStatusByCertificate(
                 updateVerificationStatus.userId(),
-                updateVerificationStatus.verificationStatus()
+                updateVerificationStatus.verificationStatus(),
+                null
         );
 
         return new ResTemplate<>(
@@ -35,6 +39,13 @@ public class AdminUserController {
                 "증명서 인증 상태 변경",
                 null
         );
+    }
+
+    @PostMapping("/slack/verification")
+    public ResTemplate<?> handleInteraction(
+            @RequestParam("payload") String payload
+    ) throws JsonProcessingException {
+        return new ResTemplate<>(HttpStatus.OK, slackService.handleInteractivity(payload), null);
     }
 
     @DeleteMapping("/deletedUsers/executeDeletion")

@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.user.service;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.event.CertificateUploadEvent;
 import JJinBBang.app.domain.user.exception.*;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.global.common.enums.VerificationStatus;
@@ -15,6 +16,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,6 +37,7 @@ public class CertificateServiceImpl implements CertificateService {
     private final Sheets sheets;
     private final UsersRepository usersRepository;
     private final UsersService usersService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 재학증명서 -> 구글 드라이브 업로드
     @Override
@@ -220,12 +223,16 @@ public class CertificateServiceImpl implements CertificateService {
      */
     @Override
     @Transactional
-    public void updateVerificationStatusByCertificate(Long userId, String status) {
-        if (!VerificationStatus.isValid(status)) {
+    public void updateVerificationStatusByCertificate(Long userId, String status, String fileLink) {
+        if (!VerificationStatus.isValid(status))
             throw VerificatoinStatusException.InvalidVerificationStatusException();
-        }
+
         Users user = usersService.findByUserId(userId);
         user.updateVerificationStatus(VerificationStatus.valueOf(status));
         usersRepository.save(user);
+
+        if (VerificationStatus.valueOf(status) == VerificationStatus.PENDING) {
+            eventPublisher.publishEvent(new CertificateUploadEvent(userId, fileLink));
+        }
     }
 }
