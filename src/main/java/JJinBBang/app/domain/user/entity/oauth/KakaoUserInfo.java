@@ -13,7 +13,7 @@ public class KakaoUserInfo implements OAuth2UserInfo {
 
 	@Override
 	public String getProviderId() {
-		return String.valueOf(attrs.get(PROVIDER_ID_KEY));
+		return String.valueOf("kakao_" + attrs.get(PROVIDER_ID_KEY));
 	}
 
 	@Override
