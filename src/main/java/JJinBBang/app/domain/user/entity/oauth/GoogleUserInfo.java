@@ -14,7 +14,7 @@ public class GoogleUserInfo implements OAuth2UserInfo {
 	@Override
 	public String getProviderId() {
 		// 구글의 고유 사용자 ID는 "sub" 필드에 들어있음
-		return String.valueOf(attrs.get(PROVIDER_ID_KEY));
+		return String.valueOf("google_" + attrs.get(PROVIDER_ID_KEY));
 	}
 
 	@Override

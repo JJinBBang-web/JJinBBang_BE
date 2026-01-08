@@ -20,7 +20,7 @@ public class NaverUserInfo implements OAuth2UserInfo {
 	@Override
 	public String getProviderId() {
 		// 네이버의 고유 사용자 ID
-		return String.valueOf(attrs.get(PROVIDER_ID_KEY));
+		return String.valueOf("naver_" + attrs.get(PROVIDER_ID_KEY));
 	}
 
 	@Override
