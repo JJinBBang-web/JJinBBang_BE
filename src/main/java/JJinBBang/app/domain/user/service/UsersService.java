@@ -5,6 +5,7 @@ import JJinBBang.app.domain.user.dto.UserInfoResponseDto;
 import JJinBBang.app.domain.user.entity.Users;
 
 public interface UsersService {
+	Users findById(Long id);
 
 	boolean existsByProviderId(String providerId);
 
