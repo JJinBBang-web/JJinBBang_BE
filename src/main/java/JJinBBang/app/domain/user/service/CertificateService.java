@@ -9,5 +9,5 @@ public interface CertificateService {
     void appendEnrollmentFileToSheets(int userId, String fileName, String fileLink);
     void appendAdmissionFileToSheets(int userId, String fileName, String fileLink);
 
-    void updateVerificationStatusByCertificate(Long userId, String status, String fileLink);
+    void updateVerificationStatusByCertificate(Long userId, String status, String fileLink, String fileName);
 }

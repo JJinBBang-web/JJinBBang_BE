@@ -92,6 +92,11 @@ spring:
     encoding: UTF-8
     basename: ValidationMessages
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 cloud:
   aws:
     region:
@@ -172,3 +177,8 @@ slack:
     url: ${slack.webhook.url}
   security:
     signing-secret: ${slack.security.signing-secret}
+
+ocr:
+  clova:
+    api-url: ${ocr.clova.api-url}
+    secret-key: ${ocr.clova.secret-key}

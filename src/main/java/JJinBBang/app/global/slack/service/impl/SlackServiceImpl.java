@@ -83,6 +83,7 @@ public class SlackServiceImpl implements SlackService {
             certificateService.updateVerificationStatusByCertificate(
                     userId,
                     String.valueOf(VerificationStatus.NEW_STUDENT_VERIFIED),
+                    null,
                     null
             );
 
@@ -92,6 +93,7 @@ public class SlackServiceImpl implements SlackService {
             certificateService.updateVerificationStatusByCertificate(
                     userId,
                     String.valueOf(VerificationStatus.UNVERIFIED),
+                    null,
                     null
             );
             message = "❌ 관리자에 의해 반려 처리되었습니다.";

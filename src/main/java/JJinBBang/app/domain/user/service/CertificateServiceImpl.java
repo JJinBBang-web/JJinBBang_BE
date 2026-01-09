@@ -223,7 +223,7 @@ public class CertificateServiceImpl implements CertificateService {
      */
     @Override
     @Transactional
-    public void updateVerificationStatusByCertificate(Long userId, String status, String fileLink) {
+    public void updateVerificationStatusByCertificate(Long userId, String status, String fileLink, String fileName) {
         if (!VerificationStatus.isValid(status))
             throw VerificatoinStatusException.InvalidVerificationStatusException();
 
@@ -232,7 +232,7 @@ public class CertificateServiceImpl implements CertificateService {
         usersRepository.save(user);
 
         if (VerificationStatus.valueOf(status) == VerificationStatus.PENDING) {
-            eventPublisher.publishEvent(new CertificateUploadEvent(userId, fileLink));
+            eventPublisher.publishEvent(new CertificateUploadEvent(userId, fileLink, fileName));
         }
     }
 }

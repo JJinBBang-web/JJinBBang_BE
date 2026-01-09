@@ -7,7 +7,6 @@ import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.domain.user.service.UsersService;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.sheets.properties.GoogleProperties;
-import JJinBBang.app.global.slack.service.SlackService;
 import JJinBBang.app.global.template.ResTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,8 +25,6 @@ public class CertificateController {
     private final GoogleProperties googleProps;
 
     private final ApplicationEventPublisher eventPublisher;
-
-    private final SlackService slackService;
 
     // 재학증명서 업로드
     @PostMapping("/enrollment/verify")
@@ -58,7 +55,8 @@ public class CertificateController {
             certificateService.updateVerificationStatusByCertificate(
                     user.getUserId(),
                     String.valueOf(VerificationStatus.PENDING),
-                    fileLink
+                    fileLink,
+                    file.getOriginalFilename()
             );
 
             return new ResTemplate<>(HttpStatus.OK,
@@ -101,13 +99,15 @@ public class CertificateController {
             certificateService.updateVerificationStatusByCertificate(
                     user.getUserId(),
                     String.valueOf(VerificationStatus.PENDING),
-                    fileLink
+                    fileLink,
+                    file.getOriginalFilename()
             );
 
             // 4) 비동기 트리거 (OCR 및 검증 로직)
             eventPublisher.publishEvent(new CertificateUploadEvent(
                     user.getUserId(),
-                    fileLink
+                    fileLink,
+                    file.getOriginalFilename()
             ));
 
             return new ResTemplate<>(HttpStatus.OK, "업로드 성공", null);
