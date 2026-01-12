@@ -1,15 +1,27 @@
 package JJinBBang.app.domain.user.event;
 
+import JJinBBang.app.domain.common.entity.Universities;
+import JJinBBang.app.domain.common.repository.UniversitiesRepository;
+import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.UserNotFoundException;
+import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.ocr.dto.response.OcrResult;
 import JJinBBang.app.global.ocr.service.OcrService;
 import JJinBBang.app.global.slack.service.SlackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
@@ -19,32 +31,61 @@ public class CertificateEventListener {
     private final SlackService slackService;
     private final CertificateService certificateService;
     private final OcrService ocrService;
+    private final UniversitiesRepository universitiesRepository;
+    private final UsersRepository usersRepository;
+
+    private static final double CONFIDENCE_THRESHOLD = 0.9; // 신뢰도 기준값
+    private static final Pattern UNIV_PATTERN = Pattern.compile("([가-힣]+대(학교|학))");
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT) // 트랜잭선 커밋 후 실행
     public void handleCertificateVerificationEvent(CertificateUploadEvent event) {
         log.info("합격증명서 검증 프로세스 시작: USER {}", event.userId());
 
         try {
-            // TODO: OCR & 검증 작업
-            String extractedText = ocrService.extractTextFromGoogleDrive(event.fileLink(), event.fileName());
+            // 1) execute OCR
+            OcrResult ocrResult = ocrService.extractTextFromGoogleDrive(event.fileLink(), event.fileName());
+            String extractedText = ocrResult.text();
+            double confidence = ocrResult.confidence();
 
-            log.info("✨ [OCR 결과] : {}", extractedText);
+            log.info("✨ OCR 결과 : {}", extractedText);
+            log.info("✨ OCR 결과 신뢰도: {}", confidence);
 
-            boolean isAutoVerified = true;
+            // 1) OCR 결과 전처리
+            String cleanText = extractedText.replaceAll("\\s+", "").toLowerCase();
 
-            if (isAutoVerified) {
-                // CASE 1) 자동 검증 성공 -> 신입생 인증으로 변경
+            // 2) 대학교 조회
+            Optional<Universities> university = findUniversityFromText(cleanText);
+            
+            if (university.isEmpty()) {
+                // CASE 1. 자동 검증 실패 - 대학교 조회에 실패한 경우
+                log.warn("❌ 소속 대학을 조회할 수 없음");
+                slackService.sendVerifyMessage(event.userId(), event.fileLink(), true);
+                return;
+            }
+
+            Universities univ = university.get();
+            log.info("소속 대학교: {}", univ.getUniversityName());
+
+            // 3) 대학교 정보 업데이트
+            Users user = usersRepository.findByUserId(event.userId()).orElseThrow(UserNotFoundException::notFound);
+            user.updateUniversity(univ);
+
+            boolean isVerified = performOcrResultVerification(cleanText, confidence);
+
+            if (isVerified) {
+                // CASE 2) 자동 검증 성공 -> 신입생 인증으로 변경
                 certificateService.updateVerificationStatusByCertificate(
                         event.userId(),
                         String.valueOf(VerificationStatus.NEW_STUDENT_VERIFIED),
                         null,
-                        event.fileName()
+                        null
                 );
             } else {
-                // CASE 2) 자동 검증 실패 -> Slack 알림 전송 (관리자 수동 검증 필요)
+                // CASE 3) 자동 검증 실패 -> Slack 알림 전송 (관리자 수동 검증 필요)
                 log.info("승인 실패 - Slack에서 관리자 수동 인증을 진행합니다.");
-                slackService.sendVerifyMessage(event.userId(), event.fileLink());
+                slackService.sendVerifyMessage(event.userId(), event.fileLink(), false);
             }
         } catch (Exception e) {
             log.error("검증 처리 중 오류 발생", e);
@@ -54,6 +95,71 @@ public class CertificateEventListener {
                     null,
                     event.fileName()
             );
+
+            // 에러 발생 시 Slack 알림 전송
+            slackService.sendVerifyMessage(event.userId(), event.fileLink(), false);
         }
+    }
+
+
+    private boolean performOcrResultVerification(String text, double confidence) {
+        if (text == null || text.isBlank()) return false;
+
+        // 1) 신뢰도 검사 (OCR 품질 검증)
+        if (confidence < CONFIDENCE_THRESHOLD) {
+            log.warn("검증 실패 [1/4]: 추출된 내용의 신뢰도 낮음 ({})", confidence);
+            return false;
+        }
+
+        // 2) 키워드 검사 (합격이나 입학에 관련된 서류인가?)
+        if (!hasKeyword(text, new String[]{"합격", "입학", "admission"})) {
+            log.warn("검증 실패 [2/4]: 합격 관련 키워드가 존재하지 않음");
+            return false;
+        }
+
+        // 3) 공문서 검사 (총장 혹은 입학처장 등으로 부터 발급된 서류인가?
+        if (!hasKeyword(text, new String[]{"총장", "학장", "처장", "직인"})) {
+            log.warn("검증 실패 [3/4]: 발급 주체가 존재하지 않음");
+            return false;
+        }
+
+        // 4) OPENAI 문서 신뢰도 점검
+
+        log.info("🔎 검증 통과!");
+        log.info("OCR 신뢰도: {}", confidence);
+        return true;
+    }
+
+    // 키워드 검사
+    private boolean hasKeyword(String text, String[] keywords) {
+        for (String k : keywords) {
+            if (text.contains(k)) return true;
+        }
+        return false;
+    }
+
+    // 대학명 찾기
+    private Optional<Universities> findUniversityFromText(String cleanText) {
+        Matcher matcher = UNIV_PATTERN.matcher(cleanText);
+
+        while (matcher.find()) {
+            String candidate = matcher.group(1);
+            log.debug("학교명 후보 추출: {}", candidate);
+
+            Optional<Universities> univeristy = findValidUniversityFromCandidate(candidate);
+            if (univeristy.isPresent()) return univeristy;
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<Universities> findValidUniversityFromCandidate(String candidate) {
+        for (int i = 0; i < candidate.length() - 2; i++) {
+            String subString = candidate.substring(i);
+
+            Optional<Universities> university = universitiesRepository.findByUniversityName(subString);
+            if (university.isPresent()) return university;
+        }
+        return Optional.empty();
     }
 }

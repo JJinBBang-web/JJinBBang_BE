@@ -1,5 +1,7 @@
 package JJinBBang.app.global.ocr.service;
 
+import JJinBBang.app.global.ocr.dto.response.OcrResult;
+
 public interface OcrService {
-    String extractTextFromGoogleDrive(String imageUrl, String fileName);
+    OcrResult extractTextFromGoogleDrive(String imageUrl, String fileName);
 }

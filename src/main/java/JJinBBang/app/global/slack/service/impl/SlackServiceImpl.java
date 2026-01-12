@@ -1,5 +1,10 @@
 package JJinBBang.app.global.slack.service.impl;
 
+import JJinBBang.app.domain.common.entity.Universities;
+import JJinBBang.app.domain.common.repository.UniversitiesRepository;
+import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.UserNotFoundException;
+import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.slack.properties.SlackProperties;
@@ -16,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,25 +32,44 @@ public class SlackServiceImpl implements SlackService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final CertificateService certificateService;
+    private final UniversitiesRepository universitiesRepository;
+    private final UsersRepository usersRepository;
+
+    private static final String INPUT_BLOCK_ID = "input_university_block";
+    private static final String ACTION_ID_INPUT = "university_name";
+    private static final String ACTION_ID_APPROVE = "approve_student_verification";
+    private static final String ACTION_ID_APPROVE_WITH_INPUT = "approve_student_verification_with_input";
+    private static final String ACTION_ID_REJECT = "reject_student_verification";
 
     /**
      * Slack #합격증명서-인증 채널에 찐빵 봇을 통한 미승인 합격증명서 인증 메시지 전송
      *
      * @param userId
      * @param fileLink 합격증명서가 저장 된 Google Drive URL
+     * @param needsInput OCR 단계에서 대학교 조회가 된 경우 - false / 조회가 되지 않은 경우 - true
      */
     @Override
-    public void sendVerifyMessage(Long userId, String fileLink) {
+    public void sendVerifyMessage(Long userId, String fileLink, boolean needsInput) {
         String webhookUrl = slackProperties.getWebhook().getUrl();
 
         // 1) 전체 메시지 Payload 생성
         Map<String, Object> payload = new HashMap<>();
-        payload.put("text", "새로 업로드 된 합격증명서 검증이 필요합니다!");
 
         // 2) Slack 메시지 내용
         List<Map<String, Object>> blocks = new ArrayList<>();
-        blocks.add(createTextBlock(userId, fileLink)); //텍스트 섹션 생성
-        blocks.add(createActionBlock(userId)); // 의사 버튼 생성
+
+        if (needsInput) {
+            // CASE 1. 재학중인 대학교 추출에 실패한 경우
+            payload.put("text", "새로 업로드 된 합격증명서 검증이 필요합니다! (대학교 수동 입력 필요)");
+            blocks.add(createTextBlock(userId, fileLink));
+            blocks.add(createInputBlock());
+            blocks.add(createActionBlock(userId, ACTION_ID_APPROVE_WITH_INPUT));
+        } else {
+            // CASE 2. 재학중인 대학교 추출에 성공한 경우 (다른 검증 과정에서 오류가 발생한 경우)
+            payload.put("text", "새로 업로드 된 합격증명서 검증이 필요합니다!");
+            blocks.add(createTextBlock(userId, fileLink));
+            blocks.add(createActionBlock(userId, ACTION_ID_APPROVE));
+        }
 
         payload.put("blocks", blocks);
 
@@ -64,6 +85,13 @@ public class SlackServiceImpl implements SlackService {
         }
     }
 
+    /**
+     * Slack에서 전송된 payload를 처리하고 승인/반려 작업 수행
+     *
+     * @param payload Slack에서 넘어온 JSON 형식의 payload
+     * @return 처리 결과
+     * @throws JsonProcessingException JSON 페이로드 파싱 과정에서 발생하는 도중 에러가 발생하는 경우
+     */
     @Transactional
     @Override
     public String handleInteractivity(String payload) throws JsonProcessingException {
@@ -79,7 +107,40 @@ public class SlackServiceImpl implements SlackService {
 
         String message = "";
 
-        if ("approve_student_verification".equals(actionId)) {
+        if (ACTION_ID_APPROVE_WITH_INPUT.equals(actionId)) {
+            // CASE 1. 대학교 이름 수동 입력 승인
+            String inputUnivName = root.path("state")
+                    .path("values")
+                    .path(INPUT_BLOCK_ID)
+                    .path(ACTION_ID_INPUT)
+                    .path("value")
+                    .asText();
+
+            // 대학교 조회 및 업데이트
+            if (inputUnivName == null || inputUnivName.isBlank()) {
+                return createResponse(false, "⚠️ 대학교 이름을 입력해주세요!");
+            }
+
+            Optional<Universities> univ = universitiesRepository.findByUniversityName(inputUnivName.trim());
+            if (univ.isEmpty()) {
+                return createResponse(false, "⚠️ '" + inputUnivName + "' 학교를 DB에서 찾을 수 없습니다.");
+            }
+
+            Users user = usersRepository.findByUserId(userId).orElseThrow(UserNotFoundException::notFound);
+            user.updateUniversity(univ.get());
+
+            certificateService.updateVerificationStatusByCertificate(
+                    userId,
+                    String.valueOf(VerificationStatus.NEW_STUDENT_VERIFIED),
+                    null,
+                    null
+            );
+
+            log.info("관리자 수동 입력 승인: User - {} / University - {}", userId, inputUnivName);
+            message = "✅ 관리자에 의해 승인 처리되었습니다.";
+
+        } else if (ACTION_ID_APPROVE.equals(actionId)) {
+            // CASE 2. 수동 승인
             certificateService.updateVerificationStatusByCertificate(
                     userId,
                     String.valueOf(VerificationStatus.NEW_STUDENT_VERIFIED),
@@ -89,7 +150,8 @@ public class SlackServiceImpl implements SlackService {
 
             message = "✅ 관리자에 의해 승인 처리되었습니다.";
             log.info("Slack에서 승인 처리 완료: userId - {}", userId);
-        } else if ("reject_student_verification".equals(actionId)) {
+        } else if (ACTION_ID_REJECT.equals(actionId)) {
+            // CASE 3. 수동 반려
             certificateService.updateVerificationStatusByCertificate(
                     userId,
                     String.valueOf(VerificationStatus.UNVERIFIED),
@@ -100,8 +162,7 @@ public class SlackServiceImpl implements SlackService {
             log.info("Slack에서 반려 처리 완료: userId - {}", userId);
         }
 
-        return createResponseJson(message);
-    }
+        return createResponse(true, message);    }
 
     // 텍스트 섹션 생성하기
     private Map<String, Object> createTextBlock(Long userId, String fileLink) {
@@ -118,17 +179,33 @@ public class SlackServiceImpl implements SlackService {
     }
 
     // 의사 버튼 섹션 생성하기 (승인/반려)
-    private Map<String, Object> createActionBlock(Long userId) {
+    private Map<String, Object> createActionBlock(Long userId, String approveType) {
         Map<String, Object> actions = new HashMap<>();
         actions.put("type", "actions");
 
         List<Map<String, Object>> elements = new ArrayList<>();
 
-        elements.add(createButton("승인", "primary", "approve_student_verification", String.valueOf(userId)));
-        elements.add(createButton("반려", "danger", "reject_student_verification", String.valueOf(userId)));
+        elements.add(createButton("승인", "primary", approveType, String.valueOf(userId)));
+        elements.add(createButton("반려", "danger", ACTION_ID_REJECT, String.valueOf(userId)));
 
         actions.put("elements", elements);
         return actions;
+    }
+
+    // input block 생성하기
+    private Map<String, Object> createInputBlock() {
+        Map<String, Object> inputBlock = new HashMap<>();
+        inputBlock.put("type", "input");
+        inputBlock.put("block_id", INPUT_BLOCK_ID);
+        inputBlock.put("label", Map.of("type", "plain_text", "text", "대학교 이름 입력"));
+
+        Map<String, Object> element = new HashMap<>();
+        element.put("type", "plain_text_input");
+        element.put("action_id", ACTION_ID_INPUT);
+        element.put("placeholder", Map.of("type", "plain_text", "text", "정확한 대학교 이름을 입력해주세요."));
+
+        inputBlock.put("element", element);
+        return inputBlock;
     }
 
     // 버튼 생성하기
@@ -144,7 +221,16 @@ public class SlackServiceImpl implements SlackService {
     }
 
     // Slack 응답 메시지 포맷
-    private String createResponseJson(String text) {
-        return String.format("{\"replace_original\": \"true\", \"text\": \"%s\"}", text);
+    private String createResponse(boolean replaceOriginal, String text) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("replace_original", replaceOriginal);
+        response.put("text", text);
+
+        try {
+            return objectMapper.writeValueAsString(response);
+        } catch (JsonProcessingException e) {
+            log.error("Slack 응답 JSON 생성 실패", e);
+            return String.format("{\"replace_original\": \"%b\", \"text\": \"Error processing response\"}", replaceOriginal);
+        }
     }
 }
