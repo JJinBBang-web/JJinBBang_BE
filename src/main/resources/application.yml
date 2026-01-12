@@ -182,3 +182,9 @@ ocr:
   clova:
     api-url: ${ocr.clova.api-url}
     secret-key: ${ocr.clova.secret-key}
+
+openai:
+  api-key: ${openai.api-key}
+  model: ${openai.model}
+  api-url: ${openai.api-url}
+  certificates-verification-prompt: ${openai.certificates-verification-prompt}

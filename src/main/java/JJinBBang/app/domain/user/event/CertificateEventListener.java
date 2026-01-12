@@ -9,6 +9,7 @@ import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.global.common.enums.VerificationStatus;
 import JJinBBang.app.global.ocr.dto.response.OcrResult;
 import JJinBBang.app.global.ocr.service.OcrService;
+import JJinBBang.app.global.openai.service.OpenaiVerificationService;
 import JJinBBang.app.global.slack.service.SlackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class CertificateEventListener {
     private final OcrService ocrService;
     private final UniversitiesRepository universitiesRepository;
     private final UsersRepository usersRepository;
+    private final OpenaiVerificationService openaiVerificationService;
 
     private static final double CONFIDENCE_THRESHOLD = 0.9; // 신뢰도 기준값
     private static final Pattern UNIV_PATTERN = Pattern.compile("([가-힣]+대(학교|학))");
@@ -72,7 +74,7 @@ public class CertificateEventListener {
             Users user = usersRepository.findByUserId(event.userId()).orElseThrow(UserNotFoundException::notFound);
             user.updateUniversity(univ);
 
-            boolean isVerified = performOcrResultVerification(cleanText, confidence);
+            boolean isVerified = performOcrResultVerification(cleanText, event.fileLink(), confidence);
 
             if (isVerified) {
                 // CASE 2) 자동 검증 성공 -> 신입생 인증으로 변경
@@ -102,7 +104,7 @@ public class CertificateEventListener {
     }
 
 
-    private boolean performOcrResultVerification(String text, double confidence) {
+    private boolean performOcrResultVerification(String text, String fileLink, double confidence) {
         if (text == null || text.isBlank()) return false;
 
         // 1) 신뢰도 검사 (OCR 품질 검증)
@@ -124,6 +126,11 @@ public class CertificateEventListener {
         }
 
         // 4) OPENAI 문서 신뢰도 점검
+        boolean isAiVerified = openaiVerificationService.verifyCertificatesImage(fileLink);
+        if (!isAiVerified) {
+            log.warn("검증 실패 [4/4]: LLM이 비정상 문서로 판정함");
+            return false;
+        }
 
         log.info("🔎 검증 통과!");
         log.info("OCR 신뢰도: {}", confidence);
