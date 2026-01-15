@@ -185,10 +185,10 @@ public class CertificateServiceImpl implements CertificateService {
             String fileName,
             String fileLink
     ) {
-        String spreadsheetId = googleProps.getSpreadsheetCertificate().getId(); // 스프레드시트
-        String sheetName = googleProps.getSpreadsheetCertificate().getSheets().get(type); // 스프레드시트의 탭
-        String range = String.format(googleProps.getSpreadsheetCertificate().getRangeTemplate(), sheetName); // 시트 범위 포맷팅
-        String hyperlinkFormula = String.format("=HYPERLINK(\"%s\",\"%s\")", fileLink, fileName); // url 포뮬러
+        String spreadsheetId = googleProps.getSpreadsheet().getCertificates().getId();
+        String sheetName = googleProps.getSpreadsheet().getCertificates().getSheets().get(type);
+        String range = String.format(googleProps.getSpreadsheet().getCertificates().getRangeTemplate(), sheetName);
+        String hyperlinkFormula = String.format("=HYPERLINK(\"%s\",\"%s\")", fileLink, fileName);
 
         List<Object> row = List.of(
                 userId,
