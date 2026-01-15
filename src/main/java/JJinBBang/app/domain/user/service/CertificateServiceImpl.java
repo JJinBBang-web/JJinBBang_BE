@@ -39,18 +39,6 @@ public class CertificateServiceImpl implements CertificateService {
     private final UsersService usersService;
     private final ApplicationEventPublisher eventPublisher;
 
-    // 재학증명서 -> 구글 드라이브 업로드
-    @Override
-    public String uploadEnrollmentFileToDrive(MultipartFile file, String folderName) {
-        try {
-            String rootFolderId = googleProps.getDrive().getFolders().get("enrollment");
-            String targetFolderId = findTargetFolderId(rootFolderId, folderName);
-            return uploadFile(file, targetFolderId);
-        } catch (IOException e) {
-            throw new RuntimeException("구글 드라이브 타겟 폴더 탐색 실패");
-        }
-    }
-
     // 합격증명서 -> 구글 드라이브 업로드
     @Override
     public String uploadAdmissionFileToDrive(MultipartFile file, String folderName) {
@@ -61,12 +49,6 @@ public class CertificateServiceImpl implements CertificateService {
         } catch (IOException e) {
             throw new RuntimeException("구글 드라이브 타겟 폴더 탐색 실패");
         }
-    }
-
-    // 재학증명서 업로드 -> 스프레드시트 추가
-    @Override
-    public void appendEnrollmentFileToSheets(int userId, String fileName, String fileLink) {
-        appendSheets("enrollment", userId, fileName, fileLink);
     }
 
     // 합격증명서 업로드 -> 스프레드시트 추가

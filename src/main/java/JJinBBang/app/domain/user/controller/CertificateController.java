@@ -26,52 +26,6 @@ public class CertificateController {
 
     private final ApplicationEventPublisher eventPublisher;
 
-    // 재학증명서 업로드
-    @PostMapping("/enrollment/verify")
-    public ResTemplate<?> uploadEnrollmentCertificate(
-            @AuthenticationPrincipal Users principal,
-            @RequestPart("file") MultipartFile file
-    ) {
-        if (principal == null || principal.getProviderId() == null) {
-            throw new RuntimeException("사용자 인증 정보가 유효하지 않습니다.");
-        }
-        try {
-            Users user = usersService.findWithUniversity(principal.getProviderId());
-
-            // 폴더 이름으로 타겟 폴더 지정
-            String folderName = googleProps.getDrive().getFolders().get("enrollment-target");
-
-            // 구글 드라이브에 업로드 및 링크 반환
-            String fileLink = certificateService.uploadEnrollmentFileToDrive(file, folderName);
-
-            // 스프레드 시트에 row로 업로드 (userId, universityId, 파일링크, 업로드 시간)
-            certificateService.appendEnrollmentFileToSheets(
-                    user.getUserId().intValue(),
-                    file.getOriginalFilename(),
-                    fileLink
-            );
-
-            // 미인증 -> 인증대기
-            certificateService.updateVerificationStatusByCertificate(
-                    user.getUserId(),
-                    String.valueOf(VerificationStatus.PENDING),
-                    fileLink,
-                    file.getOriginalFilename()
-            );
-
-            return new ResTemplate<>(HttpStatus.OK,
-                    "업로드 성공",
-                    null);
-
-        } catch (Exception e) {
-            return new ResTemplate<>(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "업로드 중 문제가 발생했습니다.",
-                    null
-            );
-        }
-    }
-
     // 합격증명서 업로드
     @PostMapping("/admission/verify")
     public ResTemplate<?> uploadAdmissionCertificate(
