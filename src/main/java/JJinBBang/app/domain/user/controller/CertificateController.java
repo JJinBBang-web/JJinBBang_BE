@@ -49,20 +49,13 @@ public class CertificateController {
                     fileLink
             );
 
-            // 3) 미인증 -> 인증대기
+            // 3) 미인증 -> 인증대기 (비동기 검증 이벤트 발행)
             certificateService.updateVerificationStatusByCertificate(
                     user.getUserId(),
                     String.valueOf(VerificationStatus.PENDING),
                     fileLink,
                     file.getOriginalFilename()
             );
-
-            // 4) 비동기 트리거 (OCR 및 검증 로직)
-            eventPublisher.publishEvent(new CertificateUploadEvent(
-                    user.getUserId(),
-                    fileLink,
-                    file.getOriginalFilename()
-            ));
 
             return new ResTemplate<>(HttpStatus.OK, "업로드 성공", null);
 

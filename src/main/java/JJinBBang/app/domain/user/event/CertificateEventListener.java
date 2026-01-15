@@ -11,6 +11,7 @@ import JJinBBang.app.global.ocr.dto.response.OcrResult;
 import JJinBBang.app.global.ocr.service.OcrService;
 import JJinBBang.app.global.openai.service.OpenaiVerificationService;
 import JJinBBang.app.global.slack.service.SlackService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,8 +39,15 @@ public class CertificateEventListener {
     private final UsersRepository usersRepository;
     private final OpenaiVerificationService openaiVerificationService;
 
+    private List<Universities> universityCache;
+
     private static final double CONFIDENCE_THRESHOLD = 0.9; // 신뢰도 기준값
-    private static final Pattern UNIV_PATTERN = Pattern.compile("([가-힣]+대(학교|학))");
+
+    @PostConstruct
+    public void initUniversityCache() {
+        this.universityCache = universitiesRepository.findAll();
+        this.universityCache.sort(Comparator.comparing((Universities u) -> u.getUniversityName().length()).reversed());
+    }
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -58,7 +68,8 @@ public class CertificateEventListener {
             String cleanText = extractedText.replaceAll("\\s+", "").toLowerCase();
 
             // 2) 대학교 조회
-            Optional<Universities> university = findUniversityFromText(cleanText);
+//            Optional<Universities> university = findUniversityFromText(cleanText);
+            Optional<Universities> university = findUniversityFromTextInMemory(cleanText);
             
             if (university.isEmpty()) {
                 // CASE 1. 자동 검증 실패 - 대학교 조회에 실패한 경우
@@ -103,6 +114,12 @@ public class CertificateEventListener {
         }
     }
 
+    private Optional<Universities> findUniversityFromTextInMemory(String text) {
+        return universityCache.stream()
+                .filter(univ -> text.contains(univ.getUniversityName()))
+                .findFirst();
+    }
+
 
     private boolean performOcrResultVerification(String text, String fileLink, double confidence) {
         if (text == null || text.isBlank()) return false;
@@ -143,30 +160,5 @@ public class CertificateEventListener {
             if (text.contains(k)) return true;
         }
         return false;
-    }
-
-    // 대학명 찾기
-    private Optional<Universities> findUniversityFromText(String cleanText) {
-        Matcher matcher = UNIV_PATTERN.matcher(cleanText);
-
-        while (matcher.find()) {
-            String candidate = matcher.group(1);
-            log.debug("학교명 후보 추출: {}", candidate);
-
-            Optional<Universities> univeristy = findValidUniversityFromCandidate(candidate);
-            if (univeristy.isPresent()) return univeristy;
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<Universities> findValidUniversityFromCandidate(String candidate) {
-        for (int i = 0; i < candidate.length() - 2; i++) {
-            String subString = candidate.substring(i);
-
-            Optional<Universities> university = universitiesRepository.findByUniversityName(subString);
-            if (university.isPresent()) return university;
-        }
-        return Optional.empty();
     }
 }
