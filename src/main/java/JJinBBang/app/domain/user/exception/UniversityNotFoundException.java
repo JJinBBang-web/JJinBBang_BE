@@ -15,4 +15,7 @@ public class UniversityNotFoundException extends NotFoundGroupException {
         return new UniversityNotFoundException("해당 도메인에 대한 대학교 데이터 없음: " + universityName);
     }
 
+	public static UniversityNotFoundException missingUniversity() {
+        return new UniversityNotFoundException("대학교 정보가 없습니다.");
+	}
 }
