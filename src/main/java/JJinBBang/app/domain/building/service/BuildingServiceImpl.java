@@ -74,7 +74,7 @@ public class BuildingServiceImpl implements BuildingService {
 	public DormitoryListResponse getDormitoryList(Long universityId) {
 		Universities university = universityRepository.findById(universityId).orElseThrow(UniversityNotFoundException::missingUniversity);
 		List<Campuses> campuses = university.getCampuses();
-		if (campuses == null || campuses.isEmpty()) {
+if (campuses.isEmpty()) {
 			return DormitoryListResponse.of(List.of());
 		}
 
