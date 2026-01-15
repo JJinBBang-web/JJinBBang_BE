@@ -6,6 +6,8 @@ import JJinBBang.app.global.ocr.dto.response.ClovaField;
 import JJinBBang.app.global.ocr.dto.response.ClovaImageResult;
 import JJinBBang.app.global.ocr.dto.response.ClovaOcrResponse;
 import JJinBBang.app.global.ocr.dto.response.OcrResult;
+import JJinBBang.app.global.ocr.exception.OcrInternalException;
+import JJinBBang.app.global.ocr.exception.OcrInvalidException;
 import JJinBBang.app.global.ocr.properties.OcrProperties;
 import JJinBBang.app.global.ocr.service.OcrService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -82,8 +85,15 @@ public class OcrServiceImpl implements OcrService {
 
             return new OcrResult(result.toString().trim(), avgConfidence);
 
+        } catch (RestClientException e) {
+            log.error("Clova OCR API 호출 중 오류 발생: url={}, error={}", imageUrl, e.getMessage(), e);
+            throw OcrInternalException.apiError();
+        } catch (IllegalArgumentException e) {
+            log.error("잘못된 입력값 오류: {}", e.getMessage(), e);
+            throw OcrInvalidException.invalidRequest();
         } catch (Exception e) {
-            throw new RuntimeException("OCR 처리 실패");
+            log.error("OCR 처리 중 알 수 없는 오류 발생", e);
+            throw OcrInternalException.ocrFail();
         }
     }
 

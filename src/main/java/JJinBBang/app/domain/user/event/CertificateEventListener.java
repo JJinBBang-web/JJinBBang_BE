@@ -42,6 +42,8 @@ public class CertificateEventListener {
     private List<Universities> universityCache;
 
     private static final double CONFIDENCE_THRESHOLD = 0.9; // 신뢰도 기준값
+    private static final String[] ADMISSION_KEYWORDS = {"합격", "입학", "admission"};
+    private static final String[] AUTHORITY_KEYWORDS = {"총장", "학장", "처장", "직인"};
 
     @PostConstruct
     public void initUniversityCache() {
@@ -131,13 +133,13 @@ public class CertificateEventListener {
         }
 
         // 2) 키워드 검사 (합격이나 입학에 관련된 서류인가?)
-        if (!hasKeyword(text, new String[]{"합격", "입학", "admission"})) {
+        if (!hasKeyword(text, ADMISSION_KEYWORDS)) {
             log.warn("검증 실패 [2/4]: 합격 관련 키워드가 존재하지 않음");
             return false;
         }
 
         // 3) 공문서 검사 (총장 혹은 입학처장 등으로 부터 발급된 서류인가?
-        if (!hasKeyword(text, new String[]{"총장", "학장", "처장", "직인"})) {
+        if (!hasKeyword(text, AUTHORITY_KEYWORDS)) {
             log.warn("검증 실패 [3/4]: 발급 주체가 존재하지 않음");
             return false;
         }

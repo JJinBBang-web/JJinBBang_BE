@@ -1,6 +1,5 @@
 package JJinBBang.app.domain.user.controller;
 
-import JJinBBang.app.domain.user.event.CertificateUploadEvent;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.domain.user.exception.UserAuthException;
 import JJinBBang.app.domain.user.service.CertificateService;

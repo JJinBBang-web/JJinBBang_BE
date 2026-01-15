@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -80,8 +81,10 @@ public class SlackServiceImpl implements SlackService {
 
             restTemplate.postForEntity(webhookUrl, request, String.class);
             log.info("Slack 인증 메시지 전송 완료: ID {}", userId);
+        } catch (RestClientException e) {
+            log.error("Slack API 호출 중 네트워크 오류 발생: {}", e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Slack 메시지 전송 실패: ", e);
+            log.error("Slack 메시지 전송 중 알 수 없는 오류 발생: ", e);
         }
     }
 
