@@ -11,6 +11,7 @@ public record ReportInfo(
         String title, // 리포트 제목
         LocalDateTime createdAt, // 작성일
         Integer likeCount, // 좋아요 수
-        Integer viewCount // 조회 수
+        Integer viewCount, // 조회 수
+        boolean isLiked // 좋아요 여부
 ) {
 }

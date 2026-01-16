@@ -20,6 +20,7 @@ public class ReportController {
 
     @GetMapping("")
     public ResTemplate<ReportListResponse> getReportList(
+            @AuthenticationPrincipal Users user,
             @RequestParam(name = "category") String category,
             @RequestParam(name = "cursor", required = false) Long cursor,
             @RequestParam(name = "size", required = false) Integer size
@@ -27,7 +28,8 @@ public class ReportController {
         ReportListResponse data = reportService.getReportList(
                 category != null ?category.toUpperCase() : null,
                 cursor,
-                (size != null && size > 0) ? size : 10
+                (size != null && size > 0) ? size : 10,
+                user
         );
 
         return new ResTemplate<>(HttpStatus.OK, "리포트 목록 조회 성공", data);
