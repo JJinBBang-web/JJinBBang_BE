@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.building.controller;
 
+import JJinBBang.app.domain.building.dto.DormitoryListResponse;
 import JJinBBang.app.domain.building.service.AgencyService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -53,5 +54,11 @@ public class BuildingController {
 
 		PaginatedResponse<ReviewSummaryResponse> data = reviewService.getReviewList(buildingId, isAgency, user, pageRequest);
 		return new ResTemplate<>(HttpStatus.OK, "조회 성공", data);
+	}
+
+	@GetMapping("/dormitory")
+	public ResTemplate<DormitoryListResponse> getDormitoryList(@RequestParam Long universityId) {
+		DormitoryListResponse data = buildingService.getDormitoryList(universityId);
+		return new ResTemplate<>(HttpStatus.OK, "기숙사 목록 조회 성공", data);
 	}
 }

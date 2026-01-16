@@ -3,6 +3,8 @@ package JJinBBang.app.domain.building.service;
 import java.util.*;
 
 import JJinBBang.app.domain.building.document.BuildingKeywordCounts;
+import JJinBBang.app.domain.building.dto.DormitoryItem;
+import JJinBBang.app.domain.building.dto.DormitoryListResponse;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +15,11 @@ import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.exception.BuildingNullException;
 import JJinBBang.app.domain.building.repository.BuildingKeywordCountsRepository;
 import JJinBBang.app.domain.building.repository.BuildingsRepository;
+import JJinBBang.app.domain.common.entity.Campuses;
+import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.exception.UniversityNotFoundException;
+import JJinBBang.app.domain.user.repository.UniversityRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class BuildingServiceImpl implements BuildingService {
 	private final BuildingsRepository buildingsRepository;
 	private final BuildingKeywordCountsRepository buildingKeywordCountRepository;
+	private final UniversityRepository universityRepository;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -60,5 +67,28 @@ public class BuildingServiceImpl implements BuildingService {
 		} else {
 			return BuildingDetailResponse.ofGeneral(building, liked, top5Positive);
 		}
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public DormitoryListResponse getDormitoryList(Long universityId) {
+		Universities university = universityRepository.findById(universityId).orElseThrow(UniversityNotFoundException::missingUniversity);
+		List<Campuses> campuses = university.getCampuses();
+if (campuses.isEmpty()) {
+			return DormitoryListResponse.of(List.of());
+		}
+
+		List<Buildings> dormitories = buildingsRepository.findByCampusInAndBuildingTypeOrderByCampus_CampusNameAscBuildingNameAsc(campuses, BuildingType.DORMITORY.name());
+
+		List<DormitoryItem> items = dormitories.stream()
+			.map(building -> DormitoryItem.of(
+				building.getCampus().getCampusName(),
+				building.getId(),
+				building.getBuildingName(),
+				building.getBuildingAddress()
+			))
+			.toList();
+
+		return DormitoryListResponse.of(items);
 	}
 }
