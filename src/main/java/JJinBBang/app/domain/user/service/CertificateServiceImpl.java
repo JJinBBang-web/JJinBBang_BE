@@ -1,6 +1,7 @@
 package JJinBBang.app.domain.user.service;
 
 import JJinBBang.app.domain.user.entity.Users;
+import JJinBBang.app.domain.user.event.CertificateUploadEvent;
 import JJinBBang.app.domain.user.exception.*;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.global.common.enums.VerificationStatus;
@@ -15,6 +16,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,18 +37,7 @@ public class CertificateServiceImpl implements CertificateService {
     private final Sheets sheets;
     private final UsersRepository usersRepository;
     private final UsersService usersService;
-
-    // 재학증명서 -> 구글 드라이브 업로드
-    @Override
-    public String uploadEnrollmentFileToDrive(MultipartFile file, String folderName) {
-        try {
-            String rootFolderId = googleProps.getDrive().getFolders().get("enrollment");
-            String targetFolderId = findTargetFolderId(rootFolderId, folderName);
-            return uploadFile(file, targetFolderId);
-        } catch (IOException e) {
-            throw new RuntimeException("구글 드라이브 타겟 폴더 탐색 실패");
-        }
-    }
+    private final ApplicationEventPublisher eventPublisher;
 
     // 합격증명서 -> 구글 드라이브 업로드
     @Override
@@ -58,12 +49,6 @@ public class CertificateServiceImpl implements CertificateService {
         } catch (IOException e) {
             throw new RuntimeException("구글 드라이브 타겟 폴더 탐색 실패");
         }
-    }
-
-    // 재학증명서 업로드 -> 스프레드시트 추가
-    @Override
-    public void appendEnrollmentFileToSheets(int userId, String fileName, String fileLink) {
-        appendSheets("enrollment", userId, fileName, fileLink);
     }
 
     // 합격증명서 업로드 -> 스프레드시트 추가
@@ -182,10 +167,10 @@ public class CertificateServiceImpl implements CertificateService {
             String fileName,
             String fileLink
     ) {
-        String spreadsheetId = googleProps.getSpreadsheetCertificate().getId(); // 스프레드시트
-        String sheetName = googleProps.getSpreadsheetCertificate().getSheets().get(type); // 스프레드시트의 탭
-        String range = String.format(googleProps.getSpreadsheetCertificate().getRangeTemplate(), sheetName); // 시트 범위 포맷팅
-        String hyperlinkFormula = String.format("=HYPERLINK(\"%s\",\"%s\")", fileLink, fileName); // url 포뮬러
+        String spreadsheetId = googleProps.getSpreadsheet().getCertificates().getId();
+        String sheetName = googleProps.getSpreadsheet().getCertificates().getSheets().get(type);
+        String range = String.format(googleProps.getSpreadsheet().getCertificates().getRangeTemplate(), sheetName);
+        String hyperlinkFormula = String.format("=HYPERLINK(\"%s\",\"%s\")", fileLink, fileName);
 
         List<Object> row = List.of(
                 userId,
@@ -220,12 +205,16 @@ public class CertificateServiceImpl implements CertificateService {
      */
     @Override
     @Transactional
-    public void updateVerificationStatusByCertificate(Long userId, String status) {
-        if (!VerificationStatus.isValid(status)) {
+    public void updateVerificationStatusByCertificate(Long userId, String status, String fileLink, String fileName) {
+        if (!VerificationStatus.isValid(status))
             throw VerificatoinStatusException.InvalidVerificationStatusException();
-        }
+
         Users user = usersService.findByUserId(userId);
         user.updateVerificationStatus(VerificationStatus.valueOf(status));
         usersRepository.save(user);
+
+        if (VerificationStatus.valueOf(status) == VerificationStatus.PENDING) {
+            eventPublisher.publishEvent(new CertificateUploadEvent(userId, fileLink, fileName));
+        }
     }
 }

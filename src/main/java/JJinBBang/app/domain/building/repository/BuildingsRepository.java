@@ -2,8 +2,11 @@ package JJinBBang.app.domain.building.repository;
 
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.repository.custom.BuildingsRepositoryCustom;
+import JJinBBang.app.domain.common.entity.Campuses;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,4 +25,7 @@ public interface BuildingsRepository extends JpaRepository<Buildings, Long>, Bui
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Buildings r SET r.likeCount = r.likeCount - 1 WHERE r.id = :buildingId")
     void decrementLikeCount(@Param("buildingId") Long buildingId);
+
+    // 캠퍼스목록과 건물 유형으로 건물 리스트 조회
+    List<Buildings> findByCampusInAndBuildingTypeOrderByCampus_CampusNameAscBuildingNameAsc(List<Campuses> campuses, String buildingType);
 }

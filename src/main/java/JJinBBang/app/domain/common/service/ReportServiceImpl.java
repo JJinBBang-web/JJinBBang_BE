@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +42,7 @@ public class ReportServiceImpl implements ReportService {
      * @return
      */
     @Override
-    public ReportListResponse getReportList(String category, Long cursor, int size) {
+    public ReportListResponse getReportList(String category, Long cursor, int size, Users user) {
 
         if (size <= 0) throw ReportInvalidException.invalidSize();
 
@@ -84,17 +86,29 @@ public class ReportServiceImpl implements ReportService {
         boolean hasNext = resultList.size() > size;
         if (hasNext) resultList = resultList.subList(0, size);
 
+        Set<Long> likedReportIds = new HashSet<>();
+        if (user != null && !resultList.isEmpty()) {
+            List<Long> ids = reportLikesRepository.findLikedReportIds(user, resultList);
+            likedReportIds.addAll(ids);
+        }
+
         // 리포트 데이터 매핑
         List<ReportInfo> reports = resultList.stream()
-                .map(report -> new ReportInfo(
-                        report.getId(),
-                        report.getCoverImage(),
-                        report.getCategory(),
-                        report.getTitle(),
-                        report.getCreatedAt(),
-                        report.getLikeCount(),
-                        report.getViewCount()
-                ))
+                .map(report -> {
+
+                    boolean isLiked = likedReportIds.contains(report.getId());
+
+                    return new ReportInfo(
+                            report.getId(),
+                            report.getCoverImage(),
+                            report.getCategory(),
+                            report.getTitle(),
+                            report.getCreatedAt(),
+                            report.getLikeCount(),
+                            report.getViewCount(),
+                            isLiked
+                    );
+                })
                 .toList();
 
         // pagination 데이터 업데이트 (마지막 요소 id 조회)
