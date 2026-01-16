@@ -92,6 +92,11 @@ spring:
     encoding: UTF-8
     basename: ValidationMessages
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 cloud:
   aws:
     region:
@@ -174,3 +179,42 @@ vworld:
 google:
   credentials:
     path: "classpath:gcp_iam_key.json"
+  drive:
+    folders:
+      admission: ${google.drive.folders.admission}
+      admission-target: ${google.drive.folders.admission-target}
+    url-template: ${google.drive.url-template}
+  spreadsheet:
+    certificates:
+      id: ${google.spreadsheet.certificates.id}
+      sheets:
+        admission: ${google.spreadsheet.certificates.sheets.admission}
+      range-template: ${google.spreadsheet.certificates.range-template}
+    opinion:
+      id: ${google.spreadsheet.opinion.id}
+      sheets:
+        user-review-opinion: ${google.spreadsheet.opinion.sheets.user-review-opinion}
+        user-building-opinion: ${google.spreadsheet.opinion.sheets.user-building-opinion}
+      range-template: ${google.spreadsheet.opinion.range-template}
+    unregister:
+      id: ${google.spreadsheet.unregister.id}
+      sheets:
+        unregister-reason: ${google.spreadsheet.unregister.sheets.unregister-reason}
+      range-template: ${google.spreadsheet.unregister.range-template}
+
+slack:
+  webhook:
+    url: ${slack.webhook.url}
+  security:
+    signing-secret: ${slack.security.signing-secret}
+
+ocr:
+  clova:
+    api-url: ${ocr.clova.api-url}
+    secret-key: ${ocr.clova.secret-key}
+
+openai:
+  api-key: ${openai.api-key}
+  model: ${openai.model}
+  api-url: ${openai.api-url}
+  certificates-verification-prompt: ${openai.certificates-verification-prompt}

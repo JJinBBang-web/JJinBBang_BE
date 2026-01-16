@@ -29,13 +29,13 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
 
     // 시트 데이터 입력
     private AppendValuesResponse appendRowToGoogleSheets(
-            GoogleProperties.Spreadsheet sheet,
+            GoogleProperties.SheetConfig sheetConfig,
             String sheetKey,
             List<Object> data
     ) throws IOException {
-        String sheetsId = sheet.getId();
-        String name = sheet.getSheets().get(sheetKey);
-        String range = String.format(sheet.getRangeTemplate(), name);
+        String sheetsId = sheetConfig.getId();
+        String name = sheetConfig.getSheets().get(sheetKey);
+        String range = String.format(sheetConfig.getRangeTemplate(), name);
 
         ValueRange row = new ValueRange().setValues(List.of(data));
 
@@ -51,7 +51,7 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
     public void appendUnregisterReason(
             UnregisterReasonDto unregisterReasonDto
     ) throws IOException {
-        var sheet = googleProperties.getSpreadsheetUnregister();
+        var sheet = googleProperties.getSpreadsheet().getUnregister();
 
         List<Object> row = List.of(
                 unregisterReasonDto.userId(),
@@ -73,7 +73,7 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
     ) throws IOException {
         Objects.requireNonNull(userOpinionDto, "userOpinionDto is null");
 
-        var sheet = googleProperties.getSpreadsheetOpinion();
+        var sheet = googleProperties.getSpreadsheet().getOpinion();
         String sheetKey = resolveOpinionSheetKey(opinionType);
 
         List<Object> row = List.of(
