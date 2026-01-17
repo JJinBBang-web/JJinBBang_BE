@@ -51,9 +51,6 @@ public record ReviewRequest (
 
 	@AssertTrue(message = "리뷰 타입에 맞는 건물 유형을 선택해야 합니다")
 	private boolean isProperBuildingType() {
-		if (dormitoryReview != null) {
-			return buildingRequest.type() == BuildingType.DORMITORY;
-		}
 		if (agencyReview != null) {
 			return buildingRequest.type() == BuildingType.AGENCY;
 		}
