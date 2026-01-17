@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.locationtech.jts.geom.*;
-
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +40,6 @@ public class ReviewServiceImpl implements ReviewService {
 	private final FacilitiesRepository facilitiesRepository;
 	private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
 	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
-	private final CampusesRepository campusesRepository;
 	private final S3Service s3Service;
 	private final BuildingCodeResolver buildingCodeResolver;
 
@@ -223,9 +220,7 @@ public class ReviewServiceImpl implements ReviewService {
      */
     private Long createDormitoryReview(ReviewRequest dto, Users user) {
         // 건물 로드
-        Buildings building = buildingsRepository.findById(
-				dto.dormitoryReview().getDormitoryId()
-		).orElseThrow(BuildingNotFoundException::missingDormitory);
+        Buildings building = findAndValidateDormitoryById(dto.dormitoryReview().getDormitoryId());
 
 		if (!building.getBuildingType().contains(BuildingType.DORMITORY)) {
 			throw BuildingNotFoundException.missingDormitory();
@@ -273,6 +268,15 @@ public class ReviewServiceImpl implements ReviewService {
 		BuildingRequest updatedRequest = buildingRequest.updateBuildingCode(resolvedCode);
 
 		return findOrCreateBuilding(updatedRequest, campus);
+	}
+
+	private Buildings findAndValidateDormitoryById(Long dormitoryId) {
+		Buildings building = buildingsRepository.findById(dormitoryId)
+				.orElseThrow(BuildingNotFoundException::missingDormitory);
+		if (!building.getBuildingType().contains(BuildingType.DORMITORY)) {
+			throw BuildingNotFoundException.missingDormitory();
+		}
+		return building;
 	}
 
 	/**
@@ -541,12 +545,7 @@ public class ReviewServiceImpl implements ReviewService {
 	private void updateDormitoryReview(DormReviews oldReview, ReviewRequest dto) {
 		//  건물 엔티티 로드
 		Buildings oldBuilding = oldReview.getBuilding();
-		Buildings newBuilding = buildingsRepository.findById(dto.dormitoryReview().getDormitoryId())
-				.orElseThrow(BuildingNotFoundException::missingDormitory);
-
-		if (!newBuilding.getBuildingType().contains(BuildingType.DORMITORY)) {
-			throw BuildingNotFoundException.missingDormitory();
-		}
+		Buildings newBuilding = findAndValidateDormitoryById(dto.dormitoryReview().getDormitoryId());
 
 		//  기존 상세 정보 로드
 		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
