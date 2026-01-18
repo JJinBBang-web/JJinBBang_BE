@@ -30,6 +30,7 @@ public class GoogleProperties {
         private SheetConfig certificates = new SheetConfig();
         private SheetConfig opinion = new SheetConfig();
         private SheetConfig unregister = new SheetConfig();
+        private SheetConfig reviewEvent = new SheetConfig();
     }
 
     @Setter
