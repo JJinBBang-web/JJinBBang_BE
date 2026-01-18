@@ -1,6 +1,7 @@
 package JJinBBang.app.global.sheets.service.impl;
 
 import JJinBBang.app.domain.common.dto.request.ReviewEventRequest;
+import JJinBBang.app.global.sheets.GoogleInternalException;
 import JJinBBang.app.global.sheets.dto.UnregisterReasonDto;
 import JJinBBang.app.global.sheets.dto.UserOpinionDto;
 import JJinBBang.app.global.sheets.enums.OpinionType;
@@ -103,8 +104,8 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
         try {
             var sheet = googleProperties.getSpreadsheet().getReviewEvent();
 
-            String posKeywords = req.review().positiveKeywords() != null ? String.join(", ", req.review().positiveKeywords()) : "";
-            String negKeywords = req.review().negativeKeywords() != null ? String.join(", ", req.review().negativeKeywords()) : "";
+            String posKeywords = String.join(", ", req.review().positiveKeywords());
+            String negKeywords = String.join(", ", req.review().negativeKeywords());
             String imageLinks = req.review().images() != null ? String.join("\n", req.review().images()) : "";
 
             List<Object> row = List.of(
@@ -125,8 +126,8 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
 
             appendRowToGoogleSheets(sheet, "review-event", row);
         } catch (IOException e) {
-            log.error("리뷰이벤트 후기를 저장에 실패했습니다.: {} (전화번호: {})", e.getMessage(), req.phoneNumber());
-            throw new RuntimeException("리뷰 저장 중 오류가 발생했습니다.");
+            log.error("리뷰이벤트 후기를 저장에 실패했습니다.: {}", e.getMessage());
+            throw GoogleInternalException.apiError();
         }
     }
 }

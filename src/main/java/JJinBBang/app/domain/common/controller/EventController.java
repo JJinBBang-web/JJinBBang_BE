@@ -31,7 +31,7 @@ public class EventController {
     @PostMapping("/review")
     public ResTemplate<?> addReviewFromEvent(
             @Valid @RequestBody ReviewEventRequest req
-    ) throws IOException {
+    ) {
         googleSheetsService.appendReviewFromEvent(req);
         return new ResTemplate<>(HttpStatus.OK, "리뷰이벤트 후기 업로드 성공", null);
     }
