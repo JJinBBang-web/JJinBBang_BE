@@ -57,8 +57,8 @@ public class BuildingController {
 	}
 
 	@GetMapping("/dormitory")
-	public ResTemplate<DormitoryListResponse> getDormitoryList(@RequestParam Long universityId) {
-		DormitoryListResponse data = buildingService.getDormitoryList(universityId);
+	public ResTemplate<DormitoryListResponse> getDormitoryList(@RequestParam Long campusId) {
+		DormitoryListResponse data = buildingService.getDormitoryList(campusId);
 		return new ResTemplate<>(HttpStatus.OK, "기숙사 목록 조회 성공", data);
 	}
 }

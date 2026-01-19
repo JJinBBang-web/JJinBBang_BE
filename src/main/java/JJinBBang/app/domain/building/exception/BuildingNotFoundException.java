@@ -14,4 +14,8 @@ public class BuildingNotFoundException extends NotFoundGroupException {
 	public static BuildingNotFoundException missingDormitory() {
 		return new BuildingNotFoundException("기숙사 정보가 존재하지 않습니다");
 	}
+
+	public static RuntimeException missingCampus() {
+		return new BuildingNotFoundException("캠퍼스 정보가 존재하지 않습니다");
+	}
 }
