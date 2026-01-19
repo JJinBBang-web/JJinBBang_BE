@@ -1,5 +1,7 @@
 package JJinBBang.app.global.sheets.service.impl;
 
+import JJinBBang.app.domain.common.dto.request.ReviewEventRequest;
+import JJinBBang.app.global.sheets.GoogleInternalException;
 import JJinBBang.app.global.sheets.dto.UnregisterReasonDto;
 import JJinBBang.app.global.sheets.dto.UserOpinionDto;
 import JJinBBang.app.global.sheets.enums.OpinionType;
@@ -94,5 +96,38 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
             case BUILDING_REPORT -> "user-building-opinion";
             case REVIEW_REPORT ->  "user-review-opinion";
         };
+    }
+
+    // 리뷰 저장 (지거국 확장 이벤트)
+    @Override
+    public void appendReviewFromEvent(ReviewEventRequest req) {
+        try {
+            var sheet = googleProperties.getSpreadsheet().getReviewEvent();
+
+            String posKeywords = String.join(", ", req.review().positiveKeywords());
+            String negKeywords = String.join(", ", req.review().negativeKeywords());
+            String imageLinks = req.review().images() != null ? String.join("\n", req.review().images()) : "";
+
+            List<Object> row = List.of(
+                    req.phoneNumber(),
+                    req.review().university(),
+                    req.review().contractType(),
+                    req.review().deposit(),
+                    req.review().monthlyRent(),
+                    req.review().administrationCost(),
+                    posKeywords,
+                    negKeywords,
+                    imageLinks,
+                    req.review().content(),
+                    req.hasAgreedToMarketing(),
+                    req.hasAgreedToPrivacy(),
+                    java.time.LocalDateTime.now().format(DATE_TIME_FORMATTER)
+            );
+
+            appendRowToGoogleSheets(sheet, "review-event", row);
+        } catch (IOException e) {
+            log.error("리뷰이벤트 후기를 저장에 실패했습니다.: {}", e.getMessage());
+            throw GoogleInternalException.apiError();
+        }
     }
 }

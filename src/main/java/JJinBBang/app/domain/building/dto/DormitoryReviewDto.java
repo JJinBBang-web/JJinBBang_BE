@@ -12,7 +12,7 @@ import lombok.Getter;
 @Getter
 public class DormitoryReviewDto {
 	@NotNull
-	private Long campusId;
+	private Long dormitoryId;
 	@NotNull
 	@Min(1)
 	private Integer capacity;
