@@ -15,7 +15,7 @@ public class BuildingNotFoundException extends NotFoundGroupException {
 		return new BuildingNotFoundException("기숙사 정보가 존재하지 않습니다");
 	}
 
-	public static RuntimeException missingCampus() {
+	public static BuildingNotFoundException missingCampus() {
 		return new BuildingNotFoundException("캠퍼스 정보가 존재하지 않습니다");
 	}
 }
