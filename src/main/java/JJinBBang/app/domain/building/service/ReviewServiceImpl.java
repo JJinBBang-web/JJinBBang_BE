@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.locationtech.jts.geom.*;
-
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +40,6 @@ public class ReviewServiceImpl implements ReviewService {
 	private final FacilitiesRepository facilitiesRepository;
 	private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
 	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
-	private final CampusesRepository campusesRepository;
 	private final S3Service s3Service;
 	private final BuildingCodeResolver buildingCodeResolver;
 
@@ -222,40 +219,39 @@ public class ReviewServiceImpl implements ReviewService {
      * 6) 키워드 통계, 평점, 이미지 업데이트
      */
     private Long createDormitoryReview(ReviewRequest dto, Users user) {
-        // 1) 캠퍼스 조회
-        Campuses campus = campusesRepository.findById(dto.dormitoryReview().getCampusId())
-                .orElseThrow(CampusNotFoundException::missingCampus);
+        // 건물 로드
+        Buildings building = findAndValidateDormitoryById(dto.dormitoryReview().getDormitoryId());
 
-        // 2) 건물 로드/생성
-        Buildings building = findOrCreateDormitory(dto.buildingRequest(), campus);
+		if (!building.getBuildingType().contains(BuildingType.DORMITORY)) {
+			throw BuildingNotFoundException.missingDormitory();
+		}
 
-
-        // 3) DormReviews 엔티티 저장
+        // DormReviews 엔티티 저장
         DormReviews review = dto.toDormReviews(user, building);
         DormReviews saved = reviewsRepository.save(review);
 
 
-        // 4) 시설 엔티티 리스트 생성 및 저장
+        // 시설 엔티티 리스트 생성 및 저장
         List<DormitoryFacilities> facilityList = convertToDormitoryFacilityList(dto.facilities(), saved);
         dormitoryFacilitiesRepository.saveAll(facilityList);
 
 
-        // 5) ReviewDetails 엔티티 저장
+        // ReviewDetails 엔티티 저장
         ReviewDetails details = dto.toReviewDetails(saved.getId(), building.getId());
         reviewDetailsRepository.save(details);
 
-        // 6.1) 키워드 통계 증가
+        // 키워드 통계 증가
         updateKeywordCounts(building.getId(), false, Collections.emptyList(), dto.keywords().positive());
 
-        // 6.2) 평점 반영
+        // 평점 반영
         building.addRating(saved.getRating());
 
-        // 6.3) 이미지 카운트 반영
+        // 이미지 카운트 반영
 		if (details.hasImages()) {
 			building.incrementImagesCount();
 		}
 
-        // 6.4) 건물 엔티티 저장
+        // 건물 엔티티 저장
         buildingsRepository.save(building);
 
         return saved.getId();
@@ -272,6 +268,15 @@ public class ReviewServiceImpl implements ReviewService {
 		BuildingRequest updatedRequest = buildingRequest.updateBuildingCode(resolvedCode);
 
 		return findOrCreateBuilding(updatedRequest, campus);
+	}
+
+	private Buildings findAndValidateDormitoryById(Long dormitoryId) {
+		Buildings building = buildingsRepository.findById(dormitoryId)
+				.orElseThrow(BuildingNotFoundException::missingDormitory);
+		if (!building.getBuildingType().contains(BuildingType.DORMITORY)) {
+			throw BuildingNotFoundException.missingDormitory();
+		}
+		return building;
 	}
 
 	/**
@@ -538,15 +543,11 @@ public class ReviewServiceImpl implements ReviewService {
 	 * 8) 삭제된 이미지 S3 정리(old - new 차집합 삭제)
 	 */
 	private void updateDormitoryReview(DormReviews oldReview, ReviewRequest dto) {
-		// 1) 캠퍼스 검증
-		Campuses campus = campusesRepository.findById(dto.dormitoryReview().getCampusId())
-			.orElseThrow(CampusNotFoundException::missingCampus);
-
-		// 2) 건물 엔티티 로드
+		//  건물 엔티티 로드
 		Buildings oldBuilding = oldReview.getBuilding();
-		Buildings newBuilding = findOrCreateDormitory(dto.buildingRequest(), campus);
+		Buildings newBuilding = findAndValidateDormitoryById(dto.dormitoryReview().getDormitoryId());
 
-		// 3) 기존 상세 정보 로드
+		//  기존 상세 정보 로드
 		ReviewDetails oldDetails = reviewDetailsRepository.findByReviewId(oldReview.getId())
 			.orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
