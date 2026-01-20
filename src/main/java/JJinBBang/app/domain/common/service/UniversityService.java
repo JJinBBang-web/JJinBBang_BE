@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.common.service;
 
+import JJinBBang.app.domain.common.dto.CampusSearchResponse;
 import JJinBBang.app.domain.common.dto.UniversityResponseDto;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,4 +11,5 @@ public interface UniversityService {
     @Transactional
     List<UniversityResponseDto> getUniversityList(int offset, int limit);
 
+	CampusSearchResponse searchCampuses(String query, int offset, int limit);
 }
