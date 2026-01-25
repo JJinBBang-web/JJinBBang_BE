@@ -18,6 +18,7 @@ import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.common.entity.Campuses;
+import JJinBBang.app.domain.common.repository.CampusesRepository;
 import JJinBBang.app.domain.common.service.S3Service;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
