@@ -7,5 +7,5 @@ import JJinBBang.app.domain.user.entity.Users;
 public interface BuildingService {
 	BuildingDetailResponse getBuildingDetail(Long buildingId, Users user);
 
-	DormitoryListResponse getDormitoryList(Long universityId);
+	DormitoryListResponse getDormitoryList(Long campusId);
 }
