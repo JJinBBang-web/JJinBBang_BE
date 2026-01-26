@@ -1,5 +1,6 @@
 package JJinBBang.app.domain.common.service;
 
+import JJinBBang.app.domain.common.dto.CampusSearchResponse;
 import JJinBBang.app.domain.common.dto.UniversityResponseDto;
 import JJinBBang.app.global.common.dto.UniversityInfo;
 
@@ -12,4 +13,6 @@ public interface UniversityService {
     List<UniversityInfo> getUniversityListByLocation(Double lat, Double lng);
 
     List<UniversityInfo> getUniversityListBasic();
+  
+	CampusSearchResponse searchCampuses(String query, int offset, int limit);
 }

@@ -161,9 +161,9 @@ public class AuthController {
         if(refreshToken == null || refreshToken.isBlank()) {
             throw UserAuthException.loginSessionExpired();
         }
+		usersService.deleteUser(user);
         jwtService.logoutAll(user.getUserId());
         cookieUtils.deleteCookie(res, REFRESH_TOKEN_COOKIE);
-        usersService.deleteUser(user);
         return new ResTemplate<>(HttpStatus.OK, "회원 탈퇴 성공", null);
     }
 }

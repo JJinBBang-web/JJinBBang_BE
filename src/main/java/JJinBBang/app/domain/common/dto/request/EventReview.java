@@ -11,6 +11,9 @@ public record EventReview(
         @NotBlank(message = "재학 중인 대학교를 입력해주세요.")
         String university,
 
+        @NotBlank(message = "주소를 입력해주세요.")
+        String address,
+
         @NotBlank(message = "계약 형태를 입력해주세요.")
         String contractType,  // 계약 형태
 

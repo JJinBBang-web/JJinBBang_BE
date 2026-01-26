@@ -174,52 +174,63 @@ public class UsersServiceImpl implements UsersService {
 	@Override
 	@Transactional
 	public void deleteUser(Users user) {
-		if (user.getUserId() == 0L) {
+		Long targetUserId = user.getUserId();
+		
+		if (targetUserId == null || targetUserId == 0L) {
 			throw UserNotFoundException.systemError();
 		}
 
-		// 1) 시스템 유저 보장
+		// 1) 시스템 유저 보장 및 조회
 		ensureSystemUserExists(user);
-
 		Users systemUser = usersRepository.findByProviderId(SYSTEM_DELETE_ID)
 				.orElseThrow(UserNotFoundException::systemError);
 
-		Long targetUserId = user.getUserId();
+		// 2) Users 엔티티를 영속성 컨텍스트에 로드 (LAZY 컬렉션 초기화를 위해)
+		Users managedUser = usersRepository.findById(targetUserId)
+				.orElseThrow(UserNotFoundException::notFound);
 
-		// 2) 작성 데이터(리뷰) → 시스템 유저로 재매핑 (벌크 업데이트)
-		//  - 벌크 연산 후 1차 캐시와의 불일치 줄이려면 flush/clear 고려
+		// 3) 작성 데이터(리뷰) → 시스템 유저로 재매핑 (벌크 업데이트)
 		generalReviewsRepository.updateUserToSystemUser(targetUserId, systemUser);
+		
+		// 벌크 업데이트 후 flush (DB에 즉시 반영)
+		usersRepository.flush();
+		
+		// Users 엔티티를 다시 조회하여 최신 상태 보장 (영속성 컨텍스트에 최신 데이터 로드)
+		managedUser = usersRepository.findById(targetUserId)
+				.orElseThrow(UserNotFoundException::notFound);
 
-		// 3) 행동 데이터(좋아요) → 삭제 + 카운터 보정
-		// 3-1) 건물 좋아요
+		// 4) 행동 데이터(좋아요) → 삭제 + 카운터 보정
+		// 4-1) 건물 좋아요
 		List<BuildingLikes> buildingLikes = buildingLikesRepository.findAllByUser_UserId(targetUserId);
 		buildingLikes.forEach(bl -> bl.getBuilding().decrementLikeCount());
 		buildingLikesRepository.deleteAll(buildingLikes);
 
-		// 3-2) 리뷰 좋아요
+		// 4-2) 리뷰 좋아요
 		List<ReviewLikes> reviewLikes = reviewLikesRepository.findAllByUser_UserId(targetUserId);
 		reviewLikes.forEach(rl -> rl.getReview().decrementLikeCount());
 		reviewLikesRepository.deleteAll(reviewLikes);
 
-		// 3-3) 공인중개사 좋아요
+		// 4-3) 공인중개사 좋아요
 		List<AgencyLikes> agencyLikes = agencyLikesRepository.findAllByUser_UserId(targetUserId);
 		agencyLikes.forEach(al -> al.getAgency().decrementLikeCount());
 		agencyLikesRepository.deleteAll(agencyLikes);
 
-		// 3-4) 리포트 좋아요
+		// 4-4) 리포트 좋아요
 		List<ReportLikes> reportLikes = reportLikesRepository.findAllByUser_UserId(targetUserId);
 		reportLikes.forEach(rl -> rl.getReport().decreaseLikeCount());
 		reportLikesRepository.deleteAllInBatch(reportLikes);
 
-		// 3-x) Users 엔티티 컬렉션 정리 (양방향 연관관계 재-persist 방지)
-		user.getBuildingLikes().clear();
-		user.getReviewLikes().clear();
-		user.getAgencyLikes().clear();
-		user.getReportLikes().clear();
+		// 5) Users 엔티티 컬렉션 정리 (양방향 연관관계 재-persist 방지)
+		// 영속성 컨텍스트에 있는 managedUser의 컬렉션을 clear
+		managedUser.getReviews().clear();
+		managedUser.getBuildingLikes().clear();
+		managedUser.getReviewLikes().clear();
+		managedUser.getAgencyLikes().clear();
+		managedUser.getReportLikes().clear();
 
-		// 4) 유저 탈퇴일 기록 (스케줄러가 N일 뒤 영구 삭제)
-		user.delete(); // 내부에서 disabledAt = now 등
-		usersRepository.save(user);
+		// 6) 유저 탈퇴일 기록 (스케줄러가 N일 뒤 영구 삭제)
+		managedUser.delete(); // 내부에서 disabledAt = now 등
+		usersRepository.save(managedUser);
 	}
 
 
