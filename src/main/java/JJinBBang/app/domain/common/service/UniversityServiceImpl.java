@@ -1,6 +1,5 @@
 package JJinBBang.app.domain.common.service;
 
-import JJinBBang.app.domain.common.entity.Campuses;
 import JJinBBang.app.domain.common.entity.Universities;
 import JJinBBang.app.domain.common.dto.UniversityResponseDto;
 import JJinBBang.app.domain.common.repository.CampusesRepository;
@@ -39,35 +38,33 @@ public class UniversityServiceImpl implements UniversityService {
     @Override
     public List<UniversityInfo> getUniversityListByLocation(Double lat, Double lng) {
         List<Object[]> results = campusesRepository.findNearestCampuses(lat, lng);
-
-        return results.stream()
-                .map(this::mapToDto)
-                .toList();
+        return results.stream().map(this::mapToDto).toList();
     }
 
     @Override
     public List<UniversityInfo> getUniversityListBasic() {
         List<Object[]> results = campusesRepository.findTop10PopularUniversities();
-
-        return results.stream()
-                .map(this::mapToDto)
-                .toList();
+        return results.stream().map(this::mapToDto).toList();
     }
 
     private UniversityInfo mapToDto(Object[] row) {
-        Long id = ((Number) row[0]).longValue();
-        String campusName = (String) row[1];
-        String campusAddress = (String) row[2];
-        Double campusLat = ((Number) row[3]).doubleValue();
-        Double campusLot = ((Number) row[4]).doubleValue();
-        String image = (String) row[5];
-        String univName = (String) row[6];
-        String univLogo = (String) row[7];
+        Long campusId = ((Number) row[0]).longValue();
+        Long universityId = ((Number) row[1]).longValue();
+
+        String campusName = (String) row[2];
+        String campusAddress = (String) row[3];
+        Double campusLat = ((Number) row[4]).doubleValue();
+        Double campusLot = ((Number) row[5]).doubleValue();
+        String image = (String) row[6];
+        String univName = (String) row[7];
+        String univLogo = (String) row[8];
 
         CampusInfo campusInfo = new CampusInfo(
-                id, campusName, image, campusAddress, campusLat, campusLot
+                campusId, campusName, image, campusAddress, campusLat, campusLot
         );
 
-        return new UniversityInfo(id, univName, univLogo, campusInfo);
+        return new UniversityInfo(
+                universityId, univName, univLogo, campusInfo
+        );
     }
 }
