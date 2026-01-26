@@ -10,6 +10,9 @@ import java.util.List;
 
 @Repository("CommonCampusesRepository")
 public interface CampusesRepository extends JpaRepository<Campuses, Long> {
+
+    double EARTH_RADIUS = 6371.0;
+
     List<Campuses> findByUniversityId(Long universityId);
 
     @Query(value = """
@@ -23,14 +26,19 @@ public interface CampusesRepository extends JpaRepository<Campuses, Long> {
             c.image AS image,
             u.university_name AS universityName,
             u.university_logo AS universityLogo,
-            (6371 * acos(cos(radians(:lat)) * cos(radians(c.campus_lat)) * cos(radians(c.campus_lot) - radians(:lng)) +
+            (:earthRadius * acos(cos(radians(:lat)) * cos(radians(c.campus_lat)) * cos(radians(c.campus_lot) - radians(:lng)) +
             sin(radians(:lat)) * sin(radians(c.campus_lat)))) AS distance
         FROM campuses c
         JOIN universities u ON c.university_id = u.university_id
         ORDER BY distance ASC 
-        LIMIT 10
+        LIMIT :limitCount
         """, nativeQuery = true)
-    List<Object[]> findNearestCampuses(@Param("lat") double lat, @Param("lng") double lng);
+    List<Object[]> findNearestCampuses(
+            @Param("lat") double lat,
+            @Param("lng") double lng,
+            @Param("earthRadius") double earthRadius,
+            @Param("limitCount") int limitCount
+    );
 
     @Query(value = """
         SELECT 
@@ -54,7 +62,7 @@ public interface CampusesRepository extends JpaRepository<Campuses, Long> {
         )
         GROUP BY c.campus_id, u.university_id, c.campus_name, c.campus_address, c.campus_lat, c.campus_lot, c.image, u.university_name, u.university_logo
         ORDER BY userCount DESC
-        LIMIT 10
+        LIMIT :limitCount
         """, nativeQuery = true)
-    List<Object[]> findTop10PopularUniversities();
+    List<Object[]> findTopPopularUniversities(@Param("limitCount") int limitCount);
 }

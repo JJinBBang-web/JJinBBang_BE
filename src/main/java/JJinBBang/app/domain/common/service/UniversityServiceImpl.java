@@ -21,6 +21,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class UniversityServiceImpl implements UniversityService {
 
+    private static final int SEARCH_LIMIT_COUNT = 10;
+
     private final UniversitiesRepository universitiesRepository;
     private final CampusesRepository campusesRepository;
 
@@ -37,13 +39,15 @@ public class UniversityServiceImpl implements UniversityService {
 
     @Override
     public List<UniversityInfo> getUniversityListByLocation(Double lat, Double lng) {
-        List<Object[]> results = campusesRepository.findNearestCampuses(lat, lng);
+        List<Object[]> results = campusesRepository.findNearestCampuses(
+                lat, lng, CampusesRepository.EARTH_RADIUS, SEARCH_LIMIT_COUNT
+        );
         return results.stream().map(this::mapToDto).toList();
     }
 
     @Override
     public List<UniversityInfo> getUniversityListBasic() {
-        List<Object[]> results = campusesRepository.findTop10PopularUniversities();
+        List<Object[]> results = campusesRepository.findTopPopularUniversities(SEARCH_LIMIT_COUNT);
         return results.stream().map(this::mapToDto).toList();
     }
 
