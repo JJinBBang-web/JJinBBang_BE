@@ -2,14 +2,17 @@ package JJinBBang.app.domain.common.service;
 
 import JJinBBang.app.domain.common.dto.CampusSearchResponse;
 import JJinBBang.app.domain.common.dto.UniversityResponseDto;
-import org.springframework.transaction.annotation.Transactional;
+import JJinBBang.app.global.common.dto.UniversityInfo;
 
 import java.util.List;
 
 public interface UniversityService {
 
-    @Transactional
     List<UniversityResponseDto> getUniversityList(int offset, int limit);
 
+    List<UniversityInfo> getUniversityListByLocation(Double lat, Double lng);
+
+    List<UniversityInfo> getUniversityListBasic();
+  
 	CampusSearchResponse searchCampuses(String query, int offset, int limit);
 }
