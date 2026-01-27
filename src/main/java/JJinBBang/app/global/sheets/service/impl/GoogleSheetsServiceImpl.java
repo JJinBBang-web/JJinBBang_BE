@@ -121,7 +121,8 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
                     req.review().content(),
                     req.hasAgreedToMarketing(),
                     req.hasAgreedToPrivacy(),
-                    java.time.LocalDateTime.now().format(DATE_TIME_FORMATTER)
+                    java.time.LocalDateTime.now().format(DATE_TIME_FORMATTER),
+                    req.review().address()
             );
 
             appendRowToGoogleSheets(sheet, "review-event", row);
