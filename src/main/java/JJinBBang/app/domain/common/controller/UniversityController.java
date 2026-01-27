@@ -51,6 +51,7 @@ public class UniversityController {
         }
         UniversityListResponse res = new UniversityListResponse(universityInfos);
         return new ResTemplate<>(HttpStatus.OK, "대학교 리스트 조회 성공", res);
+    }
       
     @Validated
     @GetMapping("/search")
