@@ -16,7 +16,8 @@ public class SlackProperties {
     @Getter
     @Setter
     public static class Webhook {
-        private String url;
+        private String verifyUrl;
+        private String opinionUrl;
     }
 
     @Getter

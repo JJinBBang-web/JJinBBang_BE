@@ -7,6 +7,7 @@ import JJinBBang.app.domain.user.exception.UserNotFoundException;
 import JJinBBang.app.domain.user.repository.UsersRepository;
 import JJinBBang.app.domain.user.service.CertificateService;
 import JJinBBang.app.global.common.enums.VerificationStatus;
+import JJinBBang.app.global.slack.enums.SlackNotificationType;
 import JJinBBang.app.global.slack.properties.SlackProperties;
 import JJinBBang.app.global.slack.service.SlackService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +52,7 @@ public class SlackServiceImpl implements SlackService {
      */
     @Override
     public void sendVerifyMessage(Long userId, String fileLink, boolean needsInput) {
-        String webhookUrl = slackProperties.getWebhook().getUrl();
+        String webhookUrl = slackProperties.getWebhook().getVerifyUrl();
 
         // 1) 전체 메시지 Payload 생성
         Map<String, Object> payload = new HashMap<>();
@@ -62,13 +63,13 @@ public class SlackServiceImpl implements SlackService {
         if (needsInput) {
             // CASE 1. 재학중인 대학교 추출에 실패한 경우
             payload.put("text", "새로 업로드 된 합격증명서 검증이 필요합니다! (대학교 수동 입력 필요)");
-            blocks.add(createTextBlock(userId, fileLink));
+            blocks.add(createTextBlockByTypes(SlackNotificationType.CERTIFICATE, userId, fileLink));
             blocks.add(createInputBlock());
             blocks.add(createActionBlock(userId, ACTION_ID_APPROVE_WITH_INPUT));
         } else {
             // CASE 2. 재학중인 대학교 추출에 성공한 경우 (다른 검증 과정에서 오류가 발생한 경우)
             payload.put("text", "새로 업로드 된 합격증명서 검증이 필요합니다!");
-            blocks.add(createTextBlock(userId, fileLink));
+            blocks.add(createTextBlockByTypes(SlackNotificationType.CERTIFICATE, userId, fileLink));
             blocks.add(createActionBlock(userId, ACTION_ID_APPROVE));
         }
 
@@ -168,17 +169,21 @@ public class SlackServiceImpl implements SlackService {
         return createResponse(true, message);    }
 
     // 텍스트 섹션 생성하기
-    private Map<String, Object> createTextBlock(Long userId, String fileLink) {
-        Map<String, Object> section = new HashMap<>();
-        section.put("type", "section");
-
+    private Map<String, Object> createTextBlock(String content) {
         Map<String, Object> text = new HashMap<>();
         text.put("type", "mrkdwn");
-        text.put("text", String.format("[재학생 인증 요청 - ID: %s] \n관리자 확인이 필요합니다.\n\n📄 <%s|합격증명서 확인하기>", userId, fileLink));
+        text.put("text", content);
 
+        Map<String, Object> section = new HashMap<>();
+        section.put("type", "section");
         section.put("text", text);
 
         return section;
+    }
+
+    public Map<String, Object> createTextBlockByTypes(SlackNotificationType type, Long userId, String data) {
+        String formattedMessage = type.format(userId, data);
+        return createTextBlock(formattedMessage);
     }
 
     // 의사 버튼 섹션 생성하기 (승인/반려)
@@ -234,6 +239,34 @@ public class SlackServiceImpl implements SlackService {
         } catch (JsonProcessingException e) {
             log.error("Slack 응답 JSON 생성 실패", e);
             return String.format("{\"replace_original\": \"%b\", \"text\": \"Error processing response\"}", replaceOriginal);
+        }
+    }
+
+
+    @Override
+    public void sendOpinionMessage(Long userId, String opinion) {
+        String webhookUrl = slackProperties.getWebhook().getOpinionUrl();
+
+        // 1) 전체 메시지 Payload 생성
+        Map<String, Object> payload = new HashMap<>();
+
+        // 2) Slack 메시지 내용
+        List<Map<String, Object>> blocks = new ArrayList<>();
+        payload.put("text", "유저 문의 및 신고가 접수되었습니다!");
+        blocks.add(createTextBlockByTypes(SlackNotificationType.OPINION, userId, opinion));
+        payload.put("blocks", blocks);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForEntity(webhookUrl, request, String.class);
+            log.info("Slack 인증 메시지 전송 완료: ID {}", userId);
+        } catch (RestClientException e) {
+            log.error("Slack API 호출 중 네트워크 오류 발생: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Slack 메시지 전송 중 알 수 없는 오류 발생: ", e);
         }
     }
 }
