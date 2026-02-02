@@ -18,7 +18,6 @@ import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.common.entity.Campuses;
-import JJinBBang.app.domain.common.repository.CampusesRepository;
 import JJinBBang.app.domain.common.service.S3Service;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
@@ -155,10 +154,12 @@ public class ReviewServiceImpl implements ReviewService {
     ) {
         // 리뷰 타입에 따라 분기 처리
         if (reviewType == ReviewType.GENERAL) {
-            return CreateReviewResponse.from(createGeneralReview(reviewRequest, user));
+			validateBuilding(reviewRequest);
+			return CreateReviewResponse.from(createGeneralReview(reviewRequest, user));
         } else if (reviewType == ReviewType.DORM) {
             return CreateReviewResponse.from(createDormitoryReview(reviewRequest, user));
         } else if (reviewType == ReviewType.AGENCY) {
+			validateBuilding(reviewRequest);
             return CreateReviewResponse.from(createAgencyReview(reviewRequest, user));
         } else {
             // 미지원 타입 예외
@@ -437,10 +438,12 @@ public class ReviewServiceImpl implements ReviewService {
 
 		// 3) 리뷰 타입별 분기 처리
 		if (review instanceof GeneralReviews general) {
+			validateBuilding(dto);
 			updateGeneralReview(general, dto);
 		} else if (review instanceof DormReviews dorm) {
 			updateDormitoryReview(dorm, dto);
 		} else if (review instanceof AgencyReviews agency) {
+			validateBuilding(dto);
 			updateAgencyReview(agency, dto);
 		} else {
 			throw ReviewNotFoundException.missingReviewType();
@@ -854,4 +857,36 @@ public class ReviewServiceImpl implements ReviewService {
 		imagesToDelete.removeAll(safeNew);
 		imagesToDelete.forEach(s3Service::deleteFile);
 	}
+
+	private void validateBuilding(ReviewRequest dto) {
+		// DORM이면 호출 자체를 안 하도록(현재 구조) 이미 처리했으면 이 블록은 없어도 됨
+		if (dto.dormitoryReview() != null) return;
+
+		boolean isGeneral = dto.generalReview() != null;
+		boolean isAgency  = dto.agencyReview() != null;
+		if (!isGeneral && !isAgency) return;
+
+		BuildingRequest br = dto.buildingRequest();
+		if (br == null) throw BuildingInvalidException.requiredBuildingRequest();
+
+		if (br.buildingCode() == null || br.buildingCode().isBlank())
+			throw BuildingInvalidException.requiredBuildingCode();
+		if (br.name() == null || br.name().isBlank())
+			throw BuildingInvalidException.requiredName();
+		if (br.address() == null || br.address().isBlank())
+			throw BuildingInvalidException.requiredAddress();
+		if (br.type() == null)
+			throw BuildingInvalidException.requiredType();
+		if (br.latitude() == null)
+			throw BuildingInvalidException.requiredLatitude();
+		if (br.longitude() == null)
+			throw BuildingInvalidException.requiredLongitude();
+
+		if (isAgency && br.type() != BuildingType.AGENCY)
+			throw BuildingInvalidException.agencyMustBeAgencyType();
+
+		if (isGeneral && (br.type() == BuildingType.AGENCY || br.type() == BuildingType.DORMITORY))
+			throw BuildingInvalidException.generalCannotBeAgencyOrDormitory();
+	}
+
 }

@@ -5,23 +5,15 @@ import JJinBBang.app.domain.building.entity.Agencies;
 import JJinBBang.app.domain.building.entity.Buildings;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.common.entity.Campuses;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 @Builder
 public record BuildingRequest (
-    @NotBlank
     String buildingCode,
-    @NotBlank
     String name,
-    @NotNull
     BuildingType type,
-    @NotBlank
     String address,
-    @NotNull
     Double latitude,
-    @NotNull
     Double longitude
 ){
 	public BuildingRequest updateBuildingCode(String buildingCode) {
