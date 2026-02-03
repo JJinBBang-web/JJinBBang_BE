@@ -14,6 +14,7 @@ public record DormitoryReviewInfo(
         String name,
         BuildingType type,
         Long campusId,
+        Long dormitoryId,
         String universityName,
         Floor floor,
         Integer capacity,
@@ -22,11 +23,17 @@ public record DormitoryReviewInfo(
         Boolean liked
 ) {
     public static DormitoryReviewInfo of(DormReviews dormReviews,Buildings building,String universityName, Boolean liked) {
+
+        Long campusId = dormReviews.getBuilding().getCampus().getId();
+        Long dormitoryId = dormReviews.getBuilding().getId();
+
         return DormitoryReviewInfo.builder()
             .id(dormReviews.getId())
             .name(building.getBuildingName())
             .type(BuildingType.DORMITORY)
             .universityName(universityName)
+            .campusId(campusId)
+            .dormitoryId(dormitoryId)
             .floor(dormReviews.getFloor())
             .capacity(dormReviews.getCapacity())
             .dormFee(dormReviews.getDormFee())
@@ -40,6 +47,7 @@ public record DormitoryReviewInfo(
         String universityName = dormReviews.getBuilding().getCampus().getUniversity().getUniversityName();
         String campusName =  dormReviews.getBuilding().getCampus().getCampusName();
         Long campusId = dormReviews.getBuilding().getCampus().getId();
+        Long dormitoryId = dormReviews.getBuilding().getId();
 
         return DormitoryReviewInfo.builder()
             .id(dormReviews.getId())
@@ -47,6 +55,7 @@ public record DormitoryReviewInfo(
             .type(BuildingType.DORMITORY)
             .universityName(universityName + " " + campusName)
             .campusId(campusId)
+            .dormitoryId(dormitoryId)
             .floor(dormReviews.getFloor())
             .capacity(dormReviews.getCapacity())
             .dormFee(dormReviews.getDormFee())
