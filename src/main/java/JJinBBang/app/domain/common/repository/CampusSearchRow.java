@@ -6,4 +6,5 @@ public interface CampusSearchRow {
 	String getCampusAddress();
 	Long getUniversityId();
 	String getUniversityName();
+	String getUniversityLogo();
 }

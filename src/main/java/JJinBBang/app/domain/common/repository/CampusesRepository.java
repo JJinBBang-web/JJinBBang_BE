@@ -67,12 +67,13 @@ public interface CampusesRepository extends JpaRepository<Campuses, Long> {
     List<Object[]> findTopPopularUniversities(@Param("limitCount") int limitCount);
            
     @Query(value = """
-        SELECT        
+        SELECT
           c.campus_id      AS campusId,
           c.campus_name    AS campusName,
           c.campus_address AS campusAddress,
           u.university_id  AS universityId,
-          u.university_name AS universityName
+          u.university_name AS universityName,
+          u.university_logo AS universityLogo
         FROM campuses c
         JOIN universities u ON u.university_id = c.university_id
         WHERE REPLACE(CONCAT(u.university_name, c.campus_name), ' ', '')
