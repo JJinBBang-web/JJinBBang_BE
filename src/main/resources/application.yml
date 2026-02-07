@@ -203,6 +203,7 @@ google:
       range-template: ${google.spreadsheet.unregister.range-template}
 
 slack:
+  bot-token: ${slack.bot-token}
   webhook:
     verify-url: ${slack.webhook.verify-url}
     opinion-url: ${slack.webhook.opinion-url}

@@ -13,6 +13,8 @@ import JJinBBang.app.global.slack.service.SlackService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.slack.api.methods.MethodsClient;
+import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -36,6 +38,7 @@ public class SlackServiceImpl implements SlackService {
     private final CertificateService certificateService;
     private final UniversitiesRepository universitiesRepository;
     private final UsersRepository usersRepository;
+    private final MethodsClient methodsClient;
 
     private static final String INPUT_BLOCK_ID = "input_university_block";
     private static final String ACTION_ID_INPUT = "university_name";
@@ -103,14 +106,22 @@ public class SlackServiceImpl implements SlackService {
         // 1) Slack이 보낸 JSON 파싱
         JsonNode root = objectMapper.readTree(payload);
 
+        String channelId = root.path("channel").path("id").asText();
+        String threadTs = root.path("message").path("ts").asText();
+
         // 2) 사용자 정보, action 추출
         JsonNode actionsNode = root.path("actions").get(0);
         String actionId = actionsNode.path("action_id").asText();
         String value = actionsNode.path("value").asText();
         Long userId = Long.parseLong(value);
 
+        JsonNode userNode = root.path("user");
+        String adminId = userNode.path("id").asText();
+        String adminTag = "<@" + adminId + ">";
+
         String message = "";
 
+        // 3) 수동 인증 로직
         if (ACTION_ID_APPROVE_WITH_INPUT.equals(actionId)) {
             // CASE 1. 대학교 이름 수동 입력 승인
             String inputUnivName = root.path("state")
@@ -141,7 +152,7 @@ public class SlackServiceImpl implements SlackService {
             );
 
             log.info("관리자 수동 입력 승인: User - {} / University - {}", userId, inputUnivName);
-            message = "✅ 관리자에 의해 승인 처리되었습니다.";
+            message = "✅ 관리자(" + adminTag +")에 의해 승인 처리되었습니다.";
 
         } else if (ACTION_ID_APPROVE.equals(actionId)) {
             // CASE 2. 수동 승인
@@ -152,7 +163,7 @@ public class SlackServiceImpl implements SlackService {
                     null
             );
 
-            message = "✅ 관리자에 의해 승인 처리되었습니다.";
+            message = "✅ 관리자(" + adminTag + ")에 의해 승인 처리되었습니다.";
             log.info("Slack에서 승인 처리 완료: userId - {}", userId);
         } else if (ACTION_ID_REJECT.equals(actionId)) {
             // CASE 3. 수동 반려
@@ -166,7 +177,10 @@ public class SlackServiceImpl implements SlackService {
             log.info("Slack에서 반려 처리 완료: userId - {}", userId);
         }
 
-        return createResponse(true, message);    }
+        // 승인 및 반려 시 스레드 메시지 전송
+        postThreadMessage(channelId, threadTs, message);
+        return createResponse(true, message);
+    }
 
     // 텍스트 섹션 생성하기
     private Map<String, Object> createTextBlock(String content) {
@@ -239,6 +253,22 @@ public class SlackServiceImpl implements SlackService {
         } catch (JsonProcessingException e) {
             log.error("Slack 응답 JSON 생성 실패", e);
             return String.format("{\"replace_original\": \"%b\", \"text\": \"Error processing response\"}", replaceOriginal);
+        }
+    }
+
+    // Slack Thread 메시지 전송
+    public void postThreadMessage(String channelId, String threadTs, String message) {
+        try {
+            ChatPostMessageRequest request = ChatPostMessageRequest.builder()
+                    .channel(channelId)
+                    .threadTs(threadTs)
+                    .text(message)
+                    .build();
+
+            methodsClient.chatPostMessage(request);
+            log.info("Slack 스레드 메시지 전송 완료: {}", threadTs);
+        } catch (Exception e) {
+            log.error("Slack 스레드 메시지 전송 중 오류 발생: {}", e.getMessage());
         }
     }
 
