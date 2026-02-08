@@ -169,7 +169,7 @@ public class SlackServiceImpl implements SlackService {
             // CASE 3. 수동 반려
             certificateService.updateVerificationStatusByCertificate(
                     userId,
-                    String.valueOf(VerificationStatus.UNVERIFIED),
+                    String.valueOf(VerificationStatus.REJECTED),
                     null,
                     null
             );
