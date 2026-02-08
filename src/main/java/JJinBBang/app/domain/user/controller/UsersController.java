@@ -104,10 +104,12 @@ public class UsersController {
 
 		slackService.sendOpinionMessage(
 				userId,
-				"\n" +
-						userOpinionRequest.opinion() +
-						"\n\n대상: " + userOpinionRequest.targetId() +
-						"\n유형: " + userOpinionRequest.opinionType()
+				String.format(
+						"\n%s\n\n대상: %s\n유형: %s",
+						userOpinionRequest.opinion(),
+						userOpinionRequest.targetId(),
+						userOpinionRequest.opinionType()
+				)
 		);
 
 		return new ResTemplate<>(HttpStatus.OK, "문의 성공", null);

@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.methods.MethodsClient;
+import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -173,7 +175,7 @@ public class SlackServiceImpl implements SlackService {
                     null,
                     null
             );
-            message = "❌ 관리자에 의해 반려 처리되었습니다.";
+            message = "❌ 관리자에(" + adminTag + ")에 의해 반려 처리되었습니다.";
             log.info("Slack에서 반려 처리 완료: userId - {}", userId);
         }
 
@@ -195,7 +197,7 @@ public class SlackServiceImpl implements SlackService {
         return section;
     }
 
-    public Map<String, Object> createTextBlockByTypes(SlackNotificationType type, Long userId, String data) {
+    private Map<String, Object> createTextBlockByTypes(SlackNotificationType type, Long userId, String data) {
         String formattedMessage = type.format(userId, data);
         return createTextBlock(formattedMessage);
     }
@@ -257,7 +259,7 @@ public class SlackServiceImpl implements SlackService {
     }
 
     // Slack Thread 메시지 전송
-    public void postThreadMessage(String channelId, String threadTs, String message) {
+    private void postThreadMessage(String channelId, String threadTs, String message) {
         try {
             ChatPostMessageRequest request = ChatPostMessageRequest.builder()
                     .channel(channelId)
@@ -267,8 +269,8 @@ public class SlackServiceImpl implements SlackService {
 
             methodsClient.chatPostMessage(request);
             log.info("Slack 스레드 메시지 전송 완료: {}", threadTs);
-        } catch (Exception e) {
-            log.error("Slack 스레드 메시지 전송 중 오류 발생: {}", e.getMessage());
+        } catch (IOException | SlackApiException e) {
+            log.error("Slack 스레드 메시지 전송 중 오류 발생: thread_ts={}", threadTs, e);
         }
     }
 
