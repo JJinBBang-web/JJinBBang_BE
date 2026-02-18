@@ -18,7 +18,6 @@ import JJinBBang.app.domain.building.exception.*;
 import JJinBBang.app.domain.building.repository.*;
 import JJinBBang.app.domain.common.dto.PaginatedResponse;
 import JJinBBang.app.domain.common.entity.Campuses;
-import JJinBBang.app.domain.common.repository.CampusesRepository;
 import JJinBBang.app.domain.common.service.S3Service;
 import JJinBBang.app.domain.user.entity.Users;
 import JJinBBang.app.global.common.enums.KeywordType;
@@ -42,7 +41,6 @@ public class ReviewServiceImpl implements ReviewService {
 	private final DormitoryFacilitiesRepository dormitoryFacilitiesRepository;
 	private final BuildingKeywordCountsRepository buildingKeywordCountsRepository;
 	private final S3Service s3Service;
-	private final BuildingCodeResolver buildingCodeResolver;
 
 	/**
      * 특정 건물 또는 공인중개사에 대한 리뷰 목록을 페이징 조회
@@ -126,16 +124,13 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(ReviewInternalServerErrorException::missingReviewDetailException);
 
         // 4) 리뷰 타입에 따라 적절한 DTO로 변환
-        if (review instanceof GeneralReviews general) {
-            return ReviewDetailResponse.ofGeneral(general, detail, liked);
-        } else if (review instanceof DormReviews dorm) {
-            return ReviewDetailResponse.ofDormitory(dorm, detail, liked);
-        } else if (review instanceof AgencyReviews agency) {
-            return ReviewDetailResponse.ofAgency(agency, detail, liked);
-        } else {
-            // 지원하지 않는 타입이면 서버 오류
-            throw ReviewInternalServerErrorException.notSupportReviewType();
-        }
+		// 지원하지 않는 타입이면 서버 오류
+		return switch (review) {
+			case GeneralReviews general -> ReviewDetailResponse.ofGeneral(general, detail, liked);
+			case DormReviews dorm -> ReviewDetailResponse.ofDormitory(dorm, detail, liked);
+			case AgencyReviews agency -> ReviewDetailResponse.ofAgency(agency, detail, liked);
+			default -> throw ReviewInternalServerErrorException.notSupportReviewType();
+		};
     }
 
     /**
@@ -155,10 +150,12 @@ public class ReviewServiceImpl implements ReviewService {
     ) {
         // 리뷰 타입에 따라 분기 처리
         if (reviewType == ReviewType.GENERAL) {
-            return CreateReviewResponse.from(createGeneralReview(reviewRequest, user));
+			validateBuilding(reviewRequest);
+			return CreateReviewResponse.from(createGeneralReview(reviewRequest, user));
         } else if (reviewType == ReviewType.DORM) {
             return CreateReviewResponse.from(createDormitoryReview(reviewRequest, user));
         } else if (reviewType == ReviewType.AGENCY) {
+			validateBuilding(reviewRequest);
             return CreateReviewResponse.from(createAgencyReview(reviewRequest, user));
         } else {
             // 미지원 타입 예외
@@ -257,19 +254,6 @@ public class ReviewServiceImpl implements ReviewService {
 
         return saved.getId();
     }
-
-	private Buildings findOrCreateDormitory(BuildingRequest buildingRequest, Campuses campus) {
-		// 카카오 장소 ID를 건물관리번호로 변환
-		String resolvedCode = buildingCodeResolver.resolve(
-			buildingRequest.longitude(),
-			buildingRequest.latitude(),
-			buildingRequest.buildingCode()
-		);
-
-		BuildingRequest updatedRequest = buildingRequest.updateBuildingCode(resolvedCode);
-
-		return findOrCreateBuilding(updatedRequest, campus);
-	}
 
 	private Buildings findAndValidateDormitoryById(Long dormitoryId) {
 		Buildings building = buildingsRepository.findById(dormitoryId)
@@ -436,14 +420,17 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 
 		// 3) 리뷰 타입별 분기 처리
-		if (review instanceof GeneralReviews general) {
-			updateGeneralReview(general, dto);
-		} else if (review instanceof DormReviews dorm) {
-			updateDormitoryReview(dorm, dto);
-		} else if (review instanceof AgencyReviews agency) {
-			updateAgencyReview(agency, dto);
-		} else {
-			throw ReviewNotFoundException.missingReviewType();
+		switch (review) {
+			case GeneralReviews general -> {
+				validateBuilding(dto);
+				updateGeneralReview(general, dto);
+			}
+			case DormReviews dorm -> updateDormitoryReview(dorm, dto);
+			case AgencyReviews agency -> {
+				validateBuilding(dto);
+				updateAgencyReview(agency, dto);
+			}
+			default -> throw ReviewNotFoundException.missingReviewType();
 		}
 	}
 
@@ -676,15 +663,12 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         // 3) 타입별 삭제 로직 분기
-        if (review instanceof GeneralReviews general) {
-            deleteGeneralReview(general);
-        } else if (review instanceof DormReviews dorm) {
-            deleteDormitoryReview(dorm);
-        } else if (review instanceof AgencyReviews agency) {
-            deleteAgencyReview(agency);
-        } else {
-            throw ReviewInternalServerErrorException.notSupportReviewType();
-        }
+		switch (review) {
+			case GeneralReviews general -> deleteGeneralReview(general);
+			case DormReviews dorm -> deleteDormitoryReview(dorm);
+			case AgencyReviews agency -> deleteAgencyReview(agency);
+			default -> throw ReviewInternalServerErrorException.notSupportReviewType();
+		}
     }
 
     /**
@@ -854,4 +838,32 @@ public class ReviewServiceImpl implements ReviewService {
 		imagesToDelete.removeAll(safeNew);
 		imagesToDelete.forEach(s3Service::deleteFile);
 	}
+
+	private void validateBuilding(ReviewRequest dto) {
+		boolean isGeneral = dto.generalReview() != null;
+		boolean isAgency  = dto.agencyReview() != null;
+
+		BuildingRequest br = dto.buildingRequest();
+		if (br == null) throw BuildingInvalidException.requiredBuildingRequest();
+
+		if (br.buildingCode() == null || br.buildingCode().isBlank())
+			throw BuildingInvalidException.requiredBuildingCode();
+		if (br.name() == null || br.name().isBlank())
+			throw BuildingInvalidException.requiredName();
+		if (br.address() == null || br.address().isBlank())
+			throw BuildingInvalidException.requiredAddress();
+		if (br.type() == null)
+			throw BuildingInvalidException.requiredType();
+		if (br.latitude() == null)
+			throw BuildingInvalidException.requiredLatitude();
+		if (br.longitude() == null)
+			throw BuildingInvalidException.requiredLongitude();
+
+		if (isAgency && br.type() != BuildingType.AGENCY)
+			throw BuildingInvalidException.agencyMustBeAgencyType();
+
+		if (isGeneral && (br.type() == BuildingType.AGENCY || br.type() == BuildingType.DORMITORY))
+			throw BuildingInvalidException.generalCannotBeAgencyOrDormitory();
+	}
+
 }
