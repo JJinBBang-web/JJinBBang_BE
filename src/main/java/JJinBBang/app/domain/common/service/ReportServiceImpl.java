@@ -52,7 +52,7 @@ public class ReportServiceImpl implements ReportService {
 
         // category 검증
         final ReportCategory reportCategory;
-        if (category == null || category.isBlank()) {
+        if (category == null || category.isBlank() || category.equalsIgnoreCase("ALL")) {
             reportCategory = null;
         } else {
             try {
@@ -95,9 +95,6 @@ public class ReportServiceImpl implements ReportService {
         // 리포트 데이터 매핑
         List<ReportInfo> reports = resultList.stream()
                 .map(report -> {
-
-                    boolean isLiked = likedReportIds.contains(report.getId());
-
                     return new ReportInfo(
                             report.getId(),
                             report.getCoverImage(),
@@ -106,7 +103,7 @@ public class ReportServiceImpl implements ReportService {
                             report.getCreatedAt(),
                             report.getLikeCount(),
                             report.getViewCount(),
-                            isLiked
+                            likedReportIds.contains(report.getId())
                     );
                 })
                 .toList();
