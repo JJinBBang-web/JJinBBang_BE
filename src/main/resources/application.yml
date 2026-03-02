@@ -195,6 +195,7 @@ google:
       sheets:
         user-review-opinion: ${google.spreadsheet.opinion.sheets.user-review-opinion}
         user-building-opinion: ${google.spreadsheet.opinion.sheets.user-building-opinion}
+        user-general-opinion: ${google.spreadsheet.opinion.sheets.user-general-opinion}
       range-template: ${google.spreadsheet.opinion.range-template}
     unregister:
       id: ${google.spreadsheet.unregister.id}

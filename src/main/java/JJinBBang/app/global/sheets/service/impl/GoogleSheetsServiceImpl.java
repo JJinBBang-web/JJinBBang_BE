@@ -80,7 +80,7 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
 
         List<Object> row = List.of(
                 userOpinionDto.userId(),
-                userOpinionDto.targetId(),
+                userOpinionDto.targetId() == null ? "-" : userOpinionDto.targetId(),
                 userOpinionDto.opinion(),
                 userOpinionDto.timestamp().format(DATE_TIME_FORMATTER)
         );
@@ -95,6 +95,7 @@ public class GoogleSheetsServiceImpl implements GoogleSheetsService {
         return switch (opinionType) {
             case BUILDING_REPORT -> "user-building-opinion";
             case REVIEW_REPORT ->  "user-review-opinion";
+            case GENERAL -> "user-general-opinion";
         };
     }
 
