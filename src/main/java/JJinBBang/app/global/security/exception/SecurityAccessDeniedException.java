@@ -36,6 +36,10 @@ public class SecurityAccessDeniedException extends AccessDeniedException {
         return new SecurityAccessDeniedException("미인증 상태여야 합니다.");
     }
 
+    public static SecurityAccessDeniedException rejectedStatusRequired() {
+        return new SecurityAccessDeniedException("반려 상태여야 합니다.");
+    }
+
     public static SecurityAccessDeniedException existPendingUnivVerifyRequest() {
         return new SecurityAccessDeniedException("대기 중인 학교 인증 요청이 존재합니다.");
     }

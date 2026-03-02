@@ -8,4 +8,6 @@ public interface SlackService {
     void sendVerifyMessage(Long userId, String fileLink, boolean needsInput);
 
     String handleInteractivity(String payload) throws JsonProcessingException;
+
+    void sendOpinionMessage(Long userId, String opinion);
 }

@@ -29,7 +29,6 @@ public record ReviewRequest (
 	@NotNull
 	List<@NotBlank String> imageUrls,
 
-	@Valid
 	BuildingRequest buildingRequest,
 
 	@Valid
@@ -45,17 +44,6 @@ public record ReviewRequest (
 	private boolean isDormitoryDetailsProvided() {
 		if (dormitoryReview != null) {
 			return facilities  != null;
-		}
-		return true;
-	}
-
-	@AssertTrue(message = "리뷰 타입에 맞는 건물 유형을 선택해야 합니다")
-	private boolean isProperBuildingType() {
-		if (agencyReview != null) {
-			return buildingRequest.type() == BuildingType.AGENCY;
-		}
-		if (generalReview != null) {
-			return (buildingRequest.type() != BuildingType.AGENCY && buildingRequest.type() != BuildingType.DORMITORY);
 		}
 		return true;
 	}

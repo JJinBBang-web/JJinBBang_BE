@@ -83,6 +83,9 @@ dependencies {
 
 	// Swagger (SpringDoc OpenAPI)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
+
+	// Slack
+	implementation "com.slack.api:slack-api-client:1.47.0"
 }
 
 // Q 클래스 경로 지정

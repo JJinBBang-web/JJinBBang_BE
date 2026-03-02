@@ -7,7 +7,6 @@ import JJinBBang.app.domain.common.repository.CampusesRepository;
 import JJinBBang.app.domain.common.repository.UniversitiesRepository;
 import JJinBBang.app.global.common.dto.CampusInfo;
 import JJinBBang.app.global.common.dto.UniversityInfo;
-import JJinBBang.app.domain.user.repository.UniversityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +25,6 @@ public class UniversityServiceImpl implements UniversityService {
     private static final int SEARCH_LIMIT_COUNT = 10;
 
     private final UniversitiesRepository universitiesRepository;
-    private final UniversityRepository universityRepository;
     private final CampusesRepository campusesRepository;
   
     @Transactional
@@ -95,7 +93,8 @@ public class UniversityServiceImpl implements UniversityService {
                     r.getCampusId(),
                     r.getCampusName(),
                     r.getUniversityId(),
-                    r.getUniversityName()
+                    r.getUniversityName(),
+                    r.getUniversityLogo()
                 ))
                 .toList();
         }

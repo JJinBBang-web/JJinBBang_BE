@@ -6,17 +6,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Getter
+@Setter
 @Component
 @ConfigurationProperties(prefix = "slack")
 public class SlackProperties {
 
+    private String botToken;
     private Webhook webhook = new Webhook();
     private Security security = new Security();
 
     @Getter
     @Setter
     public static class Webhook {
-        private String url;
+        private String verifyUrl;
+        private String opinionUrl;
     }
 
     @Getter

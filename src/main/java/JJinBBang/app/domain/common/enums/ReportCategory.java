@@ -1,7 +1,10 @@
 package JJinBBang.app.domain.common.enums;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 
+@Getter
 public enum ReportCategory {
     REAL_ESTATE("부동산"), // 부동산
     TIPS("자취 꿀팁"), // 자취 꿀팁
@@ -13,10 +16,6 @@ public enum ReportCategory {
 
     ReportCategory(String label) {
         this.label = label;
-    }
-
-    public String getLabel() {
-        return label;
     }
 
     public static ReportCategory from(String value) {

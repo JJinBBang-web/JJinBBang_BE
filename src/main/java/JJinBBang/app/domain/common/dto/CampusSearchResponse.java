@@ -30,7 +30,8 @@ public record CampusSearchResponse(
 		Long campusId,
 		String campusName,
 		Long universityId,
-		String universityName
+		String universityName,
+		String universityLogo
 	) {
 		public static CampusSearchItem of(
 			String fullName,
@@ -38,7 +39,8 @@ public record CampusSearchResponse(
 			Long campusId,
 			String campusName,
 			Long universityId,
-			String universityName
+			String universityName,
+			String universityLogo
 		) {
 			return CampusSearchItem.builder()
 				.fullName(fullName)
@@ -47,6 +49,7 @@ public record CampusSearchResponse(
 				.campusName(campusName)
 				.universityId(universityId)
 				.universityName(universityName)
+				.universityLogo(universityLogo)
 				.build();
 		}
 	}
