@@ -94,6 +94,10 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
                 // 미인증 상태여야만 하는 경우
                 return SecurityAccessDeniedException.unverifiedStatusRequired();
             }
+            case REJECTED -> {
+                // 반려되지 않은 경우
+                return SecurityAccessDeniedException.rejectedStatusRequired();
+            }
             default -> {
                 return SecurityAccessDeniedException.wrongAccess();
             }
@@ -105,6 +109,10 @@ public class VerificationStatusFilter extends OncePerRequestFilter {
             return userStatus.equals(VerificationStatus.EMAIL_VERIFIED) ||
                 userStatus.equals(VerificationStatus.ENROLL_STUDENT_VERIFIED) ||
                 userStatus.equals(VerificationStatus.NEW_STUDENT_VERIFIED);
+        }
+        if (requiredStatus.equals(VerificationStatus.UNVERIFIED)) {
+            return userStatus.equals(VerificationStatus.UNVERIFIED) ||
+                    userStatus.equals(VerificationStatus.REJECTED);
         }
         return userStatus.equals(requiredStatus);
     }

@@ -8,6 +8,7 @@ import JJinBBang.app.domain.user.exception.InvalidTokenException;
 import JJinBBang.app.global.sheets.dto.UnregisterReasonDto;
 import JJinBBang.app.global.sheets.dto.UserOpinionDto;
 import JJinBBang.app.global.sheets.service.GoogleSheetsService;
+import JJinBBang.app.global.slack.service.SlackService;
 import JJinBBang.app.global.template.ResTemplate;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ public class UsersController {
 
 	private final UsersService usersService;
 	private final GoogleSheetsService googleSheetsService;
+	private final SlackService slackService;
 
 	@GetMapping
 	public ResTemplate<UserInfoResponseDto> getUserInfo(@AuthenticationPrincipal Users user) {
@@ -99,6 +101,16 @@ public class UsersController {
 		);
 
 		googleSheetsService.appendUserOpinion(data, userOpinionRequest.opinionType());
+
+		slackService.sendOpinionMessage(
+				userId,
+				String.format(
+						"\n%s\n\n대상: %s\n유형: %s",
+						userOpinionRequest.opinion(),
+						userOpinionRequest.targetId(),
+						userOpinionRequest.opinionType()
+				)
+		);
 
 		return new ResTemplate<>(HttpStatus.OK, "문의 성공", null);
 	}

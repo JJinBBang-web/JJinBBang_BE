@@ -6,7 +6,8 @@ public enum VerificationStatus {
 	ENROLL_STUDENT_VERIFIED("인증완료"), // 재학증명서 인증
 	EMAIL_VERIFIED("인증완료"), // 학교 웹메일 인증
 	PENDING("인증대기"), // 인증대기
-	UNVERIFIED("미인증"); // 미인증
+	UNVERIFIED("미인증"), // 미인증
+	REJECTED("반려"); // 반려
 
 	private final String status;
 
