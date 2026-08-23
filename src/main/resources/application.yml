@@ -1,6 +1,6 @@
 spring:
   config:
-    import: classpath:security-path.yml
+    import: ${SECURITY_PATH_CONFIG:classpath:security-path.yml}
 
   profiles:
     active: prod
@@ -178,7 +178,7 @@ vworld:
 
 google:
   credentials:
-    path: "classpath:gcp_iam_key.json"
+    path: ${GOOGLE_CREDENTIALS_PATH:classpath:gcp_iam_key.json}
   drive:
     folders:
       admission: ${google.drive.folders.admission}
