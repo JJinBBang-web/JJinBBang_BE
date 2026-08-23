@@ -162,13 +162,19 @@ public class S3Service {
 		if (url == null || url.isBlank()) {
 			throw new IllegalArgumentException("빈 URL입니다.");
 		}
+		int queryStart = url.indexOf('?');
+		String urlWithoutQuery = queryStart >= 0 ? url.substring(0, queryStart) : url;
+		String cdnBase = "https://" + cdnDomain.replaceAll("^https?://", "").replaceAll("/+$", "");
+		if (urlWithoutQuery.startsWith(cdnBase + "/")) {
+			return URLDecoder.decode(urlWithoutQuery.substring(cdnBase.length() + 1), StandardCharsets.UTF_8);
+		}
+
 		int schemeEnd = url.indexOf("://");
 		int pathStart = url.indexOf('/', (schemeEnd >= 0 ? schemeEnd + 3 : 0));
 		if (pathStart < 0 || pathStart == url.length() - 1) {
 			throw new IllegalArgumentException("경로가 없는 URL입니다: " + url);
 		}
-		int q = url.indexOf('?', pathStart);
-		String path = (q >= 0) ? url.substring(pathStart + 1, q) : url.substring(pathStart + 1);
+		String path = (queryStart >= 0) ? url.substring(pathStart + 1, queryStart) : url.substring(pathStart + 1);
 		return URLDecoder.decode(path, StandardCharsets.UTF_8);
 	}
 }
