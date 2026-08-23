@@ -1,7 +1,9 @@
 package JJinBBang.app.global.mail;
 
+import JJinBBang.app.domain.user.repository.UniversityRepository;
 import JJinBBang.app.global.mail.dto.EmailAuthInfo;
 import JJinBBang.app.global.mail.exception.MailInvalidException;
+import JJinBBang.app.global.mail.exception.MailNotFoundException;
 import JJinBBang.app.global.mail.properties.MailAuthProperties;
 import JJinBBang.app.global.mail.repository.EmailAuthCodeRepository;
 import JJinBBang.app.global.mail.service.MailSendService;
@@ -33,6 +35,8 @@ class MailAuthServiceImplTest {
 	EmailAuthCodeRepository repo;
 	@Mock
 	MailSendService mailSender;
+	@Mock
+	UniversityRepository universityRepository;
 
 	@InjectMocks
 	MailAuthServiceImpl service;
@@ -46,6 +50,7 @@ class MailAuthServiceImplTest {
 		when(props.getBodyText()).thenReturn("코드: %s (유효:%s분)");
 		// 5분 = 300,000 밀리초
 		when(props.getExpirationTime()).thenReturn(300_000L);
+		when(universityRepository.existsByDomainMatching("gnu.ac.kr")).thenReturn(true);
 	}
 
 	@Test
@@ -112,8 +117,7 @@ class MailAuthServiceImplTest {
 		when(repo.findEmailAndAuthCodeByUserId(userId))
 				.thenReturn(Optional.empty());
 
-		// x@gnu.ac.kr 으로 인증코드 검사 수행 시 MailInvalidException 발생해야 함
-		assertThrows(MailInvalidException.class,
+		assertThrows(MailNotFoundException.class,
 				() -> service.verifyAuthCode(userId, "x@gnu.ac.kr", "0000"));
 	}
 }

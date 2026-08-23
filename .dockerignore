@@ -1,0 +1,13 @@
+.git
+.github
+.gradle
+.idea
+build
+docs
+outputs
+
+# Runtime secrets must never enter the image build context.
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
+src/main/resources/gcp_iam_key.json
+src/main/resources/security-path.yml
