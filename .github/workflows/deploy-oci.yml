@@ -26,7 +26,6 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/jjinbbang-web/jjinbbang-api
-  PACKAGE_API: https://api.github.com/orgs/JJinBBang-web/packages/container/jjinbbang-api
 
 jobs:
   build-and-dispatch:
@@ -69,32 +68,20 @@ jobs:
 
           echo "environment=$environment" >> "$GITHUB_OUTPUT"
 
-      - name: Verify existing package is private
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify existing package is not anonymously readable
         run: |
           set -euo pipefail
-          response_file="$RUNNER_TEMP/ghcr-package.json"
-          status="$(curl --silent --show-error \
-            --output "$response_file" \
-            --write-out '%{http_code}' \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header 'Accept: application/vnd.github+json' \
-            --header 'X-GitHub-Api-Version: 2022-11-28' \
-            "$PACKAGE_API")"
+          response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+            'https://ghcr.io/token?service=ghcr.io&scope=repository:jjinbbang-web/jjinbbang-api:pull')"
+          token_status="${response##*$'\n'}"
 
-          case "$status" in
-            200)
-              jq -e '.visibility == "private"' "$response_file" >/dev/null
-              ;;
-            404)
-              echo 'GHCR package does not exist yet; the first workflow publish creates it as private.'
-              ;;
-            *)
-              echo "unable to verify GHCR package visibility (HTTP $status)" >&2
-              exit 1
-              ;;
-          esac
+          if [[ "$token_status" == 200 ]]; then
+            echo 'GHCR grants anonymous pull access; private visibility is required.' >&2
+            exit 1
+          elif [[ "$token_status" != 401 && "$token_status" != 403 ]]; then
+            echo "unable to verify anonymous GHCR access (HTTP $token_status)" >&2
+            exit 1
+          fi
 
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
@@ -122,24 +109,28 @@ jobs:
           provenance: mode=max
           sbom: true
 
-      - name: Verify published image and package visibility
+      - name: Verify published private ARM64 image
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
         run: |
           set -euo pipefail
           [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
 
-          curl --fail --silent --show-error \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header 'Accept: application/vnd.github+json' \
-            --header 'X-GitHub-Api-Version: 2022-11-28' \
-            "$PACKAGE_API" |
-            jq -e '.visibility == "private"' >/dev/null
+          response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+            'https://ghcr.io/token?service=ghcr.io&scope=repository:jjinbbang-web/jjinbbang-api:pull')"
+          token_status="${response##*$'\n'}"
+
+          if [[ "$token_status" == 200 ]]; then
+            echo 'GHCR grants anonymous pull access; private visibility is required.' >&2
+            exit 1
+          elif [[ "$token_status" != 401 && "$token_status" != 403 ]]; then
+            echo "unable to verify anonymous GHCR access (HTTP $token_status)" >&2
+            exit 1
+          fi
 
           docker buildx imagetools inspect "$IMAGE@$IMAGE_DIGEST" \
-            --format '{{json .Image}}' |
-            jq -e 'has("linux/arm64")' >/dev/null
+            --raw |
+            jq -e 'any(.manifests[]?; .platform.os == "linux" and .platform.architecture == "arm64")' >/dev/null
 
       - name: Check GitOps dispatch credentials
         id: gitops
