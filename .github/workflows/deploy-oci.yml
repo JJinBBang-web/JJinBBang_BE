@@ -1,0 +1,186 @@
+name: Build private API image for OCI
+
+on:
+  push:
+    branches:
+      - develop
+      - release
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+          - legacy
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: oci-api-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/jjinbbang-web/jjinbbang-api
+
+jobs:
+  build-and-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Resolve and validate deployment target
+        id: target
+        env:
+          REQUESTED_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || '' }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            environment="$REQUESTED_ENVIRONMENT"
+          elif [[ "$GITHUB_REF_NAME" == release ]]; then
+            environment=prod
+          else
+            environment=dev
+          fi
+
+          case "$environment" in
+            dev)
+              expected_ref=develop
+              ;;
+            prod|legacy)
+              expected_ref=release
+              ;;
+            *)
+              echo "unsupported environment: $environment" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ "$GITHUB_REF_NAME" != "$expected_ref" ]]; then
+            echo "environment/source ref mismatch: $environment/$GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+
+      - name: Verify existing package is not anonymously readable
+        run: |
+          set -euo pipefail
+          response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+            'https://ghcr.io/token?service=ghcr.io&scope=repository:jjinbbang-web/jjinbbang-api:pull')"
+          token_status="${response##*$'\n'}"
+
+          if [[ "$token_status" == 200 ]]; then
+            echo 'GHCR grants anonymous pull access; private visibility is required.' >&2
+            exit 1
+          elif [[ "$token_status" != 401 && "$token_status" != 403 ]]; then
+            echo "unable to verify anonymous GHCR access (HTTP $token_status)" >&2
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish ARM64 image
+        id: image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: mode=max
+          sbom: true
+
+      - name: Verify published private ARM64 image
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+
+          response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+            'https://ghcr.io/token?service=ghcr.io&scope=repository:jjinbbang-web/jjinbbang-api:pull')"
+          token_status="${response##*$'\n'}"
+
+          if [[ "$token_status" == 200 ]]; then
+            echo 'GHCR grants anonymous pull access; private visibility is required.' >&2
+            exit 1
+          elif [[ "$token_status" != 401 && "$token_status" != 403 ]]; then
+            echo "unable to verify anonymous GHCR access (HTTP $token_status)" >&2
+            exit 1
+          fi
+
+          docker buildx imagetools inspect "$IMAGE@$IMAGE_DIGEST" \
+            --raw |
+            jq -e 'any(.manifests[]?; .platform.os == "linux" and .platform.architecture == "arm64")' >/dev/null
+
+      - name: Check GitOps dispatch credentials
+        id: gitops
+        env:
+          GITOPS_APP_ID: ${{ secrets.GITOPS_APP_ID }}
+          GITOPS_APP_PRIVATE_KEY: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
+        run: |
+          if [[ -n "$GITOPS_APP_ID" && -n "$GITOPS_APP_PRIVATE_KEY" ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::Private image was published, but GitOps dispatch is disabled until GitHub App credentials are configured.'
+          fi
+
+      - name: Create GitHub App token for GitOps dispatch
+        if: steps.gitops.outputs.enabled == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.GITOPS_APP_ID }}
+          private-key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
+          owner: JJinBBang-web
+          repositories: jjinbbang-lab
+
+      - name: Dispatch immutable image to GitOps
+        if: steps.gitops.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          DEPLOY_ENVIRONMENT: ${{ steps.target.outputs.environment }}
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            https://api.github.com/repos/JJinBBang-web/jjinbbang-lab/dispatches \
+            --data @- <<EOF
+          {
+            "event_type": "api-image-built",
+            "client_payload": {
+              "component": "api",
+              "environment": "$DEPLOY_ENVIRONMENT",
+              "image": "$IMAGE",
+              "tag": "$GITHUB_SHA",
+              "image_digest": "$IMAGE_DIGEST",
+              "source_repository": "$GITHUB_REPOSITORY",
+              "source_ref": "$GITHUB_REF_NAME",
+              "source_sha": "$GITHUB_SHA"
+            }
+          }
+          EOF
