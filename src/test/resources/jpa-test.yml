@@ -1,0 +1,16 @@
+# @MySqlJpaTest 전용 설정.
+# spring.config.location 으로 이 파일만 읽으므로 main application.yml(기본 prod 프로파일, security-path.yml)은 로드되지 않는다.
+# datasource 는 Testcontainers MySQL 이 @ServiceConnection 으로 주입한다.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+    properties:
+      hibernate:
+        generate_statistics: true
+
+logging:
+  level:
+    root: WARN
+    org.hibernate.stat: WARN
