@@ -6,6 +6,7 @@ import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ReviewType;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,23 @@ import org.springframework.data.repository.query.Param;
 public interface ReviewsRepository extends CrudRepository<Reviews,Long> {
     Reviews findFirstByBuildingOrderByCreatedAtDesc(Buildings building);
     Reviews findFirstByAgencyAndDtypeOrderByCreatedAtDesc(Agencies agency, ReviewType dtype);
+
+    /**
+     * 건물별 가장 최근(createdAt) 리뷰를 조회합니다.
+     * {@link #findFirstByBuildingOrderByCreatedAtDesc}의 배치 버전입니다.
+     */
+    @Query("SELECT r FROM Reviews r WHERE r.building.id IN :buildingIds"
+        + " AND r.createdAt = (SELECT MAX(r2.createdAt) FROM Reviews r2 WHERE r2.building = r.building)")
+    List<Reviews> findLatestByBuildingIds(@Param("buildingIds") Collection<Long> buildingIds);
+
+    /**
+     * 중개사별 가장 최근(createdAt) 리뷰를 조회합니다.
+     * {@link #findFirstByAgencyAndDtypeOrderByCreatedAtDesc}의 배치 버전입니다.
+     */
+    @Query("SELECT r FROM Reviews r WHERE r.agency.agencyId IN :agencyIds AND r.dtype = :dtype"
+        + " AND r.createdAt = (SELECT MAX(r2.createdAt) FROM Reviews r2 WHERE r2.agency = r.agency AND r2.dtype = :dtype)")
+    List<Reviews> findLatestByAgencyIdsAndDtype(@Param("agencyIds") Collection<Long> agencyIds,
+        @Param("dtype") ReviewType dtype);
     Page<Reviews> findAllByBuilding(Buildings building, Pageable pageable);
     List<Reviews> findAllByBuilding(Buildings building);
     Page<Reviews> findAllByAgency(Agencies agency, Pageable pageable);
