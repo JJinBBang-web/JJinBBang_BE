@@ -8,10 +8,14 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface AgenciesRepository extends JpaRepository<Agencies, Long>, AgenciesRepositoryCustom {
     Optional<Agencies> findByAgencySerial(String agencySerial);
+
+    List<Agencies> findAllByAgencySerialIn(Collection<String> agencySerials);
 
     @Modifying(clearAutomatically = true) // 쿼리 실행 후 영속성 컨텍스트를 클리어하여 데이터 불일치 방지
     @Query("UPDATE Agencies r SET r.likeCount = r.likeCount + 1 WHERE r.agencyId = :agencyId")

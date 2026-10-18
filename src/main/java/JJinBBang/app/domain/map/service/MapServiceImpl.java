@@ -3,10 +3,14 @@ package JJinBBang.app.domain.map.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.function.BiFunction;
 
 import JJinBBang.app.domain.building.entity.Agencies;
+import JJinBBang.app.domain.building.entity.Reviews;
 import JJinBBang.app.domain.building.enums.BuildingType;
 import JJinBBang.app.domain.building.enums.ContractType;
 import JJinBBang.app.domain.building.repository.AgenciesRepository;
@@ -167,6 +171,10 @@ public class MapServiceImpl implements MapService {
 		return markers;
 	}
 
+	/**
+	 * 키워드와 필터로 지도 검색 결과를 조회합니다.
+	 * 후보를 하나씩 조회하지 않고, 좋아요 여부는 타입별로 한 번에 조회하며 화면 정보는 SearchInfo가 목록 단위로 조립합니다.
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public PaginatedResponse<SearchInfoDto> searchMarker(SearchMarkerRequest request, Users user) {
@@ -223,32 +231,27 @@ public class MapServiceImpl implements MapService {
 		}
 
 		List<SearchInfoDto> items = new ArrayList<>();
-		for (Buildings b : buildings) {
-			if (filters.viewType() == ViewType.REVIEW) {
-				b.getReviews().stream()
-						.filter(r -> isReviewMatchingKeywords(r, filters.reviewKeyword()))
-						.forEach(r -> {
-							boolean liked = user != null && reviewLikesRepository
-									.findByReviewIdAndUserUserId(r.getId(), user.getUserId())
-									.isPresent();
-							try {
-								items.add(searchInfo.reviewSearchWithBound(r.getId(), liked));
-							} catch (Exception e) {
-								throw MapNotFoundException.notFoundReview();
-							}
-						});
-			} else {
-				boolean liked = user != null && buildingLikesRepository
-						.findByBuildingAndUser(b, user)
-						.isPresent();
-				items.add(searchInfo.buildingSearchWithBound(b.getId(), liked));
+		if (filters.viewType() == ViewType.REVIEW) {
+			List<Reviews> reviews = buildings.stream()
+					.flatMap(b -> b.getReviews().stream())
+					.filter(r -> isReviewMatchingKeywords(r, filters.reviewKeyword()))
+					.toList();
+			Set<Long> likedReviewIds = likedIds(user, reviews.stream().map(Reviews::getId).toList(),
+					reviewLikesRepository::findLikedReviewIds);
+			try {
+				items.addAll(searchInfo.reviewSearchWithBound(reviews, likedReviewIds));
+			} catch (Exception e) {
+				throw MapNotFoundException.notFoundReview();
 			}
+		} else {
+			Set<Long> likedBuildingIds = likedIds(user, buildings.stream().map(Buildings::getId).toList(),
+					buildingLikesRepository::findLikedBuildingIds);
+			items.addAll(searchInfo.buildingSearchWithBound(buildings, likedBuildingIds));
 		}
 
-		for (Agencies agency : agencies) {
-			boolean liked = user != null && agencyLikesRepository.existsByAgencyAndUser(agency, user);
-			items.add(searchInfo.agencySearchWithBound(agency.getAgencyId(), liked, filters.viewType()));
-		}
+		Set<Long> likedAgencyIds = likedIds(user, agencies.stream().map(Agencies::getAgencyId).toList(),
+				agencyLikesRepository::findLikedAgencyIds);
+		items.addAll(searchInfo.agencySearchWithBound(agencies, likedAgencyIds, filters.viewType()));
 
 		Comparator<SearchInfoDto> comparator = getSearchComparator(request.sortBy(), filters.viewType());
 		if (comparator != null) {
@@ -269,6 +272,20 @@ public class MapServiceImpl implements MapService {
 				.itemNum((long) items.size())
 				.items(paged)
 				.build();
+	}
+
+	/**
+	 * 로그인 사용자가 좋아요한 ID만 한 번에 조회합니다.
+	 * 비로그인이거나 대상이 없으면 조회하지 않고 빈 Set을 반환합니다.
+	 *
+	 * @param ids          좋아요 여부를 확인할 대상 ID 목록
+	 * @param findLikedIds (userId, 대상 ID 목록) → 좋아요한 ID를 반환하는 리포지토리 메서드
+	 */
+	private Set<Long> likedIds(Users user, List<Long> ids, BiFunction<Long, Collection<Long>, Set<Long>> findLikedIds) {
+		if (user == null || ids.isEmpty()) {
+			return Set.of();
+		}
+		return findLikedIds.apply(user.getUserId(), ids);
 	}
 
 	@Override

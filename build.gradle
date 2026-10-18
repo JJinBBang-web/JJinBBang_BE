@@ -16,6 +16,9 @@ java {
 def querydslVersion = "5.0.0"
 def querydslDir = "$buildDir/generated/querydsl"
 
+// Docker 29 이상과 호환되는 버전 (Spring Boot 기본 1.20.x 는 Docker 29 에서 Docker 를 찾지 못한다)
+ext['testcontainers.version'] = '1.21.4'
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -60,6 +63,9 @@ dependencies {
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:mysql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	// GCP
