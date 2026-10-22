@@ -2,6 +2,12 @@
 
 FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk-jammy@sha256:ce5767b7222312d42395f5bab033cd91f09e44032a2f21bdfd7b5b912dbe1e77 AS build
 
+COPY security/blocked.certs /tmp/blocked.certs
+RUN grep -qx 'Algorithm=SHA-256' "$JAVA_HOME/lib/security/blocked.certs" \
+    && sort -u -o /tmp/merged-blocked.certs "$JAVA_HOME/lib/security/blocked.certs" /tmp/blocked.certs \
+    && mv /tmp/merged-blocked.certs "$JAVA_HOME/lib/security/blocked.certs" \
+    && rm /tmp/blocked.certs
+
 WORKDIR /workspace
 
 COPY gradlew build.gradle settings.gradle ./
@@ -14,6 +20,12 @@ RUN ./gradlew clean bootJar -x test --no-daemon \
        -exec cp '{}' /workspace/app.jar \;
 
 FROM eclipse-temurin:21-jre-jammy@sha256:eebd356ad7358b7094758e5787a6726f332917cfd56feab6457c56dab895cdbf
+
+COPY security/blocked.certs /tmp/blocked.certs
+RUN grep -qx 'Algorithm=SHA-256' "$JAVA_HOME/lib/security/blocked.certs" \
+    && sort -u -o /tmp/merged-blocked.certs "$JAVA_HOME/lib/security/blocked.certs" /tmp/blocked.certs \
+    && mv /tmp/merged-blocked.certs "$JAVA_HOME/lib/security/blocked.certs" \
+    && rm /tmp/blocked.certs
 
 WORKDIR /app
 COPY --from=build --chown=65532:65532 /workspace/app.jar /app/app.jar
